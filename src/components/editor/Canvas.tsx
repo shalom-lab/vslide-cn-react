@@ -376,6 +376,7 @@ export function Canvas() {
           isResizable={!placing}
           compactType={null}
           preventCollision={false}
+          allowOverlap
           useCSSTransforms
           onDragStop={onLayoutChange}
           onResizeStop={onLayoutChange}

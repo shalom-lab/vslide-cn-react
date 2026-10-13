@@ -95,6 +95,8 @@ export function PlayPage() {
         isDraggable={false}
         isResizable={false}
         compactType={null}
+        preventCollision={false}
+        allowOverlap
         useCSSTransforms={false}
         style={{ height: '100%' }}
       >

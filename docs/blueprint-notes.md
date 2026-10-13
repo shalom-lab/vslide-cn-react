@@ -58,7 +58,9 @@ Charts carry `detail.sheetData` (2D array) + style knobs; Vue builds ECharts opt
 - Canonical order remains **`slideContent` array** (last = top). `reorderActiveAtom` reorders the array and reassigns `zIndex`.
 - UI: atom context menu **置顶 / 上移一层 / 下移一层 / 置底** + property panel **图层** buttons.
 - Canvas / play / thumbs apply `style.zIndex`. Selected atom gets a temporary (+50000) boost for editing; drag/resize forced to `z-index: 100000 !important` so RGL’s default 1–3 does not lose to user layers.
-- `preventCollision={false}` unchanged — drag/resize over overlaps still works.
+- **`allowOverlap={true}`** on Canvas / Play / Thumb `GridLayout` (RGL 1.5+ defaults to false and *pushes* other items on drag even with `compactType={null}` + `preventCollision={false}`). Vue’s older grid effectively allowed overlap without this prop.
+- `preventCollision={false}` + `compactType={null}` kept — no auto-compact; `onDragStop`/`onResizeStop` write back only the moved item’s x/y/w/h from RGL.
+- Two atoms may share cells; right-click **置顶/上移/下移/置底** controls who paints on top.
 
 ### Known limits
 

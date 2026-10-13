@@ -48,6 +48,7 @@ function Thumb({
           isResizable={false}
           compactType={null}
           preventCollision={false}
+          allowOverlap
           useCSSTransforms={false}
           style={{ height: '100%' }}
         >
