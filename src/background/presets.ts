@@ -1,5 +1,6 @@
 /**
  * Built-in PPT-like background templates.
+ * Fewer, calmer presets — prefer soft image underlays + clean solids.
  * Each preset fills a full BackgroundConfig so deck JSON stays compatible.
  */
 import {
@@ -13,7 +14,7 @@ import { cssBackground } from '../utils/background'
 export interface BgPreset {
   id: string
   name: string
-  /** CSS background value for gallery swatch */
+  /** CSS background value for gallery swatch / thumbnail */
   swatch: string
   config: BackgroundConfig
 }
@@ -60,6 +61,44 @@ function preset(
   return { id, name, swatch: cssBackground(config), config }
 }
 
+/** Unsplash photo URL — hotlink-friendly, cover-sized. */
+function unsplash(photoId: string): string {
+  return `https://images.unsplash.com/${photoId}?w=1920&q=80&auto=format&fit=crop`
+}
+
+/** Soft photo underlay with white/cream veil for text readability. */
+function softImageBg(
+  src: string,
+  opacity = 68,
+  fallback = '#f5f2ec',
+): BackgroundConfig {
+  return makeBg({
+    mode: 'image',
+    pure: fallback,
+    image: {
+      src,
+      repeat: 'no-repeat',
+      x: 'center',
+      y: 'center',
+      width: 'cover',
+      height: 'auto',
+      sizeMode: 'cover',
+      opacity,
+    },
+  })
+}
+
+/** Dark photo underlay with a dark veil (custom CSS — first-class). */
+function darkImageBg(src: string, veilAlpha = 0.52): BackgroundConfig {
+  return makeBg({
+    mode: 'custom',
+    pure: '#1a1d22',
+    custom:
+      `linear-gradient(rgba(14, 18, 26, ${veilAlpha}), rgba(14, 18, 26, ${veilAlpha})),` +
+      `url(${src}) center / cover no-repeat`,
+  })
+}
+
 /** Soft paper — warm off-white, print-like */
 const softPaper = makeBg({
   mode: 'pure',
@@ -72,108 +111,81 @@ const conferenceWhite = makeBg({
   linear: { angle: 165, start: '#fbfcfe', end: '#eef2f7' },
 })
 
-/** Warm cream */
+/** Warm cream — gentle solid gradient */
 const warmCream = makeBg({
   mode: 'linear',
   linear: { angle: 140, start: '#fff8ef', end: '#f3e6d4' },
 })
 
-/** Soft sage */
-const softSage = makeBg({
-  mode: 'linear',
-  linear: { angle: 155, start: '#f2f6f2', end: '#d8e4dc' },
-})
+/** Misty mountains — elegant light photo */
+const mistMountains = softImageBg(
+  unsplash('photo-1506905925346-21bda4d32df4'),
+  62,
+  '#e8eef4',
+)
 
-/** Dusk blue — muted presentation blue */
-const duskBlue = makeBg({
-  mode: 'linear',
-  linear: { angle: 160, start: '#2a3f55', end: '#1a2838' },
-})
+/** Soft clouds */
+const softClouds = softImageBg(
+  unsplash('photo-1513002749550-c59d786b8e6c'),
+  70,
+  '#eef3f8',
+)
 
-/** Deep slate — dark professional */
+/** Calm ocean */
+const calmOcean = softImageBg(
+  unsplash('photo-1505142468610-359e7d316be0'),
+  65,
+  '#e6eef4',
+)
+
+/** Soft abstract / marble-like pastel */
+const warmMarble = softImageBg(
+  unsplash('photo-1618005182384-a83a8bd57fbe'),
+  72,
+  '#f4efe8',
+)
+
+/** Soft forest / botanical green */
+const softBotanical = softImageBg(
+  unsplash('photo-1441974231531-c6227db76b6e'),
+  60,
+  '#e8efe8',
+)
+
+/** Deep slate — dark professional solid */
 const deepSlate = makeBg({
   mode: 'linear',
   linear: { angle: 145, start: '#2c3138', end: '#1a1d22' },
 })
 
-/** Midnight indigo */
-const midnightIndigo = makeBg({
-  mode: 'radial',
-  radial: {
-    shape: 'ellipse at 30% 20%',
-    start: '#2a2f55',
-    end: '#12131f',
-  },
-})
+/** City dusk — dark photo underlay */
+const duskCity = darkImageBg(
+  unsplash('photo-1514565131-fce0801e5785'),
+  0.55,
+)
 
-/** Soft aurora / mesh (light) */
-const softAurora = makeBg({
-  mode: 'custom',
-  custom:
-    'radial-gradient(ellipse 80% 60% at 18% 22%, rgba(186, 210, 255, 0.55), transparent 55%),' +
-    'radial-gradient(ellipse 70% 55% at 82% 18%, rgba(255, 210, 230, 0.45), transparent 50%),' +
-    'radial-gradient(ellipse 75% 60% at 55% 88%, rgba(190, 235, 220, 0.4), transparent 55%),' +
-    'linear-gradient(165deg, #f7f8fc, #eef1f7)',
-})
-
-/** Soft mesh dusk (dark) */
-const duskMesh = makeBg({
-  mode: 'custom',
-  custom:
-    'radial-gradient(ellipse 70% 55% at 15% 20%, rgba(88, 120, 180, 0.45), transparent 55%),' +
-    'radial-gradient(ellipse 60% 50% at 85% 25%, rgba(140, 90, 150, 0.35), transparent 50%),' +
-    'radial-gradient(ellipse 65% 55% at 50% 90%, rgba(50, 100, 130, 0.35), transparent 55%),' +
-    'linear-gradient(160deg, #1c2433, #121820)',
-})
-
-/** Subtle dot paper */
-const dotPaper = makeBg({
-  mode: 'custom',
-  custom:
-    'radial-gradient(circle, rgba(60, 64, 67, 0.07) 1px, transparent 1.5px) 0 0 / 18px 18px,' +
-    'linear-gradient(180deg, #faf9f6, #f3f1ec)',
-})
-
-/** Soft geometric diagonals */
-const softGeometry = makeBg({
-  mode: 'custom',
-  custom:
-    'repeating-linear-gradient(135deg, transparent, transparent 14px, rgba(90, 110, 140, 0.045) 14px, rgba(90, 110, 140, 0.045) 15px),' +
-    'linear-gradient(160deg, #f5f7fa, #e8edf3)',
-})
-
-/** Champagne mist */
-const champagneMist = makeBg({
-  mode: 'custom',
-  custom:
-    'radial-gradient(ellipse 90% 70% at 70% 10%, rgba(255, 220, 180, 0.35), transparent 50%),' +
-    'radial-gradient(ellipse 60% 50% at 10% 80%, rgba(230, 210, 190, 0.3), transparent 50%),' +
-    'linear-gradient(150deg, #fbf6ef, #efe4d6)',
-})
-
-/** Built-in gallery (read-only). Order = display order. */
+/** Built-in gallery (read-only). Order = display order. ~9 calm presets. */
 export const BUILTIN_PRESETS: BgPreset[] = [
   preset('soft-paper', '柔和纸质', softPaper),
   preset('conference-white', '会议白', conferenceWhite),
   preset('warm-cream', '暖奶油', warmCream),
-  preset('soft-sage', '浅鼠尾草', softSage),
-  preset('soft-aurora', '柔光极光', softAurora),
-  preset('champagne-mist', '香槟薄雾', champagneMist),
-  preset('dot-paper', '细点纸纹', dotPaper),
-  preset('soft-geometry', '淡几何', softGeometry),
-  preset('dusk-blue', '黄昏蓝', duskBlue),
+  preset('mist-mountains', '晨雾山峦', mistMountains),
+  preset('soft-clouds', '柔光云海', softClouds),
+  preset('calm-ocean', '静谧海面', calmOcean),
+  preset('warm-marble', '暖色柔纹', warmMarble),
+  preset('soft-botanical', '淡雅绿意', softBotanical),
   preset('deep-slate', '深石板', deepSlate),
-  preset('midnight-indigo', '午夜靛蓝', midnightIndigo),
-  preset('dusk-mesh', '暮色网格', duskMesh),
+  preset('dusk-city', '都市暮色', duskCity),
 ]
 
-export const DEFAULT_PRESET_ID = 'soft-paper'
+/** Default sample / new decks — elegant soft mountain image. */
+export const DEFAULT_PRESET_ID = 'mist-mountains'
 
 export function getBuiltinPreset(id: string): BgPreset | undefined {
   return BUILTIN_PRESETS.find((p) => p.id === id)
 }
 
-/** Default deck background — handsome soft paper (not flat gray). */
+/** Default deck background — soft image underlay (not flat gray). */
 export function preferredDefaultBackground(): BackgroundConfig {
   return cloneBg(
     getBuiltinPreset(DEFAULT_PRESET_ID)?.config ?? softPaper,

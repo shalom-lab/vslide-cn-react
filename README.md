@@ -13,9 +13,10 @@ React + TypeScript rewrite of the interactive slide editor, faithful to the comp
 - **Markdown (`text-md`)** with KaTeX math (`$…$` / `$$…$$`) and prose styles; **DOMPurify** before render
 - **Safe HTML (`custom-html`)** — static markup only; scripts / event handlers / `javascript:` stripped
 - Charts: line · bar · **stack-bar** · **hor-bar** · pie · **scatter** — **place-first** (拖框再选图) via insert drawer
+- **文字** place-first：拖框后选 **正文** (`text-md`) / **标题** (`text-shadow`)；原子类型仍分开
 - Undo / redo (`Ctrl+Z` / `Ctrl+Y`) for deck mutations
 - Compact Chinese chrome; sample deck (~6 slides)
-- **背景模板库**（顶部「背景」）：PPT 风格预设 / 自定义 / 我的背景（localStorage）
+- **背景模板库**（顶部「背景」）：柔和图片衬底 + 干净纯色预设 / 自定义 CSS·图片 / 我的背景（localStorage）
 - Play: `←` `→` / Space / Esc→edit
 
 ## Run

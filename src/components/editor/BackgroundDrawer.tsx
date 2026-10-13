@@ -401,7 +401,7 @@ export function BackgroundDrawer({ open, onClose }: Props) {
         <div className="drawer-body bg-drawer-body">
           {tab === 'presets' && (
             <>
-              <p className="drawer-hint">点击即应用到当前文稿（可撤销）</p>
+              <p className="drawer-hint">柔和预设 · 图片衬底可编辑 · 点击即应用（可撤销）</p>
               <div className="bg-preset-grid">
                 {BUILTIN_PRESETS.map((p) => (
                   <PresetCard

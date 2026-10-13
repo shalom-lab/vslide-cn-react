@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import {
   BarChart3,
   Code2,
-  Heading1,
   Image as ImageIcon,
   MonitorPlay,
   Palette,
@@ -18,11 +17,10 @@ import {
   createCustomHtmlAtom,
   createImageAtom,
   createTableAtom,
-  createTextAtom,
-  createTextShadowAtom,
   useDeckStore,
 } from '../../store/useDeckStore'
 import { ChartInsertDrawer } from './ChartInsertDrawer'
+import { TextInsertChooser } from './TextInsertChooser'
 import { BackgroundDrawer } from './BackgroundDrawer'
 
 const I = { size: 20, strokeWidth: 1.75 }
@@ -38,13 +36,17 @@ export function TopBar() {
   const futureLen = useDeckStore((s) => s.future.length)
   const placeMode = useDeckStore((s) => s.placeMode)
   const chartDrawerOpen = useDeckStore((s) => s.chartDrawerOpen)
+  const textChooserOpen = useDeckStore((s) => s.textChooserOpen)
   const startChartPlace = useDeckStore((s) => s.startChartPlace)
+  const startTextPlace = useDeckStore((s) => s.startTextPlace)
   const cancelPlaceMode = useDeckStore((s) => s.cancelPlaceMode)
   const setChartDrawerOpen = useDeckStore((s) => s.setChartDrawerOpen)
+  const setTextChooserOpen = useDeckStore((s) => s.setTextChooserOpen)
   const fileRef = useRef<HTMLInputElement>(null)
   const [bgDrawerOpen, setBgDrawerOpen] = useState(false)
 
   const chartActive = placeMode === 'chart' || chartDrawerOpen
+  const textActive = placeMode === 'text' || textChooserOpen
 
   const onImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -63,6 +65,14 @@ export function TopBar() {
       return
     }
     startChartPlace()
+  }
+
+  const onTextClick = () => {
+    if (textActive) {
+      cancelPlaceMode()
+      return
+    }
+    startTextPlace()
   }
 
   return (
@@ -129,25 +139,14 @@ export function TopBar() {
           </button>
           <button
             type="button"
-            className="icon-btn"
-            onClick={() => addAtom(createTextAtom())}
-            title="插入 Markdown 文本（支持公式）"
+            className={'icon-btn' + (textActive ? ' active' : '')}
+            onClick={onTextClick}
+            title="在画布拖框后选择正文或标题"
           >
             <span className="icon">
               <Type {...I} />
             </span>
-            <span className="label">文本</span>
-          </button>
-          <button
-            type="button"
-            className="icon-btn"
-            onClick={() => addAtom(createTextShadowAtom())}
-            title="插入标题"
-          >
-            <span className="icon">
-              <Heading1 {...I} />
-            </span>
-            <span className="label">标题</span>
+            <span className="label">文字</span>
           </button>
           <button
             type="button"
@@ -210,6 +209,10 @@ export function TopBar() {
       <ChartInsertDrawer
         open={chartDrawerOpen}
         onClose={() => setChartDrawerOpen(false)}
+      />
+      <TextInsertChooser
+        open={textChooserOpen}
+        onClose={() => setTextChooserOpen(false)}
       />
       <BackgroundDrawer
         open={bgDrawerOpen}

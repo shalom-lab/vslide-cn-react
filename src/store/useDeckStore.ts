@@ -34,7 +34,7 @@ export {
 const LOCAL_ATOMS_KEY = 'vslide-cn-react:localAtoms'
 const HISTORY_LIMIT = 50
 
-export type PlaceMode = 'chart' | null
+export type PlaceMode = 'chart' | 'text' | null
 
 interface DeckState {
   deck: DeckFile
@@ -45,18 +45,21 @@ interface DeckState {
   toast: string | null
   past: DeckFile[]
   future: DeckFile[]
-  /** Google Slides–like place-first insert (currently charts). */
+  /** Google Slides–like place-first insert (charts + text). */
   placeMode: PlaceMode
   pendingLayout: GridLayoutRect | null
   chartDrawerOpen: boolean
+  textChooserOpen: boolean
   setActiveSlide: (id: string) => void
   setActiveAtom: (id: string | null) => void
   setEditorFocus: (focus: EditorFocus) => void
   clearToast: () => void
   startChartPlace: () => void
+  startTextPlace: () => void
   finishPlaceRect: (layout: GridLayoutRect) => void
   cancelPlaceMode: () => void
   setChartDrawerOpen: (open: boolean) => void
+  setTextChooserOpen: (open: boolean) => void
   updateSlideLayout: (slideId: string, atoms: Atom[]) => void
   updateAtom: (slideId: string, atomId: string, patch: Partial<Atom>) => void
   updateAtomDetail: (
@@ -147,36 +150,70 @@ export const useDeckStore = create<DeckState>((set, get) => ({
   placeMode: null,
   pendingLayout: null,
   chartDrawerOpen: false,
+  textChooserOpen: false,
 
   startChartPlace: () =>
     set({
       placeMode: 'chart',
       pendingLayout: null,
       chartDrawerOpen: false,
+      textChooserOpen: false,
       activeAtomId: null,
       editorFocus: null,
     }),
 
-  finishPlaceRect: (layout) =>
+  startTextPlace: () =>
+    set({
+      placeMode: 'text',
+      pendingLayout: null,
+      chartDrawerOpen: false,
+      textChooserOpen: false,
+      activeAtomId: null,
+      editorFocus: null,
+    }),
+
+  finishPlaceRect: (layout) => {
+    const mode = get().placeMode
+    if (mode === 'text') {
+      set({
+        pendingLayout: layout,
+        textChooserOpen: true,
+        // stay in placeMode so Esc still cancels until insert
+      })
+      return
+    }
     set({
       pendingLayout: layout,
       chartDrawerOpen: true,
-      // stay in placeMode so Esc still cancels until insert
-    }),
+    })
+  },
 
   cancelPlaceMode: () =>
     set({
       placeMode: null,
       pendingLayout: null,
       chartDrawerOpen: false,
+      textChooserOpen: false,
     }),
 
   setChartDrawerOpen: (open) =>
     set(
       open
-        ? { chartDrawerOpen: true }
+        ? { chartDrawerOpen: true, textChooserOpen: false }
         : {
             chartDrawerOpen: false,
+            placeMode: null,
+            pendingLayout: null,
+            textChooserOpen: false,
+          },
+    ),
+
+  setTextChooserOpen: (open) =>
+    set(
+      open
+        ? { textChooserOpen: true, chartDrawerOpen: false }
+        : {
+            textChooserOpen: false,
             placeMode: null,
             pendingLayout: null,
           },
@@ -391,6 +428,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       placeMode: null,
       pendingLayout: null,
       chartDrawerOpen: false,
+      textChooserOpen: false,
     }))
   },
 
