@@ -1,10 +1,14 @@
-/** Pixel ↔ react-grid-layout cell math (matches Canvas: 18 cols, margin [4,4], padding [0,0]). */
+/** Pixel ↔ react-grid-layout cell math (matches Canvas: 48 cols, margin [4,4], padding [0,0]). */
 
-export const GRID_COLS = 18
+export const GRID_COLS = 48
+/** Historical vue-grid-layout / early React col count — used for load-time migration. */
+export const LEGACY_COLS = 18
+export const GRID_SCALE = GRID_COLS / LEGACY_COLS // 8/3
 export const GRID_MARGIN: [number, number] = [4, 4]
 export const GRID_PADDING: [number, number] = [0, 0]
-export const GRID_MIN_W = 2
-export const GRID_MIN_H = 2
+/** Place-first / snap minimum cell size on the 48-col grid. */
+export const GRID_MIN_W = 4
+export const GRID_MIN_H = 4
 
 export interface GridLayoutRect {
   x: number
@@ -98,4 +102,38 @@ export function gridToPixels(
     rowHeight * rect.h + Math.max(0, rect.h - 1) * margin[1],
   )
   return { left, top, width, height }
+}
+
+/** Scale one legacy (18-col) layout number onto the current grid. */
+export function scaleLegacyCell(n: number): number {
+  return Math.round(Number(n) * GRID_SCALE)
+}
+
+export function scaleLegacyRect(rect: GridLayoutRect): GridLayoutRect {
+  return {
+    x: scaleLegacyCell(rect.x),
+    y: scaleLegacyCell(rect.y),
+    w: Math.max(GRID_MIN_W, scaleLegacyCell(rect.w)),
+    h: Math.max(GRID_MIN_H, scaleLegacyCell(rect.h)),
+  }
+}
+
+/**
+ * True when atom layouts look like the old 18-col grid.
+ * Prefer an explicit deck.gridCols when present; otherwise max(x+w) ≤ 18.
+ */
+export function deckLooksLikeLegacyCols(
+  atoms: Iterable<{ x: number; y: number; w: number; h: number }>,
+  gridCols?: number,
+): boolean {
+  if (gridCols === GRID_COLS) return false
+  if (gridCols === LEGACY_COLS) return true
+  let maxRight = 0
+  let count = 0
+  for (const a of atoms) {
+    count += 1
+    maxRight = Math.max(maxRight, (Number(a.x) || 0) + (Number(a.w) || 0))
+  }
+  if (count === 0) return false
+  return maxRight > 0 && maxRight <= LEGACY_COLS
 }

@@ -3,6 +3,7 @@ import { Copy, Plus, Trash2 } from 'lucide-react'
 import GridLayout, { WidthProvider } from 'react-grid-layout'
 import { useDeckStore } from '../../store/useDeckStore'
 import { cssBackground } from '../../utils/background'
+import { GRID_COLS, calcRowHeight } from '../../utils/grid'
 import { AtomRenderer } from '../atoms/AtomRenderer'
 import { ContextMenu, type ContextMenuItem } from './ContextMenu'
 import { atomStackStyle } from '../../utils/layerOrder'
@@ -14,7 +15,7 @@ const CTX = { size: 14, strokeWidth: 1.75 }
 
 /** Match Vue Left.vue + VSlide: render at height 540, then scale(0.25). */
 const THUMB_FULL_HEIGHT = 540
-const THUMB_ROW_HEIGHT = Math.floor(THUMB_FULL_HEIGHT / 18)
+const THUMB_ROW_HEIGHT = calcRowHeight(THUMB_FULL_HEIGHT)
 const THUMB_MARGIN: [number, number] = [5, 5]
 
 function Thumb({
@@ -40,7 +41,7 @@ function Thumb({
         <AutoGrid
           className="thumb-grid"
           layout={layout}
-          cols={18}
+          cols={GRID_COLS}
           rowHeight={THUMB_ROW_HEIGHT}
           margin={THUMB_MARGIN}
           containerPadding={[0, 0]}

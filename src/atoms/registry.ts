@@ -114,10 +114,10 @@ function echartAtom(
   return applyLayout(
     baseAtom({
       i: nanoid(8),
-      x: 1,
-      y: 1,
-      w: 10,
-      h: 8,
+      x: 3,
+      y: 3,
+      w: 27,
+      h: 21,
       atomType: 'echart',
       atomContent: {
         atomName,
@@ -156,10 +156,10 @@ export function createTextAtom(
   return applyLayout(
     baseAtom({
       i: nanoid(8),
-      x: 1,
-      y: 1,
-      w: 8,
-      h: 8,
+      x: 3,
+      y: 3,
+      w: 21,
+      h: 21,
       atomType: 'text',
       atomContent: {
         atomName: 'text-md',
@@ -177,10 +177,10 @@ export function createTextShadowAtom(
   return applyLayout(
     baseAtom({
       i: nanoid(8),
-      x: 1,
-      y: 1,
-      w: 16,
-      h: 3,
+      x: 3,
+      y: 3,
+      w: 43,
+      h: 8,
       atomType: 'text',
       atomContent: {
         atomName: 'text-shadow',
@@ -208,10 +208,10 @@ export function createTableAtom(layout?: AtomLayoutOverride): Atom {
   return applyLayout(
     baseAtom({
       i: nanoid(8),
-      x: 1,
-      y: 1,
-      w: 12,
-      h: 8,
+      x: 3,
+      y: 3,
+      w: 32,
+      h: 21,
       atomType: 'tables',
       atomContent: {
         atomName: 'simple-table',
@@ -234,10 +234,10 @@ export function createImageAtom(
   return applyLayout(
     baseAtom({
       i: nanoid(8),
-      x: 1,
-      y: 1,
-      w: 8,
-      h: 8,
+      x: 3,
+      y: 3,
+      w: 21,
+      h: 21,
       atomType: 'images',
       atomContent: {
         atomName: 'single-image',
@@ -280,10 +280,10 @@ export function createCustomHtmlAtom(
   return applyLayout(
     baseAtom({
       i: nanoid(8),
-      x: 1,
-      y: 1,
-      w: 10,
-      h: 8,
+      x: 3,
+      y: 3,
+      w: 27,
+      h: 21,
       atomType: 'html',
       atomContent: {
         atomName: 'custom-html',

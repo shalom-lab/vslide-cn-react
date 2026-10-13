@@ -23,11 +23,26 @@ export function makeBg(
   partial: Partial<BackgroundConfig> & Pick<BackgroundConfig, 'mode'>,
 ): BackgroundConfig {
   const base = defaultBackground()
+  const linear = { ...base.linear, ...(partial.linear || {}) }
+  if (!linear.stops || linear.stops.length < 2) {
+    linear.stops = [
+      { color: linear.start, position: 0 },
+      { color: linear.end, position: 100 },
+    ]
+  }
+  const radial = { ...base.radial, ...(partial.radial || {}) }
+  if (!radial.stops || radial.stops.length < 2) {
+    radial.stops = [
+      { color: radial.start, position: 0 },
+      { color: radial.end, position: 100 },
+    ]
+  }
   return {
     ...base,
     ...partial,
-    linear: { ...base.linear, ...(partial.linear || {}) },
-    radial: { ...base.radial, ...(partial.radial || {}) },
+    pureOpacity: partial.pureOpacity ?? base.pureOpacity ?? 100,
+    linear,
+    radial,
     image: { ...emptyBackgroundImage(), ...(partial.image || {}) },
     texture: { ...emptyBackgroundTexture(), ...(partial.texture || {}) },
   }

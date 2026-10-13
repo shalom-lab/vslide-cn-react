@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import GridLayout, { WidthProvider } from 'react-grid-layout'
 import { useDeckStore } from '../../store/useDeckStore'
 import { cssBackground } from '../../utils/background'
+import { GRID_COLS, calcRowHeight } from '../../utils/grid'
 import { AtomRenderer } from '../atoms/AtomRenderer'
 import { atomStackStyle } from '../../utils/layerOrder'
 import 'react-grid-layout/css/styles.css'
@@ -74,7 +75,7 @@ export function PlayPage() {
     h: a.h,
     static: true,
   }))
-  const rowHeight = Math.max(8, Math.floor(height / 18))
+  const rowHeight = calcRowHeight(height)
 
   return (
     <div
@@ -89,7 +90,7 @@ export function PlayPage() {
       <AutoGrid
         className="play-grid"
         layout={layout}
-        cols={18}
+        cols={GRID_COLS}
         rowHeight={rowHeight}
         margin={[5, 5]}
         isDraggable={false}

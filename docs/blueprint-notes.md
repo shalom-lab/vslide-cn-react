@@ -14,7 +14,7 @@ Read-only study of `/workspace/vslide-vue` (GitHub `shalom-lab/vslide-vue`) for 
 
 - **vue-grid-layout** everywhere.
   - Slide list: `col-num=1`, vertical compact, non-resizable thumbs.
-  - Canvas / play: **`col-num=18`**, `row-height ≈ height/18`, `margin=[5,5]`, `vertical-compact=false`, drag via thin handle (`.dragable`).
+  - Canvas / play: **`col-num=18`** in Vue (`row-height ≈ height/18`); **React uses `GRID_COLS=48`** with load-time migration from 18 (`×8/3`), `margin=[5,5]` play / `[4,4]` edit, `vertical-compact=false`, drag via thin handle (`.dragable`).
 - Canvas size: `height = min(innerH-150, (innerW-280)*9/16)`, `width = height*16/9`.
 
 ## JSON / atom model
@@ -95,7 +95,7 @@ Vue 3 · Vuex · vue-router · vue-grid-layout · ECharts · Naive UI · md-edit
 ## Fidelity priorities
 
 1. Compact grey chrome + 250px left thumbs + centered 16:9 stage.
-2. 18-col grid drag/resize.
+2. 48-col grid drag/resize (React; Vue blueprint was 18-col).
 3. Chinese labels; edit ↔ play keyboard parity.
 4. JSON-shaped deck compatible in spirit with vslide-vue (subset of atom names).
 
@@ -172,7 +172,7 @@ moved?: boolean         // vue-grid-layout runtime
 Union of fields seen in factories + saved JSON:
 
 ```
-i, x, y, w, h,          // canvas grid col-num=18
+i, x, y, w, h,          // canvas grid col-num=18 (Vue) / 48 (React)
 static: boolean,        // lock; factories often typo as "stacic" — runtime / template use "static"
 super: boolean,         // template-protected; forbids edit when account.role === "user"
 atomType: "text" | "echart" | "tables" | "images",

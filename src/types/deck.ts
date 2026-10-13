@@ -130,6 +130,12 @@ export interface Slide {
   moved?: boolean
 }
 
+/** One color stop in a linear/radial gradient (position 0–100). */
+export interface GradientStop {
+  color: string
+  position: number
+}
+
 export interface BackgroundImage {
   src: string
   repeat: string
@@ -137,17 +143,46 @@ export interface BackgroundImage {
   y: string
   width: string
   height: string
+  /** cover | contain | custom (uses width/height %) */
+  sizeMode?: 'cover' | 'contain' | 'custom'
+  /** 0–100 image visibility; <100 overlays toward white */
+  opacity?: number
 }
 
 export interface BackgroundTexture {
   src: string
+  /** CSS background-repeat; default repeat */
+  repeat?: string
+}
+
+export interface BackgroundLinear {
+  angle: number
+  /** Legacy two-stop colors — kept in sync with stops[0]/stops[last] */
+  start: string
+  end: string
+  /** Optional multi-stop (≥2). When present, cssBackground prefers these. */
+  stops?: GradientStop[]
+}
+
+export interface BackgroundRadial {
+  /** Full CSS shape fragment, e.g. "ellipse at 30% 20%" (legacy + export) */
+  shape: string
+  start: string
+  end: string
+  stops?: GradientStop[]
+  /** Fine controls — when set, shape is rebuilt for CSS */
+  shapeKind?: 'circle' | 'ellipse'
+  positionX?: string
+  positionY?: string
 }
 
 export interface BackgroundConfig {
   mode: 'pure' | 'linear' | 'radial' | 'custom' | 'image' | 'texture'
   pure: string
-  linear: { angle: number; start: string; end: string }
-  radial: { shape: string; start: string; end: string }
+  /** 0–100; when <100, pure is emitted as rgba */
+  pureOpacity?: number
+  linear: BackgroundLinear
+  radial: BackgroundRadial
   custom: string
   image: BackgroundImage
   texture: BackgroundTexture
@@ -165,6 +200,11 @@ export interface DeckFile {
   /** Serialized CSS from Vue getter getBackground — stored in JSON */
   getBackground: string
   slides: Slide[]
+  /**
+   * Canvas grid column count used when this deck was authored.
+   * React extension — absent on Vue JSON; migrate 18→48 on load when missing/legacy.
+   */
+  gridCols?: number
 }
 
 export type EditorFocus =
@@ -195,29 +235,46 @@ export const defaultSlideAnimation = (): SlideAnimation => ({
 
 export const emptyBackgroundImage = (): BackgroundImage => ({
   src: '',
-  repeat: 'repeat',
+  repeat: 'no-repeat',
   x: 'center',
   y: 'center',
   width: '100%',
   height: '100%',
+  sizeMode: 'cover',
+  opacity: 100,
 })
 
 export const emptyBackgroundTexture = (): BackgroundTexture => ({
   src: '',
+  repeat: 'repeat',
 })
+
+export const defaultGradientStops = (
+  start: string,
+  end: string,
+): GradientStop[] => [
+  { color: start, position: 0 },
+  { color: end, position: 100 },
+]
 
 export const defaultBackground = (): BackgroundConfig => ({
   mode: 'pure',
   pure: '#f7f4ef',
+  pureOpacity: 100,
   linear: {
     angle: 165,
     start: '#fbfcfe',
     end: '#eef2f7',
+    stops: defaultGradientStops('#fbfcfe', '#eef2f7'),
   },
   radial: {
     shape: 'ellipse at 30% 20%',
+    shapeKind: 'ellipse',
+    positionX: '30%',
+    positionY: '20%',
     start: '#2a2f55',
     end: '#12131f',
+    stops: defaultGradientStops('#2a2f55', '#12131f'),
   },
   custom:
     'radial-gradient(ellipse 80% 60% at 18% 22%, rgba(186, 210, 255, 0.55), transparent 55%),' +

@@ -7,7 +7,7 @@ React + TypeScript rewrite of the interactive slide editor, faithful to the comp
 ## Features
 
 - **演示文稿** path: multi-slide edit ↔ play
-- 18×18 **react-grid-layout** canvas (drag / resize / overlap + 置顶/置底)
+- 48×48 **react-grid-layout** canvas (drag / resize / overlap + 置顶/置底)
 - **Shared `AtomRenderer`** for edit · play · thumbs (no dual drift)
 - **Atom registry** (`src/atoms/registry.ts`) for text / chart / table / image / **custom-html**
 - **Markdown (`text-md`)** with KaTeX math (`$…$` / `$$…$$`) and prose styles; **DOMPurify** before render

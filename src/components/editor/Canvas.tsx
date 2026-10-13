@@ -23,6 +23,9 @@ import {
 } from '../../store/useDeckStore'
 import { cssBackground } from '../../utils/background'
 import {
+  GRID_COLS,
+  GRID_MARGIN,
+  GRID_PADDING,
   buildGridMetrics,
   gridToPixels,
   pixelsToGrid,
@@ -368,10 +371,10 @@ export function Canvas() {
         <AutoGrid
           className="canvas-grid"
           layout={layout}
-          cols={18}
+          cols={GRID_COLS}
           rowHeight={rowHeight}
-          margin={[4, 4]}
-          containerPadding={[0, 0]}
+          margin={GRID_MARGIN}
+          containerPadding={GRID_PADDING}
           isDraggable={!placing}
           isResizable={!placing}
           compactType={null}

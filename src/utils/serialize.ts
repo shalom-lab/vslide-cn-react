@@ -8,20 +8,48 @@ import {
   defaultBackground,
   defaultBorder,
   defaultEchartTitle,
+  defaultGradientStops,
   defaultSlideAnimation,
   emptyBackgroundImage,
   emptyBackgroundTexture,
   sheetNrNc,
   type Atom,
   type BackgroundConfig,
+  type GradientStop,
   type DeckFile,
   type Slide,
 } from '../types/deck'
-import { cssBackground } from './background'
+import { cssBackground, syncLinearEnds, syncRadialEnds } from './background'
+import {
+  GRID_COLS,
+  deckLooksLikeLegacyCols,
+  scaleLegacyRect,
+} from './grid'
 import { withZIndex } from './layerOrder'
 
 function asRecord(v: unknown): Record<string, unknown> {
   return v && typeof v === 'object' ? (v as Record<string, unknown>) : {}
+}
+
+function normalizeStops(
+  raw: unknown,
+  start: string,
+  end: string,
+): GradientStop[] {
+  if (Array.isArray(raw) && raw.length >= 2) {
+    return raw.map((s, i) => {
+      const r = asRecord(s)
+      return {
+        color: String(r.color || (i === 0 ? start : end)),
+        position: Number.isFinite(Number(r.position))
+          ? Number(r.position)
+          : i === 0
+            ? 0
+            : 100,
+      }
+    })
+  }
+  return defaultGradientStops(start, end)
 }
 
 function normalizeBackground(raw: unknown): BackgroundConfig {
@@ -29,32 +57,85 @@ function normalizeBackground(raw: unknown): BackgroundConfig {
   const base = defaultBackground()
   const image = { ...emptyBackgroundImage(), ...asRecord(b.image) }
   const texture = { ...emptyBackgroundTexture(), ...asRecord(b.texture) }
-  const linear = { ...base.linear, ...asRecord(b.linear) }
-  const radial = { ...base.radial, ...asRecord(b.radial) }
+  const linearRaw = { ...base.linear, ...asRecord(b.linear) }
+  const radialRaw = { ...base.radial, ...asRecord(b.radial) }
   const mode = (b.mode as BackgroundConfig['mode']) || 'pure'
+  const startL = String(linearRaw.start ?? base.linear.start)
+  const endL = String(linearRaw.end ?? base.linear.end)
+  const startR = String(radialRaw.start ?? base.radial.start)
+  const endR = String(radialRaw.end ?? base.radial.end)
+  const linear = syncLinearEnds({
+    angle: Number(linearRaw.angle) || 23,
+    start: startL,
+    end: endL,
+    stops: normalizeStops(linearRaw.stops, startL, endL),
+  })
+  const shapeKind =
+    radialRaw.shapeKind === 'circle' || radialRaw.shapeKind === 'ellipse'
+      ? radialRaw.shapeKind
+      : String(radialRaw.shape || '').includes('circle')
+        ? ('circle' as const)
+        : ('ellipse' as const)
+  let positionX = typeof radialRaw.positionX === 'string' ? radialRaw.positionX : ''
+  let positionY = typeof radialRaw.positionY === 'string' ? radialRaw.positionY : ''
+  if (!positionX || !positionY) {
+    const m = String(radialRaw.shape || '').match(
+      /at\s+([\d.]+%|left|center|right)\s+([\d.]+%|top|center|bottom)/i,
+    )
+    if (m) {
+      positionX = positionX || m[1]
+      positionY = positionY || m[2]
+    } else {
+      positionX = positionX || 'center'
+      positionY = positionY || 'center'
+    }
+  }
+  const radial = syncRadialEnds({
+    shape: String(radialRaw.shape || 'ellipse at center'),
+    shapeKind,
+    positionX,
+    positionY,
+    start: startR,
+    end: endR,
+    stops: normalizeStops(radialRaw.stops, startR, endR),
+  })
+  const sizeMode =
+    image.sizeMode === 'cover' ||
+    image.sizeMode === 'contain' ||
+    image.sizeMode === 'custom'
+      ? image.sizeMode
+      : image.width === 'cover' || image.height === 'cover'
+        ? 'cover'
+        : image.width === 'contain' || image.height === 'contain'
+          ? 'contain'
+          : 'custom'
   return {
     mode,
     pure: typeof b.pure === 'string' ? b.pure : base.pure,
-    linear: {
-      angle: Number(linear.angle) || 23,
-      start: String(linear.start),
-      end: String(linear.end),
-    },
-    radial: {
-      shape: String(radial.shape || 'ellipse'),
-      start: String(radial.start),
-      end: String(radial.end),
-    },
+    pureOpacity:
+      typeof b.pureOpacity === 'number' && Number.isFinite(b.pureOpacity)
+        ? Math.max(0, Math.min(100, b.pureOpacity))
+        : 100,
+    linear,
+    radial,
     custom: typeof b.custom === 'string' ? b.custom : base.custom,
     image: {
       src: String(image.src ?? ''),
-      repeat: String(image.repeat ?? 'repeat'),
+      repeat: String(image.repeat ?? 'no-repeat'),
       x: String(image.x ?? 'center'),
       y: String(image.y ?? 'center'),
       width: String(image.width ?? '100%'),
       height: String(image.height ?? '100%'),
+      sizeMode,
+      opacity:
+        typeof image.opacity === 'number' && Number.isFinite(image.opacity)
+          ? Math.max(0, Math.min(100, image.opacity))
+          : 100,
     },
-    texture: { src: String(texture.src ?? '') },
+    texture: {
+      src: String(texture.src ?? ''),
+      repeat: String(texture.repeat ?? 'repeat'),
+    },
   }
 }
 
@@ -190,6 +271,16 @@ function normalizeSlide(raw: unknown, index: number): Slide {
   }
 }
 
+function migrateSlidesFromLegacy(slides: Slide[]): Slide[] {
+  return slides.map((sl) => ({
+    ...sl,
+    slideContent: sl.slideContent.map((a) => {
+      const scaled = scaleLegacyRect({ x: a.x, y: a.y, w: a.w, h: a.h })
+      return { ...a, ...scaled }
+    }),
+  }))
+}
+
 /** Coerce arbitrary JSON into a DeckFile matching Vue field names. */
 export function normalizeDeck(raw: unknown): DeckFile {
   const d = asRecord(raw)
@@ -201,7 +292,15 @@ export function normalizeDeck(raw: unknown): DeckFile {
     throw new Error('文稿没有幻灯片')
   }
   const background = normalizeBackground(d.background)
-  const slides = slidesRaw.map((s, i) => normalizeSlide(s, i))
+  let slides = slidesRaw.map((s, i) => normalizeSlide(s, i))
+  const declaredCols =
+    typeof d.gridCols === 'number' && Number.isFinite(d.gridCols)
+      ? Number(d.gridCols)
+      : undefined
+  const allAtoms = slides.flatMap((s) => s.slideContent)
+  if (deckLooksLikeLegacyCols(allAtoms, declaredCols)) {
+    slides = migrateSlidesFromLegacy(slides)
+  }
   const getBackground =
     typeof d.getBackground === 'string' && d.getBackground
       ? d.getBackground
@@ -218,6 +317,7 @@ export function normalizeDeck(raw: unknown): DeckFile {
     background,
     getBackground,
     slides,
+    gridCols: GRID_COLS,
   }
 }
 
@@ -226,6 +326,7 @@ export function serializeDeck(deck: DeckFile): DeckFile {
   return {
     ...deck,
     shared: Boolean(deck.shared),
+    gridCols: GRID_COLS,
     getBackground: cssBackground(deck.background),
     slides: deck.slides.map((sl, si) => ({
       ...sl,

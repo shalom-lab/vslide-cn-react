@@ -11,6 +11,7 @@ import {
 } from '../types/deck'
 import { preferredDefaultBackground } from '../background/presets'
 import { cssBackground } from '../utils/background'
+import { GRID_COLS } from '../utils/grid'
 
 const salesSheet: (string | number)[][] = [
   ['', '华东', '华北', '华南'],
@@ -98,9 +99,9 @@ export function createSampleDeck(): DeckFile {
       atom({
         i: '0',
         x: 0,
-        y: 5,
-        w: 18,
-        h: 2,
+        y: 13,
+        w: 48,
+        h: 5,
         atomType: 'text',
         atomContent: {
           atomName: 'text-shadow',
@@ -117,9 +118,9 @@ export function createSampleDeck(): DeckFile {
       atom({
         i: '1',
         x: 0,
-        y: 8,
-        w: 18,
-        h: 2,
+        y: 21,
+        w: 48,
+        h: 5,
         atomType: 'text',
         atomContent: {
           atomName: 'text-shadow',
@@ -136,10 +137,10 @@ export function createSampleDeck(): DeckFile {
       // Intentionally overlaps the brand title so layer stacking is tryable
       atom({
         i: '2',
-        x: 3,
-        y: 9,
-        w: 12,
-        h: 3,
+        x: 8,
+        y: 24,
+        w: 32,
+        h: 8,
         atomType: 'text',
         atomContent: {
           atomName: 'text-md',
@@ -156,8 +157,8 @@ export function createSampleDeck(): DeckFile {
         i: '0',
         x: 0,
         y: 0,
-        w: 18,
-        h: 2,
+        w: 48,
+        h: 5,
         atomType: 'text',
         atomContent: {
           atomName: 'text-shadow',
@@ -174,9 +175,9 @@ export function createSampleDeck(): DeckFile {
       atom({
         i: '1',
         x: 0,
-        y: 2,
-        w: 18,
-        h: 15,
+        y: 5,
+        w: 48,
+        h: 40,
         atomType: 'echart',
         atomContent: {
           atomName: 'simple-line',
@@ -195,8 +196,8 @@ export function createSampleDeck(): DeckFile {
         i: '0',
         x: 0,
         y: 0,
-        w: 18,
-        h: 2,
+        w: 48,
+        h: 5,
         atomType: 'text',
         atomContent: {
           atomName: 'text-shadow',
@@ -213,9 +214,9 @@ export function createSampleDeck(): DeckFile {
       atom({
         i: '1',
         x: 0,
-        y: 2,
-        w: 9,
-        h: 15,
+        y: 5,
+        w: 24,
+        h: 40,
         atomType: 'echart',
         atomContent: {
           atomName: 'simple-pie',
@@ -231,10 +232,10 @@ export function createSampleDeck(): DeckFile {
       }),
       atom({
         i: '2',
-        x: 9,
-        y: 2,
-        w: 9,
-        h: 15,
+        x: 24,
+        y: 5,
+        w: 24,
+        h: 40,
         atomType: 'echart',
         atomContent: {
           atomName: 'stack-bar',
@@ -255,8 +256,8 @@ export function createSampleDeck(): DeckFile {
         i: '0',
         x: 0,
         y: 0,
-        w: 18,
-        h: 2,
+        w: 48,
+        h: 5,
         atomType: 'text',
         atomContent: {
           atomName: 'text-shadow',
@@ -272,10 +273,10 @@ export function createSampleDeck(): DeckFile {
       }),
       atom({
         i: '1',
-        x: 1,
-        y: 3,
-        w: 16,
-        h: 12,
+        x: 3,
+        y: 8,
+        w: 43,
+        h: 32,
         atomType: 'tables',
         atomContent: {
           atomName: 'simple-table',
@@ -292,8 +293,8 @@ export function createSampleDeck(): DeckFile {
         i: '0',
         x: 0,
         y: 0,
-        w: 18,
-        h: 2,
+        w: 48,
+        h: 5,
         atomType: 'text',
         atomContent: {
           atomName: 'text-shadow',
@@ -310,9 +311,9 @@ export function createSampleDeck(): DeckFile {
       atom({
         i: '1',
         x: 0,
-        y: 2,
-        w: 9,
-        h: 15,
+        y: 5,
+        w: 24,
+        h: 40,
         atomType: 'echart',
         atomContent: {
           atomName: 'hor-bar',
@@ -329,10 +330,10 @@ export function createSampleDeck(): DeckFile {
       }),
       atom({
         i: '2',
-        x: 9,
-        y: 2,
-        w: 9,
-        h: 15,
+        x: 24,
+        y: 5,
+        w: 24,
+        h: 40,
         atomType: 'echart',
         atomContent: {
           atomName: 'simple-scatter',
@@ -345,10 +346,10 @@ export function createSampleDeck(): DeckFile {
     slide('4', 5, [
       atom({
         i: '0',
-        x: 1,
-        y: 2,
-        w: 10,
-        h: 12,
+        x: 3,
+        y: 5,
+        w: 27,
+        h: 32,
         atomType: 'text',
         atomContent: {
           atomName: 'text-md',
@@ -358,7 +359,7 @@ export function createSampleDeck(): DeckFile {
 
 1. **数据为中心** — JSON 存储幻灯片，网页渲染
 2. **组件化** — 文本 / 图表 / 表格 / 图片 / HTML
-3. **拖拽排版** — 18×18 网格（react-grid-layout）
+3. **拖拽排版** — 48×48 网格（react-grid-layout）
 
 ### 本版亮点
 - 图表插入抽屉 · 堆叠/条形/散点
@@ -380,10 +381,10 @@ $$
       }),
       atom({
         i: '1',
-        x: 11,
-        y: 2,
-        w: 6,
-        h: 12,
+        x: 29,
+        y: 5,
+        w: 16,
+        h: 32,
         atomType: 'images',
         atomContent: {
           atomName: 'single-image',
@@ -411,8 +412,8 @@ $$
         i: '0',
         x: 0,
         y: 0,
-        w: 18,
-        h: 2,
+        w: 48,
+        h: 5,
         atomType: 'text',
         atomContent: {
           atomName: 'text-shadow',
@@ -429,9 +430,9 @@ $$
       atom({
         i: '1',
         x: 0,
-        y: 2,
-        w: 9,
-        h: 15,
+        y: 5,
+        w: 24,
+        h: 40,
         atomType: 'text',
         atomContent: {
           atomName: 'text-md',
@@ -462,10 +463,10 @@ $$
       }),
       atom({
         i: '2',
-        x: 9,
-        y: 2,
-        w: 9,
-        h: 15,
+        x: 24,
+        y: 5,
+        w: 24,
+        h: 40,
         atomType: 'html',
         atomContent: {
           atomName: 'custom-html',
@@ -514,5 +515,6 @@ $$
     background,
     getBackground: cssBackground(background),
     slides,
+    gridCols: GRID_COLS,
   }
 }
