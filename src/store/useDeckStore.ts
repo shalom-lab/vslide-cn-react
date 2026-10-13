@@ -24,6 +24,7 @@ import type { GridLayoutRect } from '../utils/grid'
 export {
   createTextAtom,
   createTextShadowAtom,
+  createCustomHtmlAtom,
   createChartAtom,
   createTableAtom,
   createImageAtom,
@@ -331,7 +332,10 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       slideContent: active.slideContent.map((a) => {
         const cloned: Atom = JSON.parse(JSON.stringify(a))
         cloned.i = nanoid(8)
-        if (cloned.atomContent.atomName === 'text-md') {
+        if (
+          cloned.atomContent.atomName === 'text-md' ||
+          cloned.atomContent.atomName === 'custom-html'
+        ) {
           cloned.atomContent.detail.editorId = nanoid(10)
         }
         return cloned
@@ -400,7 +404,10 @@ export const useDeckStore = create<DeckState>((set, get) => ({
     copy.i = nanoid(8)
     copy.y = src.y + 1
     copy.static = false
-    if (copy.atomContent.atomName === 'text-md') {
+    if (
+      copy.atomContent.atomName === 'text-md' ||
+      copy.atomContent.atomName === 'custom-html'
+    ) {
       copy.atomContent.detail.editorId = nanoid(10)
     }
     set((s) => ({
@@ -491,7 +498,10 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       h: 5,
       static: false,
     }
-    if (copy.atomContent.atomName === 'text-md') {
+    if (
+      copy.atomContent.atomName === 'text-md' ||
+      copy.atomContent.atomName === 'custom-html'
+    ) {
       copy.atomContent.detail.editorId = nanoid(10)
     }
     const localAtoms = [...get().localAtoms, copy]

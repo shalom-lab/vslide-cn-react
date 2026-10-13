@@ -70,7 +70,7 @@ function normalizeAtom(raw: unknown, index: number): Atom {
   const content = asRecord(a.atomContent)
   const detail = { ...asRecord(content.detail) }
   const atomName = String(content.atomName || 'text-md')
-  const atomType = (a.atomType as Atom['atomType']) || 'text'
+  let atomType = (a.atomType as Atom['atomType']) || 'text'
 
   // text-md: ensure editorId
   if (atomName === 'text-md') {
@@ -79,6 +79,13 @@ function normalizeAtom(raw: unknown, index: number): Atom {
     }
     if (!detail.editorId) detail.editorId = nanoid(10)
     if (typeof detail.markdown !== 'string') detail.markdown = ''
+  }
+
+  // custom-html: ensure editorId + html string
+  if (atomName === 'custom-html') {
+    if (!detail.editorId) detail.editorId = nanoid(10)
+    if (typeof detail.html !== 'string') detail.html = ''
+    atomType = 'html'
   }
 
   // React invented text-title → map to text-shadow

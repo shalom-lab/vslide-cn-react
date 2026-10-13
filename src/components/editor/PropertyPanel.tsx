@@ -228,9 +228,9 @@ export function PropertyPanel() {
 
         {atom.atomContent.atomName === 'text-md' && (
           <label className="field">
-            Markdown
+            Markdown（支持 $公式$ / $$块公式$$）
             <textarea
-              rows={10}
+              rows={12}
               value={String(d.markdown ?? '')}
               onChange={(e) =>
                 updateAtomDetail(activeSlideId, atom.i, {
@@ -238,6 +238,25 @@ export function PropertyPanel() {
                 })
               }
             />
+            <span className="hint">经 DOMPurify 消毒，不执行 JS</span>
+          </label>
+        )}
+
+        {atom.atomContent.atomName === 'custom-html' && (
+          <label className="field">
+            HTML 源码（安全子集）
+            <textarea
+              rows={14}
+              value={String(d.html ?? '')}
+              onChange={(e) =>
+                updateAtomDetail(activeSlideId, atom.i, {
+                  html: e.target.value,
+                })
+              }
+            />
+            <span className="hint">
+              脚本 / 事件 / iframe / javascript: 会被剥离
+            </span>
           </label>
         )}
 

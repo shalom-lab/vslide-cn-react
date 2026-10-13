@@ -357,13 +357,19 @@ export function createSampleDeck(): DeckFile {
             markdown: `## 设计思路
 
 1. **数据为中心** — JSON 存储幻灯片，网页渲染
-2. **组件化** — 文本 / 图表 / 表格 / 图片
+2. **组件化** — 文本 / 图表 / 表格 / 图片 / HTML
 3. **拖拽排版** — 18×18 网格（react-grid-layout）
 
 ### 本版亮点
 - 图表插入抽屉 · 堆叠/条形/散点
+- Markdown + KaTeX：$E = mc^2$
 - 共享 AtomRenderer · 撤销/重做
-- 稳定 deck/atom JSON
+
+块级公式：
+
+$$
+\\bar{x} = \\frac{1}{n}\\sum_{i=1}^{n} x_i
+$$
 
 ### 下一步
 - 云端登录与分享
@@ -396,6 +402,101 @@ export function createSampleDeck(): DeckFile {
   <text x="160" y="150" text-anchor="middle" fill="white" font-size="28" font-family="sans-serif" font-weight="700">VSlide</text>
   <text x="160" y="190" text-anchor="middle" fill="white" font-size="16" font-family="sans-serif" opacity="0.9">微思文稿</text>
 </svg>`),
+          },
+        },
+      }),
+    ]),
+    slide('6', 6, [
+      atom({
+        i: '0',
+        x: 0,
+        y: 0,
+        w: 18,
+        h: 2,
+        atomType: 'text',
+        atomContent: {
+          atomName: 'text-shadow',
+          detail: {
+            text: 'Markdown · 公式 · 安全 HTML',
+            color: '#2c3e50',
+            fontFamily: 'Arial',
+            fontSize: 28,
+            fontWeight: 600,
+            shadow: { h: 1, v: 1, blur: 2, color: 'rgba(0,0,0,0.15)' },
+          },
+        },
+      }),
+      atom({
+        i: '1',
+        x: 0,
+        y: 2,
+        w: 9,
+        h: 15,
+        atomType: 'text',
+        atomContent: {
+          atomName: 'text-md',
+          detail: {
+            editorId: nanoid(10),
+            markdown: `## Markdown + KaTeX
+
+支持标题、**强调**、列表与代码：
+
+\`\`\`
+npm run build
+\`\`\`
+
+| 语法 | 效果 |
+|------|------|
+| \`$a$\` | $a$ |
+| \`$$...$$\` | 块公式 |
+
+行内：$e^{i\\pi} + 1 = 0$
+
+$$
+\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\varepsilon_0}
+$$
+
+> HTML 嵌入也会先经 DOMPurify 消毒。`,
+          },
+        },
+      }),
+      atom({
+        i: '2',
+        x: 9,
+        y: 2,
+        w: 9,
+        h: 15,
+        atomType: 'html',
+        atomContent: {
+          atomName: 'custom-html',
+          detail: {
+            editorId: nanoid(10),
+            html: `<div style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#eef2ff,#fce7f3);border:1px solid #c7d2fe;font-family:system-ui,-apple-system,sans-serif;box-sizing:border-box;height:100%;">
+  <h3 style="margin:0 0 8px;color:#3730a3;font-size:18px;">安全 HTML 卡片</h3>
+  <p style="margin:0 0 12px;color:#4c1d95;font-size:13px;line-height:1.5;">自定义 HTML 组件演示。脚本与事件处理器会被剥离。</p>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:8px;overflow:hidden;">
+    <thead>
+      <tr style="background:#e0e7ff;">
+        <th style="padding:8px 10px;border:1px solid #c7d2fe;text-align:left;">能力</th>
+        <th style="padding:8px 10px;border:1px solid #c7d2fe;text-align:left;">状态</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding:8px 10px;border:1px solid #c7d2fe;">静态标记 / 表格 / 样式</td>
+        <td style="padding:8px 10px;border:1px solid #c7d2fe;">允许</td>
+      </tr>
+      <tr style="background:#fafafa;">
+        <td style="padding:8px 10px;border:1px solid #c7d2fe;">&lt;script&gt; / on* / javascript:</td>
+        <td style="padding:8px 10px;border:1px solid #c7d2fe;">剥离</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 10px;border:1px solid #c7d2fe;">iframe / embed</td>
+        <td style="padding:8px 10px;border:1px solid #c7d2fe;">禁止</td>
+      </tr>
+    </tbody>
+  </table>
+</div>`,
           },
         },
       }),

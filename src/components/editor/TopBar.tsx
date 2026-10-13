@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   BarChart3,
+  Code2,
   Heading1,
   Image as ImageIcon,
   MonitorPlay,
@@ -14,6 +15,7 @@ import {
   Undo2,
 } from 'lucide-react'
 import {
+  createCustomHtmlAtom,
   createImageAtom,
   createTableAtom,
   createTextAtom,
@@ -127,7 +129,7 @@ export function TopBar() {
             type="button"
             className="icon-btn"
             onClick={() => addAtom(createTextAtom())}
-            title="插入文本"
+            title="插入 Markdown 文本（支持公式）"
           >
             <span className="icon">
               <Type {...I} />
@@ -155,6 +157,17 @@ export function TopBar() {
               <Table2 {...I} />
             </span>
             <span className="label">表格</span>
+          </button>
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => addAtom(createCustomHtmlAtom())}
+            title="插入安全 HTML（不执行 JS）"
+          >
+            <span className="icon">
+              <Code2 {...I} />
+            </span>
+            <span className="label">HTML</span>
           </button>
           <button
             type="button"

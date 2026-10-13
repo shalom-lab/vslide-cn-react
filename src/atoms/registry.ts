@@ -30,7 +30,7 @@ export type ChartKind =
   | 'simple-pie'
   | 'simple-scatter'
 
-export type AtomCategory = 'chart' | 'text' | 'table' | 'image'
+export type AtomCategory = 'chart' | 'text' | 'table' | 'image' | 'html'
 
 /** Optional grid layout override when inserting (place-first). */
 export type AtomLayoutOverride = Partial<Pick<Atom, 'x' | 'y' | 'w' | 'h'>>
@@ -135,8 +135,22 @@ function echartAtom(
   )
 }
 
+const DEFAULT_TEXT_MD = `## Markdown 示例
+
+支持 **粗体**、*斜体*、\`代码\`、列表与公式。
+
+- 行内公式：$E = mc^2$
+- 块级公式：
+
+$$
+\\int_{-\\infty}^{\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}
+$$
+
+> 渲染经 DOMPurify 消毒，不执行 JavaScript。
+`
+
 export function createTextAtom(
-  markdown = '## 新文本',
+  markdown = DEFAULT_TEXT_MD,
   layout?: AtomLayoutOverride,
 ): Atom {
   return applyLayout(
@@ -145,7 +159,7 @@ export function createTextAtom(
       x: 1,
       y: 1,
       w: 8,
-      h: 4,
+      h: 8,
       atomType: 'text',
       atomContent: {
         atomName: 'text-md',
@@ -234,6 +248,52 @@ export function createImageAtom(
   )
 }
 
+
+export function createCustomHtmlAtom(
+  html?: string,
+  layout?: AtomLayoutOverride,
+): Atom {
+  const sample =
+    html ??
+    `<div style="padding:16px;border-radius:12px;background:linear-gradient(135deg,#eef2ff,#fce7f3);border:1px solid #c7d2fe;font-family:system-ui,-apple-system,sans-serif;box-sizing:border-box;height:100%;">
+  <h3 style="margin:0 0 8px;color:#3730a3;font-size:18px;">安全 HTML 卡片</h3>
+  <p style="margin:0 0 12px;color:#4c1d95;font-size:13px;line-height:1.5;">静态展示用。脚本、事件与 javascript: 链接会被 DOMPurify 剥离。</p>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:8px;overflow:hidden;">
+    <thead>
+      <tr style="background:#e0e7ff;">
+        <th style="padding:8px 10px;border:1px solid #c7d2fe;text-align:left;">项</th>
+        <th style="padding:8px 10px;border:1px solid #c7d2fe;text-align:left;">说明</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding:8px 10px;border:1px solid #c7d2fe;">渲染</td>
+        <td style="padding:8px 10px;border:1px solid #c7d2fe;">消毒后的静态 HTML</td>
+      </tr>
+      <tr style="background:#fafafa;">
+        <td style="padding:8px 10px;border:1px solid #c7d2fe;">脚本</td>
+        <td style="padding:8px 10px;border:1px solid #c7d2fe;">禁止执行</td>
+      </tr>
+    </tbody>
+  </table>
+</div>`
+  return applyLayout(
+    baseAtom({
+      i: nanoid(8),
+      x: 1,
+      y: 1,
+      w: 10,
+      h: 8,
+      atomType: 'html',
+      atomContent: {
+        atomName: 'custom-html',
+        detail: { editorId: nanoid(10), html: sample },
+      },
+    }),
+    layout,
+  )
+}
+
 export function createChartAtom(
   kind: ChartKind,
   layout?: AtomLayoutOverride,
@@ -264,7 +324,7 @@ export const ATOM_REGISTRY: Record<string, AtomRegistryEntry> = {
     atomType: 'text',
     category: 'text',
     label: 'Markdown',
-    hint: 'Markdown 文本',
+    hint: 'Markdown + KaTeX 公式（安全渲染）',
     create: (layout) => createTextAtom(undefined, layout),
   },
   'text-shadow': {
@@ -274,6 +334,14 @@ export const ATOM_REGISTRY: Record<string, AtomRegistryEntry> = {
     label: '阴影标题',
     hint: '大字标题 + 阴影',
     create: (layout) => createTextShadowAtom(undefined, layout),
+  },
+  'custom-html': {
+    atomName: 'custom-html',
+    atomType: 'html',
+    category: 'html',
+    label: 'HTML',
+    hint: '安全自定义 HTML（不执行 JS）',
+    create: (layout) => createCustomHtmlAtom(undefined, layout),
   },
   'simple-table': {
     atomName: 'simple-table',

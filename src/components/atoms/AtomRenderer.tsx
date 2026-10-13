@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import type { Atom } from '../../types/deck'
 import { resolveAtomEntry } from '../../atoms/registry'
 import { ChartAtom } from './ChartAtom'
+import { CustomHtmlAtom } from './CustomHtmlAtom'
 import { ImageAtom } from './ImageAtom'
 import { TableAtom } from './TableAtom'
 import { TextAtom } from './TextAtom'
@@ -19,6 +20,9 @@ export function AtomRenderer({ atom }: { atom: Atom }) {
   switch (atomType) {
     case 'text':
       body = <TextAtom atomContent={atom.atomContent} />
+      break
+    case 'html':
+      body = <CustomHtmlAtom atomContent={atom.atomContent} />
       break
     case 'echart':
       body = <ChartAtom atomContent={atom.atomContent} />

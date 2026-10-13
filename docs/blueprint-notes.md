@@ -29,8 +29,8 @@ Slide: `{ i, x, y, w, h, slideAnimation: {steps,enter,leave}, slideContent[] }`
 
 Atom: `{ i, x, y, w, h, static, atomType, atomBorder, atomAnimation, atomContent: { atomName, detail } }`
 
-`atomType`: `text` | `echart` | `tables` | `images`  
-Common `atomName`s: `text-md`, `text-shadow`, `simple-line/bar/pie`, many more echarts, `simple-table`, `single-image`.
+`atomType`: `text` | `echart` | `tables` | `images` | **`html`** (React)  
+Common `atomName`s: `text-md`, `text-shadow`, **`custom-html`** (React), `simple-line/bar/pie`, many more echarts, `simple-table`, `single-image`.
 
 Charts carry `detail.sheetData` (2D array) + style knobs; Vue builds ECharts options in per-chart modules.
 
@@ -87,7 +87,7 @@ Vue 3 · Vuex · vue-router · vue-grid-layout · ECharts · Naive UI · md-edit
 | Vuex | zustand |
 | vue-router | react-router-dom |
 | vue-echarts | echarts-for-react |
-| md-editor-v3 | markdown-it (render) + textarea edit |
+| md-editor-v3 | markdown-it + KaTeX + DOMPurify + textarea |
 | Naive modals | compact right property panel |
 
 **Deferred:** CloudBase, Handsontable, full animation timeline, chart zoo, Electron, template/local galleries.
@@ -192,14 +192,16 @@ Defaults from factories / `atomBorder.js` / `atomAnimation.js`:
 ### `atomName` catalog (factories)
 
 - **text:** `text-md`, `text-shadow` (there is **no** `text-title` in Vue)
+- **html (React):** `custom-html` — safe static HTML atom
 - **tables:** `simple-table`
 - **images:** `single-image`, `image-group`
 - **echart:** `simple-line`, `simple-pie`, `simple-radar`, `simple-funnel`, `simple-box`, `simple-bubble`, `simple-scatter`, `simple-sankey`, `multi-bar`, `stack-bar`, `hor-bar`, `hor-stack`, `bi-bar`, `bar-line`, `bar-zoom`, `line-zoom`, `heat-map`, `pop-pyramid`, `tm-multi-bar`, `racing-bar`, `word-cloud`, `map-c`, `map-p`, `echart-reg`, … (`simple-parallel` / `base-calendar` deleted from catalog)
 
 ### `detail` contracts (by atomName)
 
-**text-md:** `{ editorId | editorid, markdown }`  
+**text-md:** `{ editorId | editorid, markdown }` — React: KaTeX + DOMPurify (never executes JS)  
 **text-shadow:** `{ text, color, fontFamily, fontSize, fontWeight, shadow: { h, v, blur, color } }`  
+**custom-html:** `{ editorId?, html }` — React-only; sanitized HTML only (no scripts / iframes / `on*`)  
 **simple-table:** `{ sheetData, nr, nc, pagination: { pageSize, show } }`  
 **single-image:** `{ src }` only  
 **image-group:** `{ src: string[], height, gap }`  
@@ -276,3 +278,10 @@ Still missing vs Vue:
 - More echart zoo (radar / funnel / sankey) via registry entries only
 - Keyboard layer shortcuts; multi-select
 - Persist undo across reload (optional)
+
+## Safe HTML / Markdown (React)
+
+- Shared sanitizer: `src/utils/sanitizeHtml.ts` (DOMPurify).
+- `text-md`: markdown-it (`html: true`) → KaTeX (`@traptitech/markdown-it-katex`) → DOMPurify → render.
+- `custom-html`: DOMPurify → render. Forbidden: `script`, `iframe`, `object`, `embed`, forms, `link`/`meta`/`base`, etc.
+- Both atoms **never execute JS**. Do not mount unsanitized HTML or use unsandboxed `srcdoc` iframes.

@@ -3,12 +3,13 @@
  * Prefer old field names; React-only adapters live in utils/serialize.ts.
  */
 
-export type AtomType = 'text' | 'echart' | 'tables' | 'images'
+export type AtomType = 'text' | 'echart' | 'tables' | 'images' | 'html'
 
 /** Known Vue atomNames (+ React subset `simple-bar`). */
 export type AtomName =
   | 'text-md'
   | 'text-shadow'
+  | 'custom-html'
   | 'simple-line'
   | 'simple-bar' // React subset alias (Vue: multi-bar)
   | 'multi-bar'
@@ -48,6 +49,12 @@ export interface TextMdDetail {
   editorId?: string
   /** Legacy typo/casing from some factory/demo files */
   editorid?: string
+}
+
+/** Safe custom HTML block — always sanitized before render (no JS). */
+export interface CustomHtmlDetail {
+  html: string
+  editorId?: string
 }
 
 export interface TableDetail {

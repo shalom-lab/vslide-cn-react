@@ -9,7 +9,9 @@ React + TypeScript rewrite of the interactive slide editor, faithful to the comp
 - **演示文稿** path: multi-slide edit ↔ play
 - 18×18 **react-grid-layout** canvas (drag / resize / overlap + 置顶/置底)
 - **Shared `AtomRenderer`** for edit · play · thumbs (no dual drift)
-- **Atom registry** (`src/atoms/registry.ts`) for text / chart / table / image
+- **Atom registry** (`src/atoms/registry.ts`) for text / chart / table / image / **custom-html**
+- **Markdown (`text-md`)** with KaTeX math (`$…$` / `$$…$$`) and prose styles; **DOMPurify** before render
+- **Safe HTML (`custom-html`)** — static markup only; scripts / event handlers / `javascript:` stripped
 - Charts: line · bar · **stack-bar** · **hor-bar** · pie · **scatter** — **place-first** (拖框再选图) via insert drawer
 - Undo / redo (`Ctrl+Z` / `Ctrl+Y`) for deck mutations
 - Compact Chinese chrome; sample deck (~6 slides)
@@ -50,6 +52,10 @@ See [docs/blueprint-notes.md](./docs/blueprint-notes.md).
 ## Stable JSON (Agent skills)
 
 Deck / atom field names stay aligned with vslide-vue (`fileType: vslideFile`, `atomContent.atomName`, `detail.sheetData` + `nr`/`nc`, …). Prefer extending the registry over inventing parallel shapes.
+
+### Safe HTML atoms
+
+`text-md` and `custom-html` always run HTML through `src/utils/sanitizeHtml.ts` (DOMPurify) before `dangerouslySetInnerHTML`. They **never execute JavaScript** (no `<script>`, no `on*` handlers, no `javascript:` URLs, no iframes). Insert via TopBar **文本** (Markdown) or **HTML**.
 
 ## Deferred
 
