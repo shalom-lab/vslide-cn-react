@@ -2,7 +2,7 @@ import type { AtomContent } from '../../types/deck'
 
 export function ImageAtom({ atomContent }: { atomContent: AtomContent }) {
   const src = String(atomContent.detail.src ?? '')
-  const fit = String(atomContent.detail.fit ?? 'contain')
+  // Vue single-image detail is { src } only — object-fit is CSS default contain
   return (
     <div
       style={{
@@ -21,7 +21,7 @@ export function ImageAtom({ atomContent }: { atomContent: AtomContent }) {
           style={{
             maxWidth: '100%',
             maxHeight: '100%',
-            objectFit: fit as React.CSSProperties['objectFit'],
+            objectFit: 'contain',
           }}
           draggable={false}
         />

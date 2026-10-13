@@ -70,3 +70,163 @@ Vue 3 · Vuex · vue-router · vue-grid-layout · ECharts · Naive UI · md-edit
 2. 18-col grid drag/resize.
 3. Chinese labels; edit ↔ play keyboard parity.
 4. JSON-shaped deck compatible in spirit with vslide-vue (subset of atom names).
+
+## Vuex store contract (source of truth)
+
+Read from `/workspace/vslide-vue/src/store/index.js` (Vuex, **not** Pinia), atom factories under `src/store/atom/*` + `src/components/Atom/{Text,Echart,Tables,Images}/**/*.js`, and persisted deck shape in `src/Template/vslides.json` / `demo-raw/*.json`.
+
+### Root Vuex `state` keys
+
+| Key | Shape / default | Role |
+|-----|-----------------|------|
+| `layout` | `Slide[]` | Working deck slides (= active file’s `slides`) |
+| `iActive` | `{ slide: string, atom: string }` | Selection; `atom` is `"-1"` / unset when none |
+| `iMax` | `{ slide: number, atom: number }` | Monotonic id counters (default 1000) |
+| `atom` | `{ echart, text, images, tables }` | Factory catalog keyed by `atomName` |
+| `editorOption` | Record | Border/animation/per-atom editor UI metadata |
+| `background` | `BackgroundConfig` | Active file background |
+| `innerSize` | `{ width, height }` | Viewport measure |
+| `workingAreaKey` | `number` | Force remount working canvas |
+| `leftAreaKey` | `number` | Force remount left slide list |
+| `gallery` | `{ templateLayout, localLayout: [{ slideContent }], activeIndex }` | Template / 「我的图表」 |
+| `document` | `{ fileList: DeckFile[], activeIndex, templateFile }` | Multi-file workspace |
+| `template` | `{ vslides, slides }` | Boot templates |
+| `store` | IndexedDB handle \| null | Persistence |
+| `loginState` | object \| null | CloudBase auth |
+| `account` | `{ role, date_expire, max_file, max_size, total_file, total_size }` | Quotas / `super` lock |
+| `sharedFileList` | array | Shared files |
+| `mapList` | `[{ mapName, mapObj }]` | Map chart GeoJSON |
+
+### Mutations that define the write contract
+
+- **Slides:** `addSlide(payload)`, `removeSlide(index)`, `changeLayout({ layout })`, `changeSlideAnimation({ key, value })`
+- **Selection:** `updateIActive({ slide, atom })`
+- **Atoms:** `addAtom(atom)`, `removeAtom()`, `fixedAtom()` (toggles `static`), `changeAtom({ menuValue, key, value })` (dot-path via eval), `changeSheetData({ sheetData, nr, nc, menuValue })`
+- **Background / chrome:** `changeBackground({ background })`, `changeInnersize`, `changeWorkingAreaKey`, `changeLeftAreaKey`
+- **Gallery / files:** `addLocalAtom`, `initLocalAtom`, `changeDocumentActiveIndex`, `changeDocumentFileList`, `addFile`, `removeFile`, …
+
+Getters: `activeSlide`, `activeSlideContent`, `activeAtom`, `indexActive`, `blankArea`, `getBackground` (CSS string from `background.mode`), `sortLayout` (reindexes `i` + sets `slideAnimation.steps = max(atomAnimation.order)`).
+
+### Persisted `DeckFile` (`fileType: "vslideFile"`)
+
+Concrete keys from `Template/vslides.json` / demo JSON:
+
+```
+fileType, fileName, id, date, author, shared, tags,
+background, getBackground, slides
+```
+
+- `shared: boolean`
+- `getBackground: string` — **serialized CSS** (same string as Vuex getter `getBackground`), not only live-computed
+- `background` always carries **all** mode payloads (not only the active one):
+
+```
+mode: "pure" | "linear" | "radial" | "custom" | "image" | "texture"
+pure: string (rgba/css color)
+linear: { angle, start, end }
+radial: { shape, start, end }
+custom: string (css)
+image: { src, repeat, x, y, width, height }
+texture: { src }
+```
+
+### `Slide`
+
+```
+i, x, y, w, h,          // slide-list grid (col-num=1); x=0,w=1,h=1 typical
+slideAnimation: { steps, enter, leave },
+slideContent: Atom[],
+moved?: boolean         // vue-grid-layout runtime
+```
+
+### `Atom` (component instance)
+
+Union of fields seen in factories + saved JSON:
+
+```
+i, x, y, w, h,          // canvas grid col-num=18
+static: boolean,        // lock; factories often typo as "stacic" — runtime / template use "static"
+super: boolean,         // template-protected; forbids edit when account.role === "user"
+atomType: "text" | "echart" | "tables" | "images",
+atomBorder: { width, type, color, radius },
+atomAnimation: { order, enter, leave },
+atomContent: { atomName, detail },
+moved?: boolean
+```
+
+Defaults from factories / `atomBorder.js` / `atomAnimation.js`:
+
+- `atomBorder`: `{ width: 0, type: "solid", color: "#808080", radius: 1 }`
+- `atomAnimation`: `{ order: 1, enter: "fadeIn", leave: "fadeOut" }`
+- `slideAnimation`: `{ steps: 1, enter: "fadeIn", leave: "fadeOut" }`
+- `static: false`, `super: false`
+
+### `atomName` catalog (factories)
+
+- **text:** `text-md`, `text-shadow` (there is **no** `text-title` in Vue)
+- **tables:** `simple-table`
+- **images:** `single-image`, `image-group`
+- **echart:** `simple-line`, `simple-pie`, `simple-radar`, `simple-funnel`, `simple-box`, `simple-bubble`, `simple-scatter`, `simple-sankey`, `multi-bar`, `stack-bar`, `hor-bar`, `hor-stack`, `bi-bar`, `bar-line`, `bar-zoom`, `line-zoom`, `heat-map`, `pop-pyramid`, `tm-multi-bar`, `racing-bar`, `word-cloud`, `map-c`, `map-p`, `echart-reg`, … (`simple-parallel` / `base-calendar` deleted from catalog)
+
+### `detail` contracts (by atomName)
+
+**text-md:** `{ editorId | editorid, markdown }`  
+**text-shadow:** `{ text, color, fontFamily, fontSize, fontWeight, shadow: { h, v, blur, color } }`  
+**simple-table:** `{ sheetData, nr, nc, pagination: { pageSize, show } }`  
+**single-image:** `{ src }` only  
+**image-group:** `{ src: string[], height, gap }`  
+**echart (common):** `{ sheetData, nr, nc, animation, palette, backgroundPalette, title /* ECharts title object */, grid?, xAxis?, yAxis?, legend?, label?, itemStyle?, emphasis?, <chartSpecific> }`  
+Chart-specific nests: `simpleLine`, `simpleBar`, `simplePie`, `simpleRadar`, `simpleFunnel`, `simpleScatter`, `simpleSankey`, `simpleMap`, `dataZoom`, `visualMapC`, `popPyramid`, `racingBar`, `wordCloud`, `reg`, …
+
+`changeSheetData` always writes **`sheetData` + `nr` + `nc`** together.
+
+### Atom context menu (WorkingSlide.vue — verified, do not invent)
+
+1. 数据 → `edit('sheetData')` (enabled when `atomType` ∈ echart|tables)
+2. 样式 → `edit('atomContent')` (disabled for `text-md` / `simple-table` style editors in Vue)
+3. 边框 → `edit('atomBorder')`
+4. 动画 → `edit('atomAnimation')`
+5. 固定 → `fixedAtom()` toggle `static`
+6. 复制 → deep-copy atom, new `i`, `y+1`, regen `editorId` for text-md
+7. 删除 → `removeAtom()`
+8. 保存 → clone into `gallery.localLayout`「我的图表」
+
+**Not present in Vue:** bring forward / send back / layer z-order.
+
+### Slide list context menu (Left.vue)
+
+新建幻灯片 · 复制幻灯片 · 删除幻灯片
+
+### React deltas vs this contract (pre-alignment)
+
+| Area | Vue | React (before this pass) |
+|------|-----|--------------------------|
+| Deck | `shared`, `getBackground` | missing |
+| Background | `image`, `texture` modes | only pure/linear/radial/custom |
+| Atom | `super`, optional `moved` | missing `super` |
+| Title text | `text-shadow` | invented `text-title` |
+| text-md | `editorId` / `editorid` | markdown only |
+| Chart detail | `nr`/`nc` + ECharts `title` object + style nests | flat `title: string`, no nr/nc |
+| Table detail | `nr`/`nc`/`pagination` | `sheetData` only |
+| Image detail | `src` only | invented `fit` |
+| Chart names | no `simple-bar` (use multi-bar etc.) | `simple-bar` React subset |
+| Context menu | full atom + slide menus | absent |
+
+
+### Alignment pass (2026-10-13)
+
+Mirrored into React:
+
+- Deck: `shared`, `getBackground`; Background: `image` / `texture`
+- Atom: `super`, `static`; drop invented `text-title` → `text-shadow`
+- text-md `editorId`; echart/tables `nr`/`nc`; echart `title` object; table `pagination`; image `{ src }` only
+- `normalizeDeck` / `serializeDeck` adapters (tolerate `stacic`, map legacy `text-title`)
+- Atom context menu (数据/样式/边框/动画/固定/复制/删除/保存) + slide list menu (新建/复制/删除)
+- 「保存」→ `localStorage` gallery (`vslide-cn-react:localAtoms`)
+
+Still missing vs Vue:
+
+- Full echart zoo + style nests editing UI; Handsontable sheet editor; animate.css play timeline
+- `gallery.templateLayout` / CloudBase / IndexedDB multi-file `document.fileList`
+- Layer z-order (not in Vue either)
+- `simple-bar` remains React subset alias (Vue: multi-bar / stack-bar / …)

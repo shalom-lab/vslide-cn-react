@@ -1,25 +1,42 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import GridLayout, { WidthProvider, type Layout } from 'react-grid-layout'
 import {
+  selectActiveAtom,
   selectActiveSlide,
   useDeckStore,
 } from '../../store/useDeckStore'
 import { cssBackground } from '../../utils/background'
 import { AtomRenderer } from '../atoms/AtomRenderer'
+import { ContextMenu, type ContextMenuItem } from './ContextMenu'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
 const AutoGrid = WidthProvider(GridLayout)
+
+interface MenuState {
+  x: number
+  y: number
+  atomId: string
+}
 
 export function Canvas() {
   const deck = useDeckStore((s) => s.deck)
   const activeSlideId = useDeckStore((s) => s.activeSlideId)
   const activeAtomId = useDeckStore((s) => s.activeAtomId)
   const setActiveAtom = useDeckStore((s) => s.setActiveAtom)
+  const setEditorFocus = useDeckStore((s) => s.setEditorFocus)
   const updateSlideLayout = useDeckStore((s) => s.updateSlideLayout)
+  const duplicateActiveAtom = useDeckStore((s) => s.duplicateActiveAtom)
+  const removeActiveAtom = useDeckStore((s) => s.removeActiveAtom)
+  const toggleFixedActiveAtom = useDeckStore((s) => s.toggleFixedActiveAtom)
+  const saveActiveAtomToGallery = useDeckStore((s) => s.saveActiveAtomToGallery)
+  const toast = useDeckStore((s) => s.toast)
+  const clearToast = useDeckStore((s) => s.clearToast)
   const slide = useDeckStore(selectActiveSlide)
+  const activeAtom = useDeckStore(selectActiveAtom)
 
   const [size, setSize] = useState({ w: 640, h: 360 })
+  const [menu, setMenu] = useState<MenuState | null>(null)
 
   useEffect(() => {
     const measure = () => {
@@ -33,6 +50,12 @@ export function Canvas() {
     window.addEventListener('resize', measure)
     return () => window.removeEventListener('resize', measure)
   }, [])
+
+  useEffect(() => {
+    if (!toast) return
+    const t = window.setTimeout(clearToast, 2000)
+    return () => window.clearTimeout(t)
+  }, [toast, clearToast])
 
   const layout: Layout[] = useMemo(
     () =>
@@ -60,6 +83,98 @@ export function Canvas() {
     updateSlideLayout(activeSlideId, atoms)
   }
 
+  const closeMenu = useCallback(() => setMenu(null), [])
+
+  const openAtomMenu = (e: React.MouseEvent, atomId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setActiveAtom(atomId)
+    setMenu({ x: e.clientX, y: e.clientY, atomId })
+  }
+
+  const menuAtom =
+    menu && slide
+      ? slide.slideContent.find((a) => a.i === menu.atomId)
+      : activeAtom
+
+  const forbidden = Boolean(menuAtom?.super)
+
+  const menuItems: ContextMenuItem[] = menuAtom
+    ? [
+        {
+          key: 'sheetData',
+          label: '数据',
+          icon: '▦',
+          disabled:
+            forbidden || !['echart', 'tables'].includes(menuAtom.atomType),
+          onClick: () => {
+            setActiveAtom(menuAtom.i)
+            setEditorFocus('sheetData')
+          },
+        },
+        {
+          key: 'atomContent',
+          label: '样式',
+          icon: '✎',
+          disabled:
+            forbidden ||
+            ['text-md', 'simple-table'].includes(menuAtom.atomContent.atomName),
+          onClick: () => {
+            setActiveAtom(menuAtom.i)
+            setEditorFocus('atomContent')
+          },
+        },
+        {
+          key: 'atomBorder',
+          label: '边框',
+          icon: '▢',
+          disabled: forbidden,
+          onClick: () => {
+            setActiveAtom(menuAtom.i)
+            setEditorFocus('atomBorder')
+          },
+        },
+        {
+          key: 'atomAnimation',
+          label: '动画',
+          icon: '✦',
+          disabled: forbidden,
+          onClick: () => {
+            setActiveAtom(menuAtom.i)
+            setEditorFocus('atomAnimation')
+          },
+        },
+        {
+          key: 'fixed',
+          label: menuAtom.static ? '取消固定' : '固定',
+          icon: '📌',
+          disabled: forbidden,
+          onClick: () => toggleFixedActiveAtom(),
+        },
+        {
+          key: 'copy',
+          label: '复制',
+          icon: '⧉',
+          disabled: forbidden,
+          onClick: () => duplicateActiveAtom(),
+        },
+        {
+          key: 'delete',
+          label: '删除',
+          icon: '🗑',
+          danger: true,
+          onClick: () => removeActiveAtom(),
+        },
+        {
+          key: 'save',
+          label: '保存',
+          icon: '⬇',
+          disabled: forbidden,
+          onClick: () => saveActiveAtomToGallery(),
+        },
+      ]
+    : []
+
   if (!slide) return null
 
   return (
@@ -67,7 +182,11 @@ export function Canvas() {
       <div
         className="canvas-stage"
         style={{ width: size.w, height: size.h, background }}
-        onClick={() => setActiveAtom(null)}
+        onClick={() => {
+          setActiveAtom(null)
+          setEditorFocus(null)
+          closeMenu()
+        }}
       >
         <AutoGrid
           className="canvas-grid"
@@ -88,12 +207,20 @@ export function Canvas() {
             <div
               key={atom.i}
               className={
-                'canvas-item' + (atom.i === activeAtomId ? ' selected' : '')
+                'canvas-item' +
+                (atom.i === activeAtomId ? ' selected' : '') +
+                (atom.static ? ' locked' : '')
               }
               onClick={(e) => {
                 e.stopPropagation()
                 setActiveAtom(atom.i)
               }}
+              onDoubleClick={(e) => {
+                e.stopPropagation()
+                setActiveAtom(atom.i)
+                window.setTimeout(() => toggleFixedActiveAtom(), 0)
+              }}
+              onContextMenu={(e) => openAtomMenu(e, atom.i)}
             >
               <div className="drag-handle" title="拖动" />
               <div className="canvas-item-body">
@@ -103,6 +230,15 @@ export function Canvas() {
           ))}
         </AutoGrid>
       </div>
+      {menu && (
+        <ContextMenu
+          x={menu.x}
+          y={menu.y}
+          items={menuItems}
+          onClose={closeMenu}
+        />
+      )}
+      {toast && <div className="toast">{toast}</div>}
     </div>
   )
 }

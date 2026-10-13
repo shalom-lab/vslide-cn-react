@@ -1,25 +1,46 @@
+import { useEffect, useRef } from 'react'
 import {
   selectActiveAtom,
   selectActiveSlide,
   useDeckStore,
 } from '../../store/useDeckStore'
-import { defaultBackground } from '../../types/deck'
+import { defaultBackground, defaultEchartTitle } from '../../types/deck'
 
 export function PropertyPanel() {
   const atom = useDeckStore(selectActiveAtom)
   const slide = useDeckStore(selectActiveSlide)
   const bg = useDeckStore((s) => s.deck.background)
+  const editorFocus = useDeckStore((s) => s.editorFocus)
   const updateAtomDetail = useDeckStore((s) => s.updateAtomDetail)
   const updateAtom = useDeckStore((s) => s.updateAtom)
   const removeActiveAtom = useDeckStore((s) => s.removeActiveAtom)
+  const toggleFixedActiveAtom = useDeckStore((s) => s.toggleFixedActiveAtom)
+  const duplicateActiveAtom = useDeckStore((s) => s.duplicateActiveAtom)
   const setBackground = useDeckStore((s) => s.setBackground)
   const activeSlideId = useDeckStore((s) => s.activeSlideId)
+
+  const sheetRef = useRef<HTMLDivElement>(null)
+  const styleRef = useRef<HTMLDivElement>(null)
+  const borderRef = useRef<HTMLDivElement>(null)
+  const animRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!editorFocus || !atom) return
+    const map = {
+      sheetData: sheetRef,
+      atomContent: styleRef,
+      atomBorder: borderRef,
+      atomAnimation: animRef,
+    } as const
+    const el = map[editorFocus]?.current
+    el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [editorFocus, atom])
 
   if (!atom) {
     return (
       <aside className="props">
         <h3>属性</h3>
-        <p className="muted">选中画布中的组件以编辑属性</p>
+        <p className="muted">选中画布中的组件以编辑属性（右键打开菜单）</p>
         <h4>幻灯片背景</h4>
         <label className="field">
           模式
@@ -36,6 +57,8 @@ export function PropertyPanel() {
             <option value="linear">线性渐变</option>
             <option value="radial">径向渐变</option>
             <option value="custom">自定义</option>
+            <option value="image">图片</option>
+            <option value="texture">纹理</option>
           </select>
         </label>
         {bg.mode === 'pure' && (
@@ -61,6 +84,30 @@ export function PropertyPanel() {
             />
           </label>
         )}
+        {(bg.mode === 'image' || bg.mode === 'texture') && (
+          <label className="field">
+            图片 URL / DataURL
+            <textarea
+              rows={3}
+              value={
+                bg.mode === 'image' ? bg.image.src : bg.texture.src
+              }
+              onChange={(e) => {
+                if (bg.mode === 'image') {
+                  setBackground({
+                    ...bg,
+                    image: { ...bg.image, src: e.target.value },
+                  })
+                } else {
+                  setBackground({
+                    ...bg,
+                    texture: { ...bg.texture, src: e.target.value },
+                  })
+                }
+              }}
+            />
+          </label>
+        )}
         <button
           type="button"
           className="btn-secondary"
@@ -77,109 +124,144 @@ export function PropertyPanel() {
   }
 
   const d = atom.atomContent.detail
+  const titleObj =
+    d.title && typeof d.title === 'object'
+      ? (d.title as { text?: string })
+      : null
+  const titleStr =
+    typeof d.title === 'string'
+      ? d.title
+      : titleObj?.text
+        ? String(titleObj.text)
+        : ''
 
   return (
     <aside className="props">
       <h3>属性</h3>
       <p className="atom-meta">
         {atom.atomType} / {atom.atomContent.atomName}
+        {atom.static ? ' · 已固定' : ''}
+        {atom.super ? ' · super' : ''}
       </p>
 
-      {(atom.atomContent.atomName === 'text-md' ||
-        atom.atomContent.atomName === 'text-title') && (
-        <>
-          {atom.atomContent.atomName === 'text-title' ? (
-            <>
-              <label className="field">
-                标题
-                <input
-                  value={String(d.text ?? '')}
-                  onChange={(e) =>
-                    updateAtomDetail(activeSlideId, atom.i, {
-                      text: e.target.value,
-                    })
-                  }
-                />
-              </label>
-              <label className="field">
-                字号
-                <input
-                  type="number"
-                  value={Number(d.fontSize) || 28}
-                  onChange={(e) =>
-                    updateAtomDetail(activeSlideId, atom.i, {
-                      fontSize: Number(e.target.value),
-                    })
-                  }
-                />
-              </label>
-              <label className="field">
-                颜色
-                <input
-                  type="color"
-                  value={String(d.color || '#2c3e50')}
-                  onChange={(e) =>
-                    updateAtomDetail(activeSlideId, atom.i, {
-                      color: e.target.value,
-                    })
-                  }
-                />
-              </label>
-            </>
-          ) : (
+      <div ref={styleRef}>
+        {atom.atomContent.atomName === 'text-shadow' && (
+          <>
+            <h4>样式</h4>
             <label className="field">
-              Markdown
-              <textarea
-                rows={10}
-                value={String(d.markdown ?? '')}
+              文本
+              <input
+                value={String(d.text ?? '')}
                 onChange={(e) =>
                   updateAtomDetail(activeSlideId, atom.i, {
-                    markdown: e.target.value,
+                    text: e.target.value,
                   })
                 }
               />
             </label>
-          )}
-        </>
-      )}
-
-      {atom.atomType === 'echart' && (
-        <label className="field">
-          标题
-          <input
-            value={String(d.title ?? '')}
-            onChange={(e) =>
-              updateAtomDetail(activeSlideId, atom.i, {
-                title: e.target.value,
-              })
-            }
-          />
-        </label>
-      )}
-
-      {atom.atomType === 'echart' || atom.atomType === 'tables' ? (
-        <label className="field">
-          数据 (JSON 二维数组)
-          <textarea
-            rows={8}
-            value={JSON.stringify(d.sheetData ?? [], null, 2)}
-            onChange={(e) => {
-              try {
-                const sheetData = JSON.parse(e.target.value)
-                if (Array.isArray(sheetData)) {
-                  updateAtomDetail(activeSlideId, atom.i, { sheetData })
+            <label className="field">
+              字号
+              <input
+                type="number"
+                value={Number(d.fontSize) || 28}
+                onChange={(e) =>
+                  updateAtomDetail(activeSlideId, atom.i, {
+                    fontSize: Number(e.target.value),
+                  })
                 }
-              } catch {
-                /* ignore while typing */
+              />
+            </label>
+            <label className="field">
+              字体
+              <input
+                value={String(d.fontFamily || 'Arial')}
+                onChange={(e) =>
+                  updateAtomDetail(activeSlideId, atom.i, {
+                    fontFamily: e.target.value,
+                  })
+                }
+              />
+            </label>
+            <label className="field">
+              颜色
+              <input
+                type="color"
+                value={rgbToHex(String(d.color || '#2c3e50')) || '#2c3e50'}
+                onChange={(e) =>
+                  updateAtomDetail(activeSlideId, atom.i, {
+                    color: e.target.value,
+                  })
+                }
+              />
+            </label>
+          </>
+        )}
+
+        {atom.atomContent.atomName === 'text-md' && (
+          <label className="field">
+            Markdown
+            <textarea
+              rows={10}
+              value={String(d.markdown ?? '')}
+              onChange={(e) =>
+                updateAtomDetail(activeSlideId, atom.i, {
+                  markdown: e.target.value,
+                })
               }
-            }}
-          />
-        </label>
-      ) : null}
+            />
+          </label>
+        )}
+
+        {atom.atomType === 'echart' && (
+          <label className="field">
+            标题 (title.text)
+            <input
+              value={titleStr}
+              onChange={(e) =>
+                updateAtomDetail(activeSlideId, atom.i, {
+                  title: {
+                    ...defaultEchartTitle(e.target.value),
+                    ...(titleObj || {}),
+                    text: e.target.value,
+                  },
+                })
+              }
+            />
+          </label>
+        )}
+      </div>
+
+      {(atom.atomType === 'echart' || atom.atomType === 'tables') && (
+        <div
+          className={'field' + (editorFocus === 'sheetData' ? ' focus-flash' : '')}
+          ref={sheetRef}
+        >
+          <label className="field">
+            数据 sheetData (JSON 二维数组)
+            <textarea
+              rows={8}
+              value={JSON.stringify(d.sheetData ?? [], null, 2)}
+              onChange={(e) => {
+                try {
+                  const sheetData = JSON.parse(e.target.value)
+                  if (Array.isArray(sheetData)) {
+                    updateAtomDetail(activeSlideId, atom.i, { sheetData })
+                  }
+                } catch {
+                  /* ignore while typing */
+                }
+              }}
+            />
+            <span className="hint">
+              nr={String(d.nr ?? '-')} · nc={String(d.nc ?? '-')}
+            </span>
+          </label>
+        </div>
+      )}
 
       {atom.atomType === 'images' && (
         <label className="field">
-          图片 URL / DataURL
+          图片 src
           <textarea
             rows={4}
             value={String(d.src ?? '')}
@@ -190,43 +272,130 @@ export function PropertyPanel() {
         </label>
       )}
 
-      <h4>边框</h4>
-      <label className="field">
-        宽度
-        <input
-          type="number"
-          min={0}
-          value={atom.atomBorder.width}
-          onChange={(e) =>
-            updateAtom(activeSlideId, atom.i, {
-              atomBorder: {
-                ...atom.atomBorder,
-                width: Number(e.target.value),
-              },
-            })
-          }
-        />
-      </label>
-      <label className="field">
-        颜色
-        <input
-          type="color"
-          value={atom.atomBorder.color}
-          onChange={(e) =>
-            updateAtom(activeSlideId, atom.i, {
-              atomBorder: { ...atom.atomBorder, color: e.target.value },
-            })
-          }
-        />
-      </label>
+      <div ref={borderRef}>
+        <h4>边框</h4>
+        <label className="field">
+          宽度
+          <input
+            type="number"
+            min={0}
+            value={atom.atomBorder.width}
+            onChange={(e) =>
+              updateAtom(activeSlideId, atom.i, {
+                atomBorder: {
+                  ...atom.atomBorder,
+                  width: Number(e.target.value),
+                },
+              })
+            }
+          />
+        </label>
+        <label className="field">
+          类型
+          <select
+            value={atom.atomBorder.type}
+            onChange={(e) =>
+              updateAtom(activeSlideId, atom.i, {
+                atomBorder: { ...atom.atomBorder, type: e.target.value },
+              })
+            }
+          >
+            <option value="solid">实线</option>
+            <option value="dashed">----</option>
+            <option value="dotted">.....</option>
+          </select>
+        </label>
+        <label className="field">
+          颜色
+          <input
+            type="color"
+            value={atom.atomBorder.color.startsWith('#')
+              ? atom.atomBorder.color.slice(0, 7)
+              : '#808080'}
+            onChange={(e) =>
+              updateAtom(activeSlideId, atom.i, {
+                atomBorder: { ...atom.atomBorder, color: e.target.value },
+              })
+            }
+          />
+        </label>
+        <label className="field">
+          圆角
+          <input
+            type="number"
+            min={0}
+            value={atom.atomBorder.radius}
+            onChange={(e) =>
+              updateAtom(activeSlideId, atom.i, {
+                atomBorder: {
+                  ...atom.atomBorder,
+                  radius: Number(e.target.value),
+                },
+              })
+            }
+          />
+        </label>
+      </div>
 
-      <button
-        type="button"
-        className="btn-danger"
-        onClick={removeActiveAtom}
-      >
-        删除组件
-      </button>
+      <div ref={animRef}>
+        <h4>动画</h4>
+        <label className="field">
+          出场次序 order
+          <input
+            type="number"
+            min={1}
+            value={atom.atomAnimation.order}
+            onChange={(e) =>
+              updateAtom(activeSlideId, atom.i, {
+                atomAnimation: {
+                  ...atom.atomAnimation,
+                  order: Number(e.target.value),
+                },
+              })
+            }
+          />
+        </label>
+        <label className="field">
+          进入 enter
+          <input
+            value={atom.atomAnimation.enter}
+            onChange={(e) =>
+              updateAtom(activeSlideId, atom.i, {
+                atomAnimation: {
+                  ...atom.atomAnimation,
+                  enter: e.target.value,
+                },
+              })
+            }
+          />
+        </label>
+        <label className="field">
+          离开 leave
+          <input
+            value={atom.atomAnimation.leave}
+            onChange={(e) =>
+              updateAtom(activeSlideId, atom.i, {
+                atomAnimation: {
+                  ...atom.atomAnimation,
+                  leave: e.target.value,
+                },
+              })
+            }
+          />
+        </label>
+      </div>
+
+      <div className="props-actions">
+        <button type="button" className="btn-secondary" onClick={toggleFixedActiveAtom}>
+          {atom.static ? '取消固定' : '固定'}
+        </button>
+        <button type="button" className="btn-secondary" onClick={duplicateActiveAtom}>
+          复制
+        </button>
+        <button type="button" className="btn-danger" onClick={removeActiveAtom}>
+          删除组件
+        </button>
+      </div>
     </aside>
   )
 }

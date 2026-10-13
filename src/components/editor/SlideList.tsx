@@ -1,18 +1,21 @@
+import { useCallback, useState } from 'react'
 import { useDeckStore } from '../../store/useDeckStore'
 import { cssBackground } from '../../utils/background'
 import { AtomRenderer } from '../atoms/AtomRenderer'
+import { ContextMenu, type ContextMenuItem } from './ContextMenu'
 import GridLayout, { WidthProvider } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
 const AutoGrid = WidthProvider(GridLayout)
 
-/** Compact thumbnail of a slide (non-interactive grid). */
 function Thumb({
   slideContent,
   background,
 }: {
-  slideContent: ReturnType<typeof useDeckStore.getState>['deck']['slides'][0]['slideContent']
+  slideContent: ReturnType<
+    typeof useDeckStore.getState
+  >['deck']['slides'][0]['slideContent']
   background: string
 }) {
   const layout = slideContent.map((a) => ({
@@ -47,6 +50,12 @@ function Thumb({
   )
 }
 
+interface MenuState {
+  x: number
+  y: number
+  slideId: string
+}
+
 export function SlideList() {
   const slides = useDeckStore((s) => s.deck.slides)
   const bg = useDeckStore((s) => s.deck.background)
@@ -56,6 +65,31 @@ export function SlideList() {
   const duplicateSlide = useDeckStore((s) => s.duplicateSlide)
   const removeSlide = useDeckStore((s) => s.removeSlide)
   const background = cssBackground(bg)
+  const [menu, setMenu] = useState<MenuState | null>(null)
+  const closeMenu = useCallback(() => setMenu(null), [])
+
+  const menuItems: ContextMenuItem[] = [
+    {
+      key: 'new',
+      label: '新建幻灯片',
+      icon: '＋',
+      onClick: () => addSlide(),
+    },
+    {
+      key: 'copy',
+      label: '复制幻灯片',
+      icon: '⧉',
+      onClick: () => duplicateSlide(),
+    },
+    {
+      key: 'delete',
+      label: '删除幻灯片',
+      icon: '🗑',
+      danger: true,
+      disabled: slides.length <= 1,
+      onClick: () => removeSlide(),
+    },
+  ]
 
   return (
     <aside className="slide-list">
@@ -82,12 +116,28 @@ export function SlideList() {
                 'slide-thumb' + (slide.i === activeSlideId ? ' actived' : '')
               }
               onClick={() => setActiveSlide(slide.i)}
+              onContextMenu={(e) => {
+                e.preventDefault()
+                setActiveSlide(slide.i)
+                setMenu({ x: e.clientX, y: e.clientY, slideId: slide.i })
+              }}
             >
               <span className="slide-num">{index + 1}</span>
-              <Thumb slideContent={slide.slideContent} background={background} />
+              <Thumb
+                slideContent={slide.slideContent}
+                background={background}
+              />
             </button>
           ))}
       </div>
+      {menu && (
+        <ContextMenu
+          x={menu.x}
+          y={menu.y}
+          items={menuItems}
+          onClose={closeMenu}
+        />
+      )}
     </aside>
   )
 }
