@@ -3,10 +3,17 @@
   font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
     'Microsoft YaHei', Arial, sans-serif;
   color: #2c3e50;
+  /* From vslide-vue Edit / Top / Toolbar / Left */
   --bar: #e6e6e6;
-  --panel: #f0f0f0;
-  --border: rgba(198, 194, 194, 0.7);
+  --panel: rgba(233, 230, 230, 0.945);
+  --border: rgba(198, 194, 194, 0.603);
   --accent: #3a99b2;
+  --active-slide: rgb(230, 28, 78);
+  --active-slide-soft: rgba(221, 83, 115, 0.705);
+  --toolbar-grad: linear-gradient(to top, rgb(220, 209, 209), rgb(186, 172, 172));
+  --icon-grad: linear-gradient(to bottom, rgb(220, 209, 209), rgb(186, 172, 172));
+  --icon-grad-hover: linear-gradient(to top, rgb(245, 245, 245), rgb(211, 203, 203));
+  --icon-grad-active: linear-gradient(to bottom, rgb(245, 245, 245), rgb(211, 203, 203));
 }
 
 * {
@@ -46,11 +53,11 @@ select {
   background: #f7f8fa;
 }
 .home-header {
-  height: 56px;
+  height: 48px;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 20px;
+  padding: 0 16px;
   background: #fff;
   border-bottom: 1px solid var(--border);
 }
@@ -59,37 +66,39 @@ select {
   align-items: center;
   gap: 8px;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 15px;
 }
 .home-logo .mark {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
   background: linear-gradient(135deg, #4bc0c8, #c779d0, #feac5e);
 }
 .home-body {
   flex: 1;
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 200px 1fr;
   min-height: 0;
 }
 .home-side {
   background: #f7f8fa;
   border-right: 1px solid var(--border);
-  padding: 16px 12px;
+  padding: 12px 10px;
 }
 .home-side button,
-.home-side a.nav-item {
+.home-side a.nav-item,
+.home-side .nav-item {
   display: block;
   width: 100%;
   text-align: left;
-  padding: 10px 12px;
-  margin-bottom: 6px;
+  padding: 8px 10px;
+  margin-bottom: 4px;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   background: transparent;
   cursor: pointer;
   color: #555;
+  font-size: 13px;
 }
 .home-side .nav-item.active,
 .home-side button.active {
@@ -98,185 +107,243 @@ select {
   font-weight: 600;
 }
 .home-main {
-  padding: 28px 36px;
+  padding: 22px 28px;
   overflow: auto;
 }
 .home-main h1 {
-  font-size: 22px;
-  margin-bottom: 8px;
+  font-size: 20px;
+  margin-bottom: 6px;
 }
 .home-main p {
   color: #666;
-  margin-bottom: 20px;
-  line-height: 1.6;
+  margin-bottom: 16px;
+  line-height: 1.55;
+  font-size: 13px;
 }
 .home-cards {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
 }
 .home-card {
-  width: 220px;
-  padding: 20px;
+  width: 200px;
+  padding: 16px;
   background: #fff;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   text-align: left;
   transition: box-shadow 0.15s;
 }
 .home-card:hover {
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
 }
 .home-card h3 {
-  margin-bottom: 6px;
+  margin-bottom: 4px;
+  font-size: 14px;
 }
 .home-card p {
-  font-size: 13px;
+  font-size: 12px;
   margin: 0;
 }
 
-/* Editor chrome — mirrors vslide-vue Edit.vue grid */
+/* Editor chrome — mirrors vslide-vue Edit.vue: 20px / 80px / main / 20px */
 .editor-page {
   height: 100%;
   display: grid;
-  grid-template-rows: 28px 72px 1fr 22px;
+  grid-template-rows: 20px 80px 1fr 20px;
   overflow: hidden;
 }
+
+/* Toolbar.vue */
 .toolbar {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 300px 1fr 200px;
   align-items: center;
-  background: #dcdcdc;
+  background: var(--toolbar-grad);
   font-size: 13px;
-  padding: 0 8px;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  padding: 0;
+  line-height: 20px;
+  height: 20px;
   -webkit-app-region: drag;
 }
 .toolbar .menu {
   display: flex;
   list-style: none;
   padding: 0;
-  gap: 4px;
+  margin: 0;
+  gap: 0;
+  height: 20px;
 }
 .toolbar .menu li,
 .toolbar .menu a,
 .toolbar .file-label {
-  padding: 2px 10px;
+  padding: 0 3px;
+  margin: 0;
+  height: 20px;
+  line-height: 20px;
   cursor: pointer;
-  border-radius: 3px;
+  border-radius: 0;
+  color: black;
   -webkit-app-region: no-drag;
+  display: inline-block;
+  text-align: center;
 }
 .toolbar .menu li:hover,
 .toolbar .file-label:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgb(176, 165, 154);
 }
 .toolbar-title {
   text-align: center;
-  font-size: 12px;
-  color: #444;
+  font-size: 13px;
+  color: #222;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+.toolbar-spacer {
+  height: 20px;
+}
+
+/* Top.vue */
 .topbar {
   background: var(--bar);
   display: grid;
-  grid-template-columns: 250px 220px 1fr;
+  grid-template-columns: 250px 300px 1fr;
   align-items: center;
   justify-items: center;
-  border-top: 1px solid var(--border);
+  height: 80px;
 }
 .topbar-left,
 .topbar-mode,
 .topbar-atoms {
   display: flex;
-  gap: 4px;
+  gap: 0;
   align-items: center;
+  justify-content: center;
   height: 100%;
+  width: 100%;
 }
+
+/* IconButton.vue — bevelled compact buttons */
 .icon-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 2px;
-  min-width: 56px;
-  height: 60px;
+  justify-content: flex-start;
+  gap: 0;
+  min-width: 52px;
+  height: auto;
   border: none;
   background: transparent;
   cursor: pointer;
-  border-radius: 6px;
-  color: #444;
-  padding: 4px;
+  border-radius: 0;
+  color: #222;
+  padding: 0 1px;
+  text-decoration: none;
 }
 .icon-btn:hover,
 .icon-btn.active {
-  background: rgba(255, 255, 255, 0.55);
+  background: transparent;
 }
 .icon-btn .icon {
-  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2em;
+  height: 1.15em;
+  font-size: 26px;
   line-height: 1;
+  padding: 5px 8px;
+  border-radius: 5px;
+  box-shadow: 0 1px 0 rgb(255, 241, 241) inset, 0 1px 1px rgb(186, 172, 172);
+  background: var(--icon-grad);
+  color: #333;
+  cursor: pointer;
+}
+.icon-btn:hover .icon {
+  background: var(--icon-grad-hover);
+}
+.icon-btn:active .icon,
+.icon-btn.active .icon {
+  background: var(--icon-grad-active);
 }
 .icon-btn .label {
-  font-size: 11px;
+  display: block;
+  position: relative;
+  bottom: 2px;
+  font-size: 12px;
+  font-family: Arial, sans-serif;
+  padding-left: 2px;
+  letter-spacing: 2px;
+  cursor: default;
+  user-select: none;
+  margin-top: 2px;
+  white-space: nowrap;
 }
+
+/* Edit.vue main: left 250 + center; React keeps slim right props */
 .editor-main {
   display: grid;
-  grid-template-columns: 250px 1fr 260px;
+  grid-template-columns: 250px 1fr 220px;
   min-height: 0;
-  border-top: 1px solid grey;
+  border-top: solid 1px grey;
   background: #fff;
 }
+
+/* Left.vue / Edit.vue .left */
 .slide-list {
   background: #e6e6e6;
-  border-right: 1px solid var(--border);
-  padding: 6px;
+  border-right: solid 1px var(--border);
+  padding: 5px;
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
 }
 .slide-list-actions {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 6px;
-}
-.slide-list-actions button {
-  flex: 1;
-  font-size: 12px;
-  padding: 4px;
-  border: 1px solid #ccc;
-  background: #fff;
-  border-radius: 4px;
-  cursor: pointer;
+  display: none; /* Vue: context menu only; keep DOM for a11y hooks if needed */
 }
 .slide-list-scroll {
   overflow-y: auto;
+  overflow-x: hidden;
   flex: 1;
-  padding: 0 6px 8px;
+  padding: 0 10px 8px;
+  margin: 0;
 }
 .slide-thumb {
   display: block;
   width: 100%;
-  margin-bottom: 10px;
-  border: 2px solid transparent;
+  margin-bottom: 5px;
+  border: none;
+  outline: 2px solid rgba(226, 211, 226, 0.705);
   background: #fff;
   padding: 0;
   cursor: pointer;
   position: relative;
-  border-radius: 2px;
+  border-radius: 0;
   overflow: hidden;
   aspect-ratio: 16 / 9;
+  box-shadow: 1px 1px 1px #888888;
 }
-.slide-thumb.actived {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
+.slide-thumb:hover {
+  outline: 1px solid var(--active-slide-soft);
+}
+.slide-thumb.actived,
+.slide-thumb.actived:hover {
+  outline: 2px solid var(--active-slide);
 }
 .slide-num {
   position: absolute;
-  left: 4px;
-  top: 2px;
+  left: 3px;
+  top: 1px;
   z-index: 2;
-  font-size: 11px;
+  font-size: 10px;
   color: #666;
-  background: rgba(255, 255, 255, 0.75);
-  padding: 0 4px;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 0 3px;
   border-radius: 2px;
 }
 .thumb-inner {
@@ -298,12 +365,14 @@ select {
   padding: 0 !important;
   line-height: 1.1 !important;
 }
+
+/* Edit.vue .right */
 .editor-center {
-  background: rgba(233, 230, 230, 0.95);
+  background: var(--panel);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: 5px;
   min-width: 0;
 }
 .canvas-wrap {
@@ -311,8 +380,9 @@ select {
   align-items: center;
   justify-content: center;
 }
+/* WorkingSlide.vue */
 .canvas-stage {
-  outline: 1px solid rgba(119, 119, 119, 0.32);
+  outline: 1px solid rgba(119, 119, 119, 0.322);
   position: relative;
   overflow: hidden;
 }
@@ -327,7 +397,7 @@ select {
   outline: 1px solid rgb(119, 119, 119);
 }
 .canvas-item.selected {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--active-slide);
 }
 .drag-handle {
   height: 5px;
@@ -341,60 +411,66 @@ select {
   height: calc(100% - 5px);
   overflow: hidden;
 }
+
+/* Compact right property panel (React addition; denser to stay 小巧) */
 .props {
-  background: #fafafa;
+  background: #f3f1f1;
   border-left: 1px solid var(--border);
-  padding: 12px;
+  padding: 8px 10px;
   overflow-y: auto;
-  font-size: 13px;
+  font-size: 12px;
   text-align: left;
 }
 .props h3 {
-  font-size: 14px;
-  margin-bottom: 8px;
+  font-size: 13px;
+  margin-bottom: 6px;
+  font-weight: 600;
 }
 .props h4 {
-  font-size: 12px;
-  margin: 12px 0 6px;
+  font-size: 11px;
+  margin: 8px 0 4px;
   color: #666;
+  font-weight: 600;
 }
 .props .muted,
 .props .hint {
   color: #888;
-  font-size: 12px;
-  margin: 8px 0;
+  font-size: 11px;
+  margin: 6px 0;
+  line-height: 1.4;
 }
 .props .atom-meta {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--accent);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 .field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 10px;
-  font-size: 12px;
+  gap: 2px;
+  margin-bottom: 7px;
+  font-size: 11px;
   color: #555;
 }
 .field input,
 .field textarea,
 .field select {
   width: 100%;
-  padding: 6px 8px;
+  padding: 4px 6px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 3px;
   background: #fff;
   user-select: text;
+  font-size: 12px;
 }
 .btn-danger,
 .btn-secondary {
-  width: 100%;
-  margin-top: 10px;
-  padding: 8px;
-  border-radius: 4px;
+  margin-top: 6px;
+  padding: 5px 8px;
+  border-radius: 3px;
   border: 1px solid #ccc;
   cursor: pointer;
+  font-size: 12px;
 }
 .btn-danger {
   background: #fff0f0;
@@ -403,15 +479,36 @@ select {
 }
 .btn-secondary {
   background: #fff;
+  border: 1px solid var(--border);
 }
+.props-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+.props-actions .btn-secondary,
+.props-actions .btn-danger {
+  width: auto;
+  flex: 1 1 auto;
+  min-width: 64px;
+  margin-top: 0;
+}
+.focus-flash {
+  outline: 2px solid var(--active-slide);
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+
 .footer {
-  background: rgba(233, 230, 230, 0.95);
-  box-shadow: 1px 1px 2px #393838;
+  background: var(--panel);
+  box-shadow: 1px 1px 2px #393838fb;
   font-size: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #666;
+  height: 20px;
 }
 
 /* Play */
@@ -494,34 +591,34 @@ select {
   border: solid 1px rgb(219, 219, 219);
 }
 
-/* Context menu (atom / slide) */
+/* Context menu — denser, closer to v-contextmenu */
 .ctx-menu {
   position: fixed;
   z-index: 10000;
-  min-width: 148px;
+  min-width: 132px;
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
-  padding: 4px 0;
+  border-radius: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+  padding: 2px 0;
   user-select: none;
 }
 .ctx-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   border: none;
   background: transparent;
-  padding: 8px 14px;
+  padding: 5px 12px;
   text-align: left;
-  font-size: 13px;
+  font-size: 12px;
   color: #333;
   cursor: pointer;
 }
 .ctx-item:hover:not(.disabled) {
-  background: #eef5f8;
-  color: var(--accent);
+  background: #eee;
+  color: var(--active-slide);
 }
 .ctx-item.disabled {
   opacity: 0.4;
@@ -551,34 +648,8 @@ select {
   transform: translateX(-50%);
   background: rgba(40, 40, 40, 0.88);
   color: #fff;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 12px;
   z-index: 10001;
-}
-.props-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
-}
-.focus-flash {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-.btn-secondary {
-  border: 1px solid var(--border);
-  background: #fff;
-  padding: 6px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.btn-danger {
-  border: 1px solid #e0b4b4;
-  background: #fff5f5;
-  color: #c0392b;
-  padding: 6px 10px;
-  border-radius: 4px;
-  cursor: pointer;
 }

@@ -11,6 +11,8 @@ import {
 export function TopBar() {
   const addSlide = useDeckStore((s) => s.addSlide)
   const addAtom = useDeckStore((s) => s.addAtom)
+  const setActiveAtom = useDeckStore((s) => s.setActiveAtom)
+  const setEditorFocus = useDeckStore((s) => s.setEditorFocus)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const onImage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,6 +92,17 @@ export function TopBar() {
         >
           <span className="icon">🖼</span>
           <span className="label">图片</span>
+        </button>
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={() => {
+            setActiveAtom(null)
+            setEditorFocus(null)
+          }}
+        >
+          <span className="icon">⚙</span>
+          <span className="label">背景</span>
         </button>
         <input
           ref={fileRef}

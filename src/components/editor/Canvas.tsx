@@ -40,8 +40,9 @@ export function Canvas() {
 
   useEffect(() => {
     const measure = () => {
+      // Match Vue Right.vue: min(innerH-150, (innerW-280)*9/16); React adds ~220px props
       const availH = Math.max(200, window.innerHeight - 150)
-      const availW = Math.max(320, window.innerWidth - 250 - 280)
+      const availW = Math.max(320, window.innerWidth - 250 - 220 - 20)
       const h = Math.floor(Math.min(availH, (availW * 9) / 16))
       const w = Math.floor((h * 16) / 9)
       setSize({ w, h })
