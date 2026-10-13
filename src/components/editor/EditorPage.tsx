@@ -62,7 +62,9 @@ export function EditorPage() {
 
   useEffect(() => {
     if (!toast) return
-    const t = window.setTimeout(() => clearToast(), 1800)
+    // Place-mode nudge stays a bit longer so users notice after drawer closes
+    const ms = toast.includes('拖选') ? 2800 : 1800
+    const t = window.setTimeout(() => clearToast(), ms)
     return () => window.clearTimeout(t)
   }, [toast, clearToast])
 

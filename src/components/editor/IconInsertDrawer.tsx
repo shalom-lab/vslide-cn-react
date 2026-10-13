@@ -125,7 +125,6 @@ export function IconInsertDrawer({ open, onClose }: Props) {
                       kind: 'icon',
                       src: buildIconSrc(entry),
                     })
-                    onClose()
                   }}
                 >
                   <I size={28} strokeWidth={1.75} color={entry.color} />

@@ -414,16 +414,16 @@ export function Canvas() {
       {placing && (
         <div className="place-hint" role="status">
           {placeMode === 'text'
-            ? '类型已选 · 在画布拖框放置文字 · Esc 取消'
+            ? '请在画布拖选区域放置文字 · Esc 取消'
             : placeMode === 'html'
-              ? '类型已选 · 在画布拖框放置 HTML · Esc 取消'
+              ? '请在画布拖选区域放置 HTML · Esc 取消'
               : placeMode === 'table'
-                ? '在画布拖框放置表格 · Esc 取消'
+                ? '请在画布拖选区域放置表格 · Esc 取消'
                 : placeMode === 'image'
-                  ? '图片已选 · 在画布拖框放置（多图将平铺） · Esc 取消'
+                  ? '请在画布拖选区域放置图片（多图将平铺） · Esc 取消'
                   : placeMode === 'icon'
-                    ? '图标已选 · 在画布拖框放置 · Esc 取消'
-                    : '图表已选 · 在画布拖框放置 · Esc 取消'}
+                    ? '请在画布拖选区域放置图标 · Esc 取消'
+                    : '请在画布拖选区域放置图表 · Esc 取消'}
         </div>
       )}
       <div

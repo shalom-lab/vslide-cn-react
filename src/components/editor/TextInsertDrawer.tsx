@@ -30,7 +30,6 @@ export function TextInsertDrawer({ open, onClose }: Props) {
 
   const pick = (atomName: 'text-md' | 'text-shadow' | 'custom-html') => {
     armPendingInsert({ kind: 'text', atomName })
-    onClose()
   }
 
   return (

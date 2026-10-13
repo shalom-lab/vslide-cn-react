@@ -294,6 +294,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       iconDrawerOpen: false,
       activeAtomId: null,
       editorFocus: null,
+      toast: '请在画布拖选区域',
     }),
 
   startImagePlace: () =>
@@ -342,6 +343,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       iconDrawerOpen: false,
       activeAtomId: null,
       editorFocus: null,
+      toast: '请在画布拖选区域',
     })
   },
 
@@ -427,40 +429,53 @@ export const useDeckStore = create<DeckState>((set, get) => ({
     }),
 
   setChartDrawerOpen: (open) =>
-    set(
+    set((state) =>
       open
         ? { chartDrawerOpen: true, textDrawerOpen: false, iconDrawerOpen: false }
         : {
             chartDrawerOpen: false,
-            placeMode: null,
-            pendingInsert: null,
-            pendingLayout: null,
             textDrawerOpen: false,
             iconDrawerOpen: false,
+            // Keep place mode if already armed (pick → arm closes drawer, then onClose)
+            ...(state.pendingInsert
+              ? {}
+              : {
+                  placeMode: null,
+                  pendingInsert: null,
+                  pendingLayout: null,
+                }),
           },
     ),
 
   setTextDrawerOpen: (open) =>
-    set(
+    set((state) =>
       open
         ? { textDrawerOpen: true, chartDrawerOpen: false, iconDrawerOpen: false }
         : {
             textDrawerOpen: false,
-            placeMode: null,
-            pendingInsert: null,
-            pendingLayout: null,
+            ...(state.pendingInsert
+              ? {}
+              : {
+                  placeMode: null,
+                  pendingInsert: null,
+                  pendingLayout: null,
+                }),
           },
     ),
 
   setIconDrawerOpen: (open) =>
-    set(
+    set((state) =>
       open
         ? { iconDrawerOpen: true, chartDrawerOpen: false, textDrawerOpen: false }
         : {
             iconDrawerOpen: false,
-            placeMode: null,
-            pendingInsert: null,
-            pendingLayout: null,
+            ...(state.pendingInsert
+              ? {}
+              : {
+                  placeMode: null,
+                  pendingInsert: null,
+                  pendingLayout: null,
+                }),
           },
     ),
 

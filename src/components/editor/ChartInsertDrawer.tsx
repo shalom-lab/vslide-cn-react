@@ -67,12 +67,10 @@ export function ChartInsertDrawer({ open, onClose }: Props) {
 
   const pickBuiltin = (entry: AtomRegistryEntry) => {
     armPendingInsert({ kind: 'chart', atomName: entry.atomName })
-    onClose()
   }
 
   const pickSaved = (item: LocalGalleryItem) => {
     armPendingInsert({ kind: 'saved', atom: item.atom })
-    onClose()
   }
 
   const startRename = (item: LocalGalleryItem) => {
