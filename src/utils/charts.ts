@@ -13,6 +13,23 @@ function axisSheet(sheetData: (string | number)[][]) {
   return { header, categories }
 }
 
+/**
+ * Vue-aligned grid: percentage insets + containLabel so the plot fills the
+ * atom box at any size (fixed px margins left huge empty regions when the
+ * container was taller/wider than the default chart draft size).
+ */
+function chartGrid(
+  extra?: Partial<{ left: string; right: string; top: string; bottom: string }>,
+) {
+  return {
+    containLabel: true,
+    left: extra?.left ?? '4%',
+    right: extra?.right ?? '4%',
+    top: extra?.top ?? '18%',
+    bottom: extra?.bottom ?? '8%',
+  }
+}
+
 /** sheetData: first row = series names (col0 = category header), rest = rows */
 export function sheetToLineOption(
   sheetData: (string | number)[][],
@@ -32,7 +49,7 @@ export function sheetToLineOption(
     title: titleOpt(title),
     tooltip: { trigger: 'axis' },
     legend: { top: 24 },
-    grid: { left: 40, right: 20, top: 56, bottom: 28 },
+    grid: chartGrid(),
     xAxis: { type: 'category', data: categories, boundaryGap: false },
     yAxis: { type: 'value' },
     series,
@@ -55,7 +72,7 @@ export function sheetToBarOption(
     title: titleOpt(title),
     tooltip: { trigger: 'axis' },
     legend: { top: 24 },
-    grid: { left: 40, right: 20, top: 56, bottom: 28 },
+    grid: chartGrid(),
     xAxis: { type: 'category', data: categories },
     yAxis: { type: 'value' },
     series,
@@ -81,7 +98,7 @@ export function sheetToStackBarOption(
     title: titleOpt(title),
     tooltip: { trigger: 'axis' },
     legend: { top: 24 },
-    grid: { left: 40, right: 20, top: 56, bottom: 28 },
+    grid: chartGrid(),
     xAxis: { type: 'category', data: categories },
     yAxis: { type: 'value' },
     series,
@@ -105,7 +122,8 @@ export function sheetToHorBarOption(
     title: titleOpt(title),
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     legend: { top: 24 },
-    grid: { left: 72, right: 24, top: 56, bottom: 28 },
+    // Extra left room for category labels; containLabel keeps plot filling
+    grid: chartGrid({ left: '3%', top: '16%', bottom: '6%' }),
     xAxis: { type: 'value' },
     yAxis: { type: 'category', data: categories },
     series,
@@ -151,7 +169,9 @@ export function sheetToScatterOption(
   const groups = new Map<string, { value: [number, number] }[]>()
   for (const r of rows) {
     const name = String(r[0] ?? '')
-    const point = { value: [Number(r[1]) || 0, Number(r[2]) || 0] as [number, number] }
+    const point = {
+      value: [Number(r[1]) || 0, Number(r[2]) || 0] as [number, number],
+    }
     const list = groups.get(name) ?? []
     list.push(point)
     groups.set(name, list)
@@ -174,7 +194,7 @@ export function sheetToScatterOption(
       },
     },
     legend: { top: 24 },
-    grid: { left: 48, right: 24, top: 56, bottom: 36 },
+    grid: chartGrid({ bottom: '10%' }),
     xAxis: { type: 'value', scale: true, splitLine: { show: true } },
     yAxis: { type: 'value', scale: true, splitLine: { show: true } },
     series,

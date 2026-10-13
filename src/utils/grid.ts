@@ -27,8 +27,21 @@ export interface GridMetrics {
   containerHeight: number
 }
 
-export function calcRowHeight(containerHeight: number, rows = GRID_COLS): number {
-  return Math.max(8, Math.floor(containerHeight / rows))
+/**
+ * Row height so `rows` cells + vertical margins fill `containerHeight`
+ * (mirrors calcColWidth). Plain `height/rows` ignored margins and made
+ * atom boxes taller than the stage — charts looked vertically squashed
+ * relative to empty space in the atom.
+ */
+export function calcRowHeight(
+  containerHeight: number,
+  rows = GRID_COLS,
+  marginY: number = GRID_MARGIN[1],
+  paddingY: number = GRID_PADDING[1],
+): number {
+  const usable =
+    containerHeight - marginY * Math.max(0, rows - 1) - paddingY * 2
+  return Math.max(1, Math.floor(usable / rows))
 }
 
 export function calcColWidth(

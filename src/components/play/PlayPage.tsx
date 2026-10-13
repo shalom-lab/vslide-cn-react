@@ -78,7 +78,7 @@ export function PlayPage() {
     h: a.h,
     static: true,
   }))
-  const rowHeight = calcRowHeight(height)
+  const rowHeight = calcRowHeight(height, GRID_COLS, 5)
 
   return (
     <div
