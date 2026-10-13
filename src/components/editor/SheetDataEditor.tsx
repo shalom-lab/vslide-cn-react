@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { HotTable } from '@handsontable/react-wrapper'
 import { registerAllModules } from 'handsontable/registry'
 import type { HotTableRef } from '@handsontable/react-wrapper'
@@ -29,21 +29,51 @@ function normalizeSheet(raw: unknown): Cell[][] {
   )
 }
 
+function sheetKey(sheetData: unknown): string {
+  try {
+    return JSON.stringify(sheetData)
+  } catch {
+    return ''
+  }
+}
+
 /**
  * Handsontable spreadsheet for atom sheetData (charts / tables).
  * Mirrors vslide-vue Edit/Share/SheetData.vue — drag-edit cells, spare rows/cols.
  */
 export function SheetDataEditor({ data, onChange, focused }: Props) {
   const hotRef = useRef<HotTableRef>(null)
+  const lastEmitted = useRef<string>(sheetKey(data))
   const sheet = useMemo(() => normalizeSheet(data), [data])
+
+  useEffect(() => {
+    lastEmitted.current = sheetKey(data)
+  }, [data])
 
   const emitFromHot = useCallback(() => {
     const hot = hotRef.current?.hotInstance
-    if (!hot) return
-    const nr = hot.countRows() - hot.countEmptyRows(true)
-    const nc = hot.countCols() - hot.countEmptyCols(true)
+    // Guard destroyed / half-mounted instances (canvas resize / selection remounts)
+    if (!hot || hot.isDestroyed || !hot.table) return
+    let nr: number
+    let nc: number
+    try {
+      nr = hot.countRows() - hot.countEmptyRows(true)
+      nc = hot.countCols() - hot.countEmptyCols(true)
+    } catch {
+      return
+    }
     if (nr + nc === 0) return
-    const raw = hot.getData(0, 0, Math.max(0, nr - 1), Math.max(0, nc - 1))
+    let raw: Cell[][]
+    try {
+      raw = hot.getData(
+        0,
+        0,
+        Math.max(0, nr - 1),
+        Math.max(0, nc - 1),
+      ) as Cell[][]
+    } catch {
+      return
+    }
     const sheetData = (JSON.parse(JSON.stringify(raw)) as Cell[][]).map((row) =>
       row.map((cell) => {
         if (cell === null || cell === undefined) return ''
@@ -54,6 +84,10 @@ export function SheetDataEditor({ data, onChange, focused }: Props) {
         return s
       }),
     ) as (string | number)[][]
+    const key = sheetKey(sheetData)
+    // Skip no-op emits (spare row/col auto-create would otherwise loop setState)
+    if (key === lastEmitted.current) return
+    lastEmitted.current = key
     onChange(sheetData, nr, nc)
   }, [onChange])
 
@@ -92,8 +126,15 @@ export function SheetDataEditor({ data, onChange, focused }: Props) {
           }}
           afterRemoveCol={() => emitFromHot()}
           afterRemoveRow={() => emitFromHot()}
-          afterCreateCol={() => emitFromHot()}
-          afterCreateRow={() => emitFromHot()}
+          // minSpareRows/Cols fire source "auto" — ignore to avoid update loops
+          afterCreateCol={(_i, _n, source) => {
+            if (source === 'auto') return
+            emitFromHot()
+          }}
+          afterCreateRow={(_i, _n, source) => {
+            if (source === 'auto') return
+            emitFromHot()
+          }}
         />
       </div>
     </div>

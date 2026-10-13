@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement, type Ref } from 'react'
 import GridLayout, { WidthProvider, type Layout } from 'react-grid-layout'
 import {
   ArrowDown,
@@ -42,7 +42,25 @@ import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
 const AutoGrid = WidthProvider(GridLayout)
+
 const CTX = { size: 14, strokeWidth: 1.75 }
+
+/**
+ * Stable RGL/react-resizable handle: always a real DOM node with the library
+ * ref attached. Avoids undefined nodeRef → ownerDocument crashes mid-drag
+ * (esp. when hover-only handles lose :hover while the pointer is still down).
+ */
+function renderCornerHandle(
+  axis: string,
+  ref: Ref<HTMLElement>,
+): ReactElement {
+  return (
+    <span
+      ref={ref as Ref<HTMLSpanElement>}
+      className={`react-resizable-handle react-resizable-handle-${axis}`}
+    />
+  )
+}
 
 interface MenuState {
   x: number
@@ -81,6 +99,8 @@ export function Canvas() {
   const [size, setSize] = useState({ w: 640, h: 360 })
   const [menu, setMenu] = useState<MenuState | null>(null)
   const [dragDraft, setDragDraft] = useState<DragDraft | null>(null)
+  /** Atom currently being resized — keeps handles mounted/interactive mid-drag. */
+  const [resizingAtomId, setResizingAtomId] = useState<string | null>(null)
   const stageRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<DragDraft | null>(null)
   const placing =
@@ -161,6 +181,21 @@ export function Canvas() {
       return { ...a, x: item.x, y: item.y, w: item.w, h: item.h }
     })
     updateSlideLayout(activeSlideId, atoms)
+  }
+
+  const onResizeStart = (
+    _layout: Layout[],
+    _oldItem: Layout,
+    newItem: Layout,
+  ) => {
+    // Select so .selected keeps handles visible if :hover ends mid-drag
+    setActiveAtom(newItem.i)
+    setResizingAtomId(newItem.i)
+  }
+
+  const onResizeStop = (next: Layout[]) => {
+    setResizingAtomId(null)
+    onLayoutChange(next)
   }
 
   const closeMenu = useCallback(() => setMenu(null), [])
@@ -413,8 +448,10 @@ export function Canvas() {
           allowOverlap
           useCSSTransforms
           onDragStop={onLayoutChange}
-          onResizeStop={onLayoutChange}
+          onResizeStart={onResizeStart}
+          onResizeStop={onResizeStop}
           resizeHandles={['nw', 'ne', 'sw', 'se']}
+          resizeHandle={renderCornerHandle}
           draggableCancel=".atom-no-drag,input,textarea,button,a"
         >
           {slide.slideContent.map((atom, index) => (
@@ -423,7 +460,8 @@ export function Canvas() {
               className={
                 'canvas-item' +
                 (atom.i === activeAtomId ? ' selected' : '') +
-                (atom.static ? ' locked' : '')
+                (atom.static ? ' locked' : '') +
+                (atom.i === resizingAtomId ? ' resizing-atom' : '')
               }
               style={atomStackStyle(atom, index, atom.i === activeAtomId)}
               onClick={(e) => {

@@ -1179,7 +1179,10 @@ body.pane-resizing * {
   box-sizing: border-box;
   z-index: 5;
   opacity: 0;
-  pointer-events: none;
+  /* Keep hit-testing alive: toggling pointer-events off when :hover ends
+     mid-drag (NW/NE/SW/SE pulled outside the atom) leaves react-draggable
+     with a dead handle nodeRef and crashes on ownerDocument. */
+  pointer-events: auto;
   padding: 0;
 }
 .react-grid-item > .react-resizable-handle::after {
@@ -1188,14 +1191,22 @@ body.pane-resizing * {
   background: none !important;
 }
 
-/* Show corner handles on hover and when selected (non-locked) */
+/* Locked atoms: never interactive */
+.canvas-item.locked > .react-resizable-handle {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Show corner handles on hover, selection, or active resize (non-locked) */
 .canvas-item:hover:not(.locked) > .react-resizable-handle,
-.canvas-item.selected:not(.locked) > .react-resizable-handle {
+.canvas-item.selected:not(.locked) > .react-resizable-handle,
+.canvas-item.resizing-atom:not(.locked) > .react-resizable-handle,
+.react-grid-item.resizing:not(.locked) > .react-resizable-handle {
   opacity: 1;
   pointer-events: auto;
 }
 /* Hover (not selected): slightly softer so selection still reads stronger */
-.canvas-item:hover:not(.selected):not(.locked) > .react-resizable-handle {
+.canvas-item:hover:not(.selected):not(.locked):not(.resizing-atom) > .react-resizable-handle {
   opacity: 0.85;
 }
 
