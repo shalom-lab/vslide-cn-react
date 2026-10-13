@@ -234,7 +234,9 @@ export function resolveEditorOption(key: string): EditorOption {
     key.includes('bar') ||
     key.includes('line') ||
     key.includes('pie') ||
-    key.includes('scatter')
+    key.includes('scatter') ||
+    key.includes('radar') ||
+    key.includes('funnel')
   ) {
     return EDITOR_OPTIONS.echart!
   }

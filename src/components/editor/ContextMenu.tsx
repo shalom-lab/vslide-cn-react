@@ -3,11 +3,13 @@ import { createPortal } from 'react-dom'
 
 export interface ContextMenuItem {
   key: string
-  label: string
+  label?: string
   icon?: ReactNode
   disabled?: boolean
   danger?: boolean
-  onClick: () => void
+  /** Visual separator — ignore other fields */
+  divider?: boolean
+  onClick?: () => void
 }
 
 interface Props {
@@ -59,27 +61,31 @@ export function ContextMenu({ x, y, items, onClose }: Props) {
       style={{ left: x, top: y }}
       role="menu"
     >
-      {items.map((item) => (
-        <div key={item.key}>
-          <button
-            type="button"
-            className={
-              'ctx-item' +
-              (item.disabled ? ' disabled' : '') +
-              (item.danger ? ' danger' : '')
-            }
-            disabled={item.disabled}
-            onClick={() => {
-              if (item.disabled) return
-              item.onClick()
-              onClose()
-            }}
-          >
-            {item.icon ? <span className="ctx-icon">{item.icon}</span> : null}
-            <span className="ctx-label">{item.label}</span>
-          </button>
-        </div>
-      ))}
+      {items.map((item) =>
+        item.divider ? (
+          <div key={item.key} className="ctx-divider" role="separator" />
+        ) : (
+          <div key={item.key}>
+            <button
+              type="button"
+              className={
+                'ctx-item' +
+                (item.disabled ? ' disabled' : '') +
+                (item.danger ? ' danger' : '')
+              }
+              disabled={item.disabled}
+              onClick={() => {
+                if (item.disabled || !item.onClick) return
+                item.onClick()
+                onClose()
+              }}
+            >
+              {item.icon ? <span className="ctx-icon">{item.icon}</span> : null}
+              <span className="ctx-label">{item.label}</span>
+            </button>
+          </div>
+        ),
+      )}
     </div>,
     document.body,
   )

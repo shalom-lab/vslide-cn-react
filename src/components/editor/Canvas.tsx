@@ -33,6 +33,7 @@ import {
 } from '../../utils/grid'
 import { AtomRenderer } from '../atoms/AtomRenderer'
 import { ContextMenu, type ContextMenuItem } from './ContextMenu'
+import { InlineAtomEditor, isInlineEditableAtom } from './InlineAtomEditor'
 import {
   atomStackStyle,
   canLayerAction,
@@ -82,13 +83,12 @@ export function Canvas() {
   const setActiveAtom = useDeckStore((s) => s.setActiveAtom)
   const setEditorFocus = useDeckStore((s) => s.setEditorFocus)
   const updateSlideLayout = useDeckStore((s) => s.updateSlideLayout)
+  const updateAtomDetail = useDeckStore((s) => s.updateAtomDetail)
   const duplicateActiveAtom = useDeckStore((s) => s.duplicateActiveAtom)
   const removeActiveAtom = useDeckStore((s) => s.removeActiveAtom)
   const toggleFixedActiveAtom = useDeckStore((s) => s.toggleFixedActiveAtom)
   const reorderActiveAtom = useDeckStore((s) => s.reorderActiveAtom)
   const saveActiveAtomToGallery = useDeckStore((s) => s.saveActiveAtomToGallery)
-  const toast = useDeckStore((s) => s.toast)
-  const clearToast = useDeckStore((s) => s.clearToast)
   const placeMode = useDeckStore((s) => s.placeMode)
   const pendingLayout = useDeckStore((s) => s.pendingLayout)
   const finishPlaceRect = useDeckStore((s) => s.finishPlaceRect)
@@ -98,6 +98,7 @@ export function Canvas() {
 
   const [size, setSize] = useState({ w: 640, h: 360 })
   const [menu, setMenu] = useState<MenuState | null>(null)
+  const [editingAtomId, setEditingAtomId] = useState<string | null>(null)
   const [dragDraft, setDragDraft] = useState<DragDraft | null>(null)
   /** Atom currently being resized — keeps handles mounted/interactive mid-drag. */
   const [resizingAtomId, setResizingAtomId] = useState<string | null>(null)
@@ -138,12 +139,6 @@ export function Canvas() {
       window.removeEventListener('resize', measure)
     }
   }, [])
-
-  useEffect(() => {
-    if (!toast) return
-    const t = window.setTimeout(clearToast, 2000)
-    return () => window.clearTimeout(t)
-  }, [toast, clearToast])
 
   // Clear in-progress drag when place mode ends
   useEffect(() => {
@@ -337,6 +332,7 @@ export function Canvas() {
             setEditorFocus('atomAnimation')
           },
         },
+        { key: 'div-anim', divider: true },
         {
           key: 'front',
           label: '置顶',
@@ -373,6 +369,7 @@ export function Canvas() {
             !canLayerAction(slide?.slideContent ?? [], menuAtom.i, 'back'),
           onClick: () => reorderActiveAtom('back'),
         },
+        { key: 'div-layer', divider: true },
         {
           key: 'fixed',
           label: menuAtom.static ? '取消固定' : '固定',
@@ -380,6 +377,7 @@ export function Canvas() {
           disabled: forbidden,
           onClick: () => toggleFixedActiveAtom(),
         },
+        { key: 'div-fixed', divider: true },
         {
           key: 'copy',
           label: '复制',
@@ -394,6 +392,7 @@ export function Canvas() {
           danger: true,
           onClick: () => removeActiveAtom(),
         },
+        { key: 'div-del', divider: true },
         {
           key: 'save',
           label: '保存',
@@ -431,6 +430,7 @@ export function Canvas() {
           if (placing) return
           setActiveAtom(null)
           setEditorFocus(null)
+          setEditingAtomId(null)
           closeMenu()
         }}
       >
@@ -473,6 +473,12 @@ export function Canvas() {
                 if (placing) return
                 e.stopPropagation()
                 setActiveAtom(atom.i)
+                if (isInlineEditableAtom(atom) && !atom.super) {
+                  setEditingAtomId(atom.i)
+                  setEditorFocus('atomContent')
+                  return
+                }
+                // Vue: dblclick toggles 固定 for non-text atoms
                 window.setTimeout(() => toggleFixedActiveAtom(), 0)
               }}
               onContextMenu={(e) => {
@@ -489,7 +495,18 @@ export function Canvas() {
                 </span>
               ) : null}
               <div className="canvas-item-body">
-                <AtomRenderer atom={atom} />
+                {editingAtomId === atom.i ? (
+                  <InlineAtomEditor
+                    atom={atom}
+                    onCommit={(patch) => {
+                      updateAtomDetail(activeSlideId, atom.i, patch)
+                      setEditingAtomId(null)
+                    }}
+                    onCancel={() => setEditingAtomId(null)}
+                  />
+                ) : (
+                  <AtomRenderer atom={atom} />
+                )}
               </div>
             </div>
           ))}
@@ -529,7 +546,6 @@ export function Canvas() {
           onClose={closeMenu}
         />
       )}
-      {toast && <div className="toast">{toast}</div>}
     </div>
   )
 }

@@ -163,7 +163,7 @@ export function createSampleDeck(): DeckFile {
           detail: {
             editorId: nanoid(10),
             markdown:
-              '拖框插入图表 / 表格 / 图片 · 右键 **置顶 / 上移 / 下移 / 置底** · ← → 放映 · Esc 编辑',
+              '拖框插入 · 双击编辑文字 · 右键图层/固定 · Ctrl+S 思路：工具栏保存 · 放映支持步进动画',
           },
         },
       }),

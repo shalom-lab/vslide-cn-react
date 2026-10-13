@@ -13,13 +13,13 @@ import {
   sheetNrNc,
 } from '../types/deck'
 import { cssBackground } from '../utils/background'
-import { normalizeDeck } from '../utils/serialize'
+import { normalizeDeck, serializeDeck } from '../utils/serialize'
 import {
   applyLayerOrder,
   withZIndex,
   type LayerAction,
 } from '../utils/layerOrder'
-import type { GridLayoutRect } from '../utils/grid'
+import { GRID_COLS, type GridLayoutRect } from '../utils/grid'
 import { setByPath } from '../utils/pathSet'
 
 import {
@@ -47,6 +47,8 @@ export {
 } from '../atoms/registry'
 
 const LOCAL_ATOMS_KEY = 'vslide-cn-react:localAtoms'
+const DECK_KEY = 'vslide-cn-react:deck'
+const CLIPBOARD_KEY = 'vslide-cn-react:atomClipboard'
 const HISTORY_LIMIT = 50
 
 export type PlaceMode = 'chart' | 'text' | 'html' | 'table' | 'image' | 'icon' | null
@@ -133,6 +135,13 @@ interface DeckState {
   ) => void
   replaceDeck: (deck: DeckFile | unknown) => void
   resetSample: () => void
+  /** Persist current deck to localStorage (Vue 「保存」). */
+  saveDeck: () => void
+  showToast: (msg: string) => void
+  /** Copy active atom into clipboard (Ctrl+C). */
+  copyActiveAtom: () => void
+  /** Paste clipboard atom onto active slide (Ctrl+V). */
+  pasteAtom: () => void
   undo: () => void
   redo: () => void
   canUndo: () => boolean
@@ -178,6 +187,43 @@ function persistLocalAtoms(atoms: Atom[]) {
   }
 }
 
+function loadPersistedDeck(): DeckFile | null {
+  try {
+    const raw = localStorage.getItem(DECK_KEY)
+    if (!raw) return null
+    return normalizeDeck(JSON.parse(raw))
+  } catch {
+    return null
+  }
+}
+
+function persistDeck(deck: DeckFile) {
+  try {
+    localStorage.setItem(DECK_KEY, JSON.stringify(serializeDeck(deck)))
+  } catch {
+    /* quota */
+  }
+}
+
+function loadClipboardAtom(): Atom | null {
+  try {
+    const raw = localStorage.getItem(CLIPBOARD_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? (parsed as Atom) : null
+  } catch {
+    return null
+  }
+}
+
+function persistClipboardAtom(atom: Atom) {
+  try {
+    localStorage.setItem(CLIPBOARD_KEY, JSON.stringify(atom))
+  } catch {
+    /* quota */
+  }
+}
+
 /** Push current deck onto past before a mutating set. */
 function pushHistory(
   s: Pick<DeckState, 'deck' | 'past'>,
@@ -189,11 +235,14 @@ function pushHistory(
 let detailTimer: ReturnType<typeof setTimeout> | null = null
 let detailSnapshot: DeckFile | null = null
 
-const initial = createSampleDeck()
+const bootDeck =
+  typeof localStorage !== 'undefined'
+    ? loadPersistedDeck() ?? createSampleDeck()
+    : createSampleDeck()
 
 export const useDeckStore = create<DeckState>((set, get) => ({
-  deck: initial,
-  activeSlideId: initial.slides[0]?.i ?? '0',
+  deck: bootDeck,
+  activeSlideId: bootDeck.slides[0]?.i ?? '0',
   activeAtomId: null,
   editorFocus: null,
   localAtoms: typeof localStorage !== 'undefined' ? loadLocalAtoms() : [],
@@ -409,6 +458,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
   setActiveAtom: (id) => set({ activeAtomId: id }),
   setEditorFocus: (focus) => set({ editorFocus: focus }),
   clearToast: () => set({ toast: null }),
+  showToast: (msg) => set({ toast: msg }),
 
   canUndo: () => get().past.length > 0,
   canRedo: () => get().future.length > 0,
@@ -871,6 +921,43 @@ export const useDeckStore = create<DeckState>((set, get) => ({
     }))
   },
 
+  saveDeck: () => {
+    const deck = get().deck
+    persistDeck(deck)
+    set({ toast: '已保存到本机' })
+  },
+
+  copyActiveAtom: () => {
+    const atom = selectActiveAtom(get())
+    if (!atom || atom.super) return
+    persistClipboardAtom(JSON.parse(JSON.stringify(atom)) as Atom)
+    set({ toast: '已复制组件' })
+  },
+
+  pasteAtom: () => {
+    const clip = loadClipboardAtom()
+    if (!clip) {
+      set({ toast: '剪贴板为空' })
+      return
+    }
+    const copy: Atom = {
+      ...JSON.parse(JSON.stringify(clip)),
+      i: nanoid(8),
+      x: Math.min(GRID_COLS - (clip.w || 6), (clip.x || 0) + 2),
+      y: (clip.y || 0) + 2,
+      static: false,
+      super: false,
+    }
+    if (
+      copy.atomContent.atomName === 'text-md' ||
+      copy.atomContent.atomName === 'custom-html'
+    ) {
+      copy.atomContent.detail.editorId = nanoid(10)
+    }
+    get().addAtom(copy)
+    set({ toast: '已粘贴组件' })
+  },
+
   replaceDeck: (raw) => {
     const deck = normalizeDeck(raw)
     set((s) => ({
@@ -879,6 +966,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       activeSlideId: deck.slides[0]?.i ?? '0',
       activeAtomId: null,
       editorFocus: null,
+      toast: '已打开文稿',
     }))
   },
 
@@ -890,6 +978,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       activeSlideId: deck.slides[0]?.i ?? '0',
       activeAtomId: null,
       editorFocus: null,
+      toast: '已恢复示例文稿',
     }))
   },
 }))

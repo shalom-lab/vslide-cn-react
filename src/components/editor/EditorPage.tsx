@@ -40,6 +40,11 @@ export function EditorPage() {
   const redo = useDeckStore((s) => s.redo)
   const removeActiveAtom = useDeckStore((s) => s.removeActiveAtom)
   const duplicateActiveAtom = useDeckStore((s) => s.duplicateActiveAtom)
+  const copyActiveAtom = useDeckStore((s) => s.copyActiveAtom)
+  const pasteAtom = useDeckStore((s) => s.pasteAtom)
+  const saveDeck = useDeckStore((s) => s.saveDeck)
+  const toast = useDeckStore((s) => s.toast)
+  const clearToast = useDeckStore((s) => s.clearToast)
   const activeAtomId = useDeckStore((s) => s.activeAtomId)
   const placeMode = useDeckStore((s) => s.placeMode)
   const chartDrawerOpen = useDeckStore((s) => s.chartDrawerOpen)
@@ -54,6 +59,12 @@ export function EditorPage() {
     startDrag,
     onDoubleClick,
   } = useResizablePanes()
+
+  useEffect(() => {
+    if (!toast) return
+    const t = window.setTimeout(() => clearToast(), 1800)
+    return () => window.clearTimeout(t)
+  }, [toast, clearToast])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -89,6 +100,11 @@ export function EditorPage() {
         redo()
         return
       }
+      if (mod && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        saveDeck()
+        return
+      }
       if (editing) return
 
       if ((e.key === 'Delete' || e.key === 'Backspace') && activeAtomId) {
@@ -99,14 +115,25 @@ export function EditorPage() {
         e.preventDefault()
         duplicateActiveAtom()
       }
+      if (mod && e.key.toLowerCase() === 'c' && activeAtomId) {
+        e.preventDefault()
+        copyActiveAtom()
+      }
+      if (mod && e.key.toLowerCase() === 'v') {
+        e.preventDefault()
+        pasteAtom()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [
     undo,
     redo,
+    saveDeck,
     removeActiveAtom,
     duplicateActiveAtom,
+    copyActiveAtom,
+    pasteAtom,
     activeAtomId,
     placeMode,
     chartDrawerOpen,
@@ -158,7 +185,8 @@ export function EditorPage() {
         />
         <PropertyPanel />
       </main>
-      <footer className="footer">www.vslide.cn · React 重写 · Ctrl+Z 撤销</footer>
+      <footer className="footer">www.vslide.cn · React 重写 · Ctrl+Z 撤销 · Ctrl+C/V 复制粘贴</footer>
+      {toast && <div className="toast">{toast}</div>}
     </div>
   )
 }

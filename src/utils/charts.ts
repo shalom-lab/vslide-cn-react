@@ -201,6 +201,89 @@ export function sheetToScatterOption(
   }
 }
 
+/** simple-radar sheet: row0 headers, row1 mins, row2 maxes, rest = series values */
+export function sheetToRadarOption(
+  sheetData: (string | number)[][],
+  title?: string,
+): EChartsOption {
+  if (!sheetData?.length || sheetData.length < 3) return {}
+  const header = sheetData[0] ?? []
+  const mins = sheetData[1] ?? []
+  const maxs = sheetData[2] ?? []
+  const indicator = header.slice(1).map((name, i) => ({
+    name: String(name),
+    min: Number(mins[i + 1]) || 0,
+    max: Number(maxs[i + 1]) || 100,
+  }))
+  const seriesData = sheetData.slice(3).map((row) => ({
+    name: String(row[0] ?? ''),
+    value: row.slice(1).map((v) => Number(v) || 0),
+  }))
+  return {
+    color: getActiveChartColors(),
+    title: titleOpt(title),
+    tooltip: { trigger: 'item' },
+    legend: { top: 24 },
+    radar: {
+      indicator,
+      center: ['50%', '58%'],
+      radius: '62%',
+      shape: 'polygon',
+      splitNumber: 5,
+    },
+    series: [
+      {
+        type: 'radar',
+        data: seriesData,
+        areaStyle: { opacity: 0.15 },
+        symbol: 'circle',
+        symbolSize: 5,
+      },
+    ],
+  }
+}
+
+/** simple-funnel sheet: [name, value] rows (no header required; skip header-like first row if col1 is non-numeric) */
+export function sheetToFunnelOption(
+  sheetData: (string | number)[][],
+  title?: string,
+): EChartsOption {
+  if (!sheetData?.length) return {}
+  let rows = sheetData
+  const firstVal = Number(sheetData[0]?.[1])
+  if (Number.isNaN(firstVal) && sheetData.length > 1) {
+    rows = sheetData.slice(1)
+  }
+  const data = rows.map((r) => ({
+    name: String(r[0] ?? ''),
+    value: Number(r[1]) || 0,
+  }))
+  const max = Math.max(...data.map((d) => d.value), 1)
+  return {
+    color: getActiveChartColors(),
+    title: titleOpt(title),
+    tooltip: { trigger: 'item', formatter: '{b}: {c}' },
+    legend: { top: 24 },
+    series: [
+      {
+        type: 'funnel',
+        left: '10%',
+        right: '10%',
+        top: '18%',
+        bottom: '8%',
+        min: 0,
+        max,
+        minSize: '0%',
+        maxSize: '100%',
+        sort: 'descending',
+        gap: 2,
+        label: { show: true, position: 'inside' },
+        data,
+      },
+    ],
+  }
+}
+
 export type ChartOptionBuilder = (
   sheetData: (string | number)[][],
   title?: string,
@@ -218,6 +301,8 @@ export const chartBuilders: Record<string, ChartOptionBuilder> = {
   'simple-pie': sheetToPieOption,
   'simple-scatter': sheetToScatterOption,
   'simple-bubble': sheetToScatterOption,
+  'simple-radar': sheetToRadarOption,
+  'simple-funnel': sheetToFunnelOption,
 }
 
 export function buildChartOption(
@@ -228,3 +313,4 @@ export function buildChartOption(
   const builder = chartBuilders[atomName] ?? sheetToLineOption
   return builder(sheetData, title)
 }
+

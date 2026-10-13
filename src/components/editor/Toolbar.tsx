@@ -8,6 +8,8 @@ export function Toolbar() {
   const deck = useDeckStore((s) => s.deck)
   const replaceDeck = useDeckStore((s) => s.replaceDeck)
   const resetSample = useDeckStore((s) => s.resetSample)
+  const saveDeck = useDeckStore((s) => s.saveDeck)
+  const showToast = useDeckStore((s) => s.showToast)
 
   const download = () => {
     const payload = serializeDeck(deck)
@@ -19,6 +21,7 @@ export function Toolbar() {
     a.download = `${fileName || 'vslide'}.json`
     a.click()
     URL.revokeObjectURL(a.href)
+    showToast('已下载 JSON')
   }
 
   const openFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,10 +32,11 @@ export function Toolbar() {
       try {
         replaceDeck(JSON.parse(String(reader.result)))
       } catch (err) {
-        alert(err instanceof Error ? err.message : 'JSON 解析失败')
+        showToast(err instanceof Error ? err.message : 'JSON 解析失败')
       }
       e.target.value = ''
     }
+    reader.onerror = () => showToast('读取文件失败')
     reader.readAsText(file)
   }
 
@@ -51,6 +55,9 @@ export function Toolbar() {
               打开
               <input type="file" accept=".json" onChange={openFile} hidden />
             </label>
+          </li>
+          <li onClick={saveDeck} title="保存到本机 localStorage">
+            保存
           </li>
           <li onClick={download}>下载</li>
           <li onClick={resetSample}>示例</li>

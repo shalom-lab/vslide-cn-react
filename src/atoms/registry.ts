@@ -15,9 +15,11 @@ import {
 import type { ChartOptionBuilder } from '../utils/charts'
 import {
   sheetToBarOption,
+  sheetToFunnelOption,
   sheetToHorBarOption,
   sheetToLineOption,
   sheetToPieOption,
+  sheetToRadarOption,
   sheetToScatterOption,
   sheetToStackBarOption,
 } from '../utils/charts'
@@ -30,6 +32,8 @@ export type ChartKind =
   | 'hor-bar'
   | 'simple-pie'
   | 'simple-scatter'
+  | 'simple-radar'
+  | 'simple-funnel'
 
 export type AtomCategory = 'chart' | 'text' | 'table' | 'image' | 'html'
 
@@ -45,7 +49,7 @@ export interface AtomRegistryEntry {
   /** Short description */
   hint?: string
   /** Group tab in chart drawer */
-  chartGroup?: 'bar' | 'line' | 'pie' | 'scatter' | 'other'
+  chartGroup?: 'bar' | 'line' | 'pie' | 'scatter' | 'radar' | 'funnel' | 'other'
   /** Factory used by insert drawer / TopBar; layout overrides default position/size */
   create: (layout?: AtomLayoutOverride) => Atom
   /** ECharts option builder (echart only) */
@@ -593,6 +597,62 @@ export const ATOM_REGISTRY: Record<string, AtomRegistryEntry> = {
         layout,
       ),
   },
+
+  'simple-radar': {
+    atomName: 'simple-radar',
+    atomType: 'echart',
+    category: 'chart',
+    label: '雷达图',
+    chartGroup: 'radar',
+    buildOption: sheetToRadarOption,
+    create: (layout) =>
+      echartAtom(
+        'simple-radar',
+        [
+          ['', 'AQI', 'PM2.5', 'PM10', 'CO', 'NO2', 'SO2'],
+          ['轴最小值', 0, 0, 0, 0, 0, 0],
+          ['轴最大值', 100, 50, 150, 5, 50, 50],
+          ['上海', 91, 45, 125, 0.82, 34, 23],
+          ['北京', 55, 9, 56, 0.46, 18, 6],
+          ['广州', 26, 37, 27, 1.16, 27, 13],
+        ],
+        {
+          simpleRadar: {
+            shape: 'polygon',
+            center: ['50%', '58%'],
+            radius: '62%',
+          },
+        },
+        layout,
+      ),
+  },
+  'simple-funnel': {
+    atomName: 'simple-funnel',
+    atomType: 'echart',
+    category: 'chart',
+    label: '漏斗图',
+    chartGroup: 'funnel',
+    buildOption: sheetToFunnelOption,
+    create: (layout) =>
+      echartAtom(
+        'simple-funnel',
+        [
+          ['Exposure', 200],
+          ['Infection', 120],
+          ['Symptom', 70],
+          ['Outpatient', 40],
+          ['Hospitalized', 25],
+          ['Death', 10],
+        ],
+        {
+          simpleFunnel: {
+            sort: 'descending',
+            gap: 2,
+          },
+        },
+        layout,
+      ),
+  },
 }
 
 /** Aliases that share a registry entry's builder (not insertable themselves). */
@@ -617,6 +677,8 @@ export const CHART_INSERT_LIST: AtomRegistryEntry[] = [
   ATOM_REGISTRY['simple-line'],
   ATOM_REGISTRY['simple-pie'],
   ATOM_REGISTRY['simple-scatter'],
+  ATOM_REGISTRY['simple-radar'],
+  ATOM_REGISTRY['simple-funnel'],
 ]
 
 export const CHART_GROUPS: { id: NonNullable<AtomRegistryEntry['chartGroup']>; label: string }[] = [
@@ -624,4 +686,6 @@ export const CHART_GROUPS: { id: NonNullable<AtomRegistryEntry['chartGroup']>; l
   { id: 'line', label: '折线图' },
   { id: 'pie', label: '饼图' },
   { id: 'scatter', label: '散点' },
+  { id: 'radar', label: '雷达' },
+  { id: 'funnel', label: '漏斗' },
 ]
