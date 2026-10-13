@@ -1450,3 +1450,106 @@ body.pane-resizing * {
   border: 1px solid var(--border);
   margin: 6px 0 10px;
 }
+
+/* —— SheetData (Handsontable) —— */
+.sheet-data-editor {
+  margin: 8px 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+.sheet-data-toolbar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #f8f9fa;
+  border-bottom: 1px solid var(--border);
+}
+.sheet-data-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3c4043;
+}
+.sheet-data-hot {
+  padding: 4px;
+  max-height: 280px;
+  overflow: auto;
+}
+.sheet-data-hot .handsontable {
+  font-size: 12px;
+}
+
+/* —— Recursive prop editor —— */
+.props-section {
+  margin-top: 10px;
+  padding-top: 4px;
+}
+.recursive-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.recursive-editor.nested {
+  padding-left: 6px;
+  border-left: 2px solid #e8eaed;
+  margin-left: 2px;
+}
+.recursive-field {
+  display: grid !important;
+  grid-template-columns: 88px 1fr;
+  align-items: center;
+  gap: 6px 8px;
+  margin-bottom: 2px !important;
+}
+.recursive-field > .hint {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.recursive-label {
+  font-size: 12px;
+  color: #5f6368;
+  font-weight: 500;
+  word-break: break-all;
+}
+.recursive-block {
+  margin: 8px 0 4px;
+  padding: 6px 8px 8px;
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 6px;
+}
+.recursive-block-title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  color: #3c4043;
+  background: #f0f1f3;
+  padding: 4px;
+  border-radius: 4px;
+}
+.recursive-image-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.recursive-image-row input {
+  flex: 1;
+  min-width: 0;
+}
+.anim-preview-card {
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px dashed #dadce0;
+  border-radius: 8px;
+  background: #fff;
+  text-align: center;
+}
+.anim-preview-card h3 {
+  margin: 8px 0 10px;
+  font-size: 16px;
+  color: #1a73e8;
+}

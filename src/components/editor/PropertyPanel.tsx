@@ -1,16 +1,15 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   selectActiveAtom,
   selectActiveSlide,
   useDeckStore,
 } from '../../store/useDeckStore'
-import {
-  defaultEchartTitle,
-  resolveTableFormat,
-  type TableCellAlign,
-} from '../../types/deck'
 import { cssBackground } from '../../utils/background'
 import { canLayerAction } from '../../utils/layerOrder'
+import { ANIM_ENTER_OPTIONS } from '../../editor/editorOption'
+import { SheetDataEditor } from './SheetDataEditor'
+import { RecursivePropEditor } from './RecursivePropEditor'
+import 'animate.css'
 
 export function PropertyPanel() {
   const atom = useDeckStore(selectActiveAtom)
@@ -18,18 +17,21 @@ export function PropertyPanel() {
   const bg = useDeckStore((s) => s.deck.background)
   const editorFocus = useDeckStore((s) => s.editorFocus)
   const updateAtomDetail = useDeckStore((s) => s.updateAtomDetail)
-  const updateAtom = useDeckStore((s) => s.updateAtom)
+  const patchAtomPath = useDeckStore((s) => s.patchAtomPath)
   const removeActiveAtom = useDeckStore((s) => s.removeActiveAtom)
   const toggleFixedActiveAtom = useDeckStore((s) => s.toggleFixedActiveAtom)
   const duplicateActiveAtom = useDeckStore((s) => s.duplicateActiveAtom)
   const reorderActiveAtom = useDeckStore((s) => s.reorderActiveAtom)
   const setBackground = useDeckStore((s) => s.setBackground)
+  const updateSlideAnimation = useDeckStore((s) => s.updateSlideAnimation)
   const activeSlideId = useDeckStore((s) => s.activeSlideId)
 
   const sheetRef = useRef<HTMLDivElement>(null)
   const styleRef = useRef<HTMLDivElement>(null)
   const borderRef = useRef<HTMLDivElement>(null)
   const animRef = useRef<HTMLDivElement>(null)
+  const [animPreview, setAnimPreview] = useState(true)
+  const [animKey, setAnimKey] = useState(0)
 
   useEffect(() => {
     if (!editorFocus || !atom) return
@@ -42,6 +44,25 @@ export function PropertyPanel() {
     const el = map[editorFocus]?.current
     el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [editorFocus, atom])
+
+  // Replay enter animation preview when enter class changes
+  useEffect(() => {
+    if (!atom?.atomAnimation.enter) return
+    setAnimPreview(false)
+    const t = window.setTimeout(() => {
+      setAnimKey((k) => k + 1)
+      setAnimPreview(true)
+    }, 30)
+    return () => window.clearTimeout(t)
+  }, [atom?.atomAnimation.enter, atom?.i])
+
+  const onPathChange = useCallback(
+    (fullPath: string, value: unknown) => {
+      if (!atom) return
+      patchAtomPath(activeSlideId, atom.i, fullPath, value)
+    },
+    [atom, activeSlideId, patchAtomPath],
+  )
 
   if (!atom) {
     return (
@@ -67,29 +88,37 @@ export function PropertyPanel() {
             }
           />
         </label>
+        {slide && (
+          <>
+            <h4>幻灯片动画</h4>
+            <label className="field">
+              进入
+              <select
+                value={slide.slideAnimation.enter}
+                onChange={(e) =>
+                  updateSlideAnimation(activeSlideId, { enter: e.target.value })
+                }
+              >
+                {ANIM_ENTER_OPTIONS.map((o) => (
+                  <option key={String(o.value)} value={String(o.value)}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
+        )}
         <p className="hint">
           当前幻灯片 #{slide ? slide.y + 1 : '-'} ·{' '}
           {slide?.slideContent.length ?? 0} 个组件 · 模式 {bg.mode}
-        </p>
-        <p className="hint">
-          文字 rem：画布 / 播放 / 缩略图舞台按「高度÷36」设根字号，Markdown /
-          标题 / HTML / 表格用 rem·em 随舞台缩放。
         </p>
       </aside>
     )
   }
 
   const d = atom.atomContent.detail
-  const titleObj =
-    d.title && typeof d.title === 'object'
-      ? (d.title as { text?: string })
-      : null
-  const titleStr =
-    typeof d.title === 'string'
-      ? d.title
-      : titleObj?.text
-        ? String(titleObj.text)
-        : ''
+  const hasSheet =
+    atom.atomType === 'echart' || atom.atomType === 'tables'
 
   return (
     <aside className="props">
@@ -125,366 +154,132 @@ export function PropertyPanel() {
           </button>
         ))}
       </div>
-      <p className="hint">右键菜单同样支持图层；拖动重叠组件时仍可缩放。</p>
 
-      <div ref={styleRef}>
-        {atom.atomContent.atomName === 'text-shadow' && (
-          <>
-            <h4>样式</h4>
-            <label className="field">
-              文本
-              <input
-                value={String(d.text ?? '')}
-                onChange={(e) =>
-                  updateAtomDetail(activeSlideId, atom.i, {
-                    text: e.target.value,
-                  })
-                }
-              />
-            </label>
-            <label className="field">
-              字号（设计 px → rem）
-              <input
-                type="number"
-                value={Number(d.fontSize) || 28}
-                onChange={(e) =>
-                  updateAtomDetail(activeSlideId, atom.i, {
-                    fontSize: Number(e.target.value),
-                  })
-                }
-              />
-              <span className="hint">
-                相对舞台缩放：舞台字号 = 高度/36，字号按设计稿 540 高换算为 rem
-              </span>
-            </label>
-            <label className="field">
-              字体
-              <input
-                value={String(d.fontFamily || 'Arial')}
-                onChange={(e) =>
-                  updateAtomDetail(activeSlideId, atom.i, {
-                    fontFamily: e.target.value,
-                  })
-                }
-              />
-            </label>
-            <label className="field">
-              颜色
-              <input
-                type="color"
-                value={rgbToHex(String(d.color || '#2c3e50')) || '#2c3e50'}
-                onChange={(e) =>
-                  updateAtomDetail(activeSlideId, atom.i, {
-                    color: e.target.value,
-                  })
-                }
-              />
-            </label>
-          </>
-        )}
-
-        {atom.atomContent.atomName === 'text-md' && (
-          <label className="field">
-            Markdown（支持 $公式$ / $$块公式$$）
-            <textarea
-              rows={12}
-              value={String(d.markdown ?? '')}
-              onChange={(e) =>
-                updateAtomDetail(activeSlideId, atom.i, {
-                  markdown: e.target.value,
-                })
-              }
-            />
-            <span className="hint">
-              经 DOMPurify 消毒，不执行 JS · 正文字号跟随舞台 rem
-            </span>
-          </label>
-        )}
-
-        {atom.atomContent.atomName === 'custom-html' && (
-          <label className="field">
-            HTML 源码（安全子集）
-            <textarea
-              rows={14}
-              value={String(d.html ?? '')}
-              onChange={(e) =>
-                updateAtomDetail(activeSlideId, atom.i, {
-                  html: e.target.value,
-                })
-              }
-            />
-            <span className="hint">
-              脚本 / 事件 / iframe / javascript: 会被剥离
-            </span>
-          </label>
-        )}
-
-        {atom.atomType === 'echart' && (
-          <label className="field">
-            标题 (title.text)
-            <input
-              value={titleStr}
-              onChange={(e) =>
-                updateAtomDetail(activeSlideId, atom.i, {
-                  title: {
-                    ...defaultEchartTitle(e.target.value),
-                    ...(titleObj || {}),
-                    text: e.target.value,
-                  },
-                })
-              }
-            />
-          </label>
-        )}
-        {atom.atomContent.atomName === 'simple-table' &&
-          (() => {
-            const fmt = resolveTableFormat(d)
-            const patch = (partial: Record<string, unknown>) =>
-              updateAtomDetail(activeSlideId, atom.i, partial)
-            return (
-              <>
-            <h4>表格样式</h4>
-            <label className="field checkbox-field">
-              <span>首行为表头</span>
-              <input
-                type="checkbox"
-                checked={fmt.headerRow}
-                onChange={(e) => patch({ headerRow: e.target.checked })}
-              />
-            </label>
-            <label className="field checkbox-field">
-              <span>表头加粗</span>
-              <input
-                type="checkbox"
-                checked={fmt.boldHeader}
-                disabled={!fmt.headerRow}
-                onChange={(e) => patch({ boldHeader: e.target.checked })}
-              />
-            </label>
-            <label className="field checkbox-field">
-              <span>斑马纹</span>
-              <input
-                type="checkbox"
-                checked={fmt.zebra}
-                onChange={(e) => patch({ zebra: e.target.checked })}
-              />
-            </label>
-            <label className="field">
-              单元格对齐
-              <select
-                value={fmt.cellAlign}
-                onChange={(e) =>
-                  patch({ cellAlign: e.target.value as TableCellAlign })
-                }
-              >
-                <option value="left">左对齐</option>
-                <option value="center">居中</option>
-                <option value="right">右对齐</option>
-              </select>
-            </label>
-            <label className="field">
-              表头背景
-              <input
-                type="color"
-                value={
-                  fmt.headerBackground.startsWith('#')
-                    ? fmt.headerBackground.slice(0, 7)
-                    : '#eef3f6'
-                }
-                disabled={!fmt.headerRow}
-                onChange={(e) => patch({ headerBackground: e.target.value })}
-              />
-            </label>
-            <label className="field">
-              边框颜色
-              <input
-                type="color"
-                value={
-                  fmt.borderColor.startsWith('#')
-                    ? fmt.borderColor.slice(0, 7)
-                    : '#d0d0d0'
-                }
-                onChange={(e) => patch({ borderColor: e.target.value })}
-              />
-            </label>
-            <label className="field">
-              边框宽度
-              <input
-                type="number"
-                min={0}
-                max={8}
-                step={1}
-                value={fmt.borderWidth}
-                onChange={(e) =>
-                  patch({ borderWidth: Number(e.target.value) })
-                }
-              />
-            </label>
-              <p className="hint">下方 JSON 仍可直接改 sheetData（高级）。</p>
-              </>
-            )
-          })()}
-      </div>
-
-      {(atom.atomType === 'echart' || atom.atomType === 'tables') && (
+      {hasSheet && (
         <div
-          className={'field' + (editorFocus === 'sheetData' ? ' focus-flash' : '')}
           ref={sheetRef}
+          className={
+            'props-section' +
+            (editorFocus === 'sheetData' ? ' focus-flash' : '')
+          }
         >
-          <label className="field">
-            数据 sheetData (JSON 二维数组)
-            <textarea
-              rows={8}
-              value={JSON.stringify(d.sheetData ?? [], null, 2)}
-              onChange={(e) => {
-                try {
-                  const sheetData = JSON.parse(e.target.value)
-                  if (Array.isArray(sheetData)) {
-                    updateAtomDetail(activeSlideId, atom.i, { sheetData })
-                  }
-                } catch {
-                  /* ignore while typing */
-                }
-              }}
-            />
-            <span className="hint">
-              nr={String(d.nr ?? '-')} · nc={String(d.nc ?? '-')}
-            </span>
-          </label>
+          <SheetDataEditor
+            data={(d.sheetData as (string | number)[][]) ?? []}
+            focused={editorFocus === 'sheetData'}
+            onChange={(sheetData, nr, nc) =>
+              updateAtomDetail(activeSlideId, atom.i, { sheetData, nr, nc })
+            }
+          />
         </div>
       )}
 
-      {atom.atomType === 'images' && (
-        <label className="field">
-          图片 src
-          <textarea
-            rows={4}
-            value={String(d.src ?? '')}
-            onChange={(e) =>
-              updateAtomDetail(activeSlideId, atom.i, { src: e.target.value })
-            }
-          />
-        </label>
-      )}
-
-      <div ref={borderRef}>
-        <h4>边框</h4>
-        <label className="field">
-          宽度
-          <input
-            type="number"
-            min={0}
-            value={atom.atomBorder.width}
-            onChange={(e) =>
-              updateAtom(activeSlideId, atom.i, {
-                atomBorder: {
-                  ...atom.atomBorder,
-                  width: Number(e.target.value),
-                },
-              })
-            }
-          />
-        </label>
-        <label className="field">
-          类型
-          <select
-            value={atom.atomBorder.type}
-            onChange={(e) =>
-              updateAtom(activeSlideId, atom.i, {
-                atomBorder: { ...atom.atomBorder, type: e.target.value },
-              })
-            }
-          >
-            <option value="solid">实线</option>
-            <option value="dashed">----</option>
-            <option value="dotted">.....</option>
-          </select>
-        </label>
-        <label className="field">
-          颜色
-          <input
-            type="color"
-            value={atom.atomBorder.color.startsWith('#')
-              ? atom.atomBorder.color.slice(0, 7)
-              : '#808080'}
-            onChange={(e) =>
-              updateAtom(activeSlideId, atom.i, {
-                atomBorder: { ...atom.atomBorder, color: e.target.value },
-              })
-            }
-          />
-        </label>
-        <label className="field">
-          圆角
-          <input
-            type="number"
-            min={0}
-            value={atom.atomBorder.radius}
-            onChange={(e) =>
-              updateAtom(activeSlideId, atom.i, {
-                atomBorder: {
-                  ...atom.atomBorder,
-                  radius: Number(e.target.value),
-                },
-              })
-            }
-          />
-        </label>
+      <div
+        ref={styleRef}
+        className={
+          'props-section' +
+          (editorFocus === 'atomContent' ? ' focus-flash' : '')
+        }
+      >
+        <h4>内容 / 样式</h4>
+        <RecursivePropEditor
+          obj={d as Record<string, unknown>}
+          prefix="atomContent.detail"
+          optionKey={String(atom.atomContent.atomName)}
+          onChange={onPathChange}
+        />
       </div>
 
-      <div ref={animRef}>
+      <div
+        ref={borderRef}
+        className={
+          'props-section' +
+          (editorFocus === 'atomBorder' ? ' focus-flash' : '')
+        }
+      >
+        <h4>边框</h4>
+        <RecursivePropEditor
+          obj={atom.atomBorder as unknown as Record<string, unknown>}
+          prefix="atomBorder"
+          optionKey="atomBorder"
+          onChange={onPathChange}
+        />
+      </div>
+
+      <div
+        ref={animRef}
+        className={
+          'props-section' +
+          (editorFocus === 'atomAnimation' ? ' focus-flash' : '')
+        }
+      >
         <h4>动画</h4>
-        <label className="field">
-          出场次序 order
-          <input
-            type="number"
-            min={1}
-            value={atom.atomAnimation.order}
-            onChange={(e) =>
-              updateAtom(activeSlideId, atom.i, {
-                atomAnimation: {
-                  ...atom.atomAnimation,
-                  order: Number(e.target.value),
-                },
-              })
-            }
-          />
-        </label>
-        <label className="field">
-          进入 enter
-          <input
-            value={atom.atomAnimation.enter}
-            onChange={(e) =>
-              updateAtom(activeSlideId, atom.i, {
-                atomAnimation: {
-                  ...atom.atomAnimation,
-                  enter: e.target.value,
-                },
-              })
-            }
-          />
-        </label>
-        <label className="field">
-          离开 leave
-          <input
-            value={atom.atomAnimation.leave}
-            onChange={(e) =>
-              updateAtom(activeSlideId, atom.i, {
-                atomAnimation: {
-                  ...atom.atomAnimation,
-                  leave: e.target.value,
-                },
-              })
-            }
-          />
-        </label>
+        <RecursivePropEditor
+          obj={atom.atomAnimation as unknown as Record<string, unknown>}
+          prefix="atomAnimation"
+          optionKey="atomAnimation"
+          onChange={onPathChange}
+        />
+        <div className="anim-preview-card">
+          <p className="hint">进入预览（animate.css）</p>
+          {animPreview && atom.atomAnimation.enter !== 'none' ? (
+            <h3
+              key={animKey}
+              className={`animate__animated animate__${atom.atomAnimation.enter}`}
+            >
+              VSlide 微思文稿
+            </h3>
+          ) : (
+            <h3>VSlide 微思文稿</h3>
+          )}
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              setAnimPreview(false)
+              window.setTimeout(() => {
+                setAnimKey((k) => k + 1)
+                setAnimPreview(true)
+              }, 30)
+            }}
+          >
+            重播
+          </button>
+        </div>
+        {slide && (
+          <>
+            <h5 className="recursive-block-title">幻灯片动画</h5>
+            <label className="field">
+              进入
+              <select
+                value={slide.slideAnimation.enter}
+                onChange={(e) =>
+                  updateSlideAnimation(activeSlideId, { enter: e.target.value })
+                }
+              >
+                {ANIM_ENTER_OPTIONS.map((o) => (
+                  <option key={String(o.value)} value={String(o.value)}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
+        )}
       </div>
 
       <div className="props-actions">
-        <button type="button" className="btn-secondary" onClick={toggleFixedActiveAtom}>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={toggleFixedActiveAtom}
+        >
           {atom.static ? '取消固定' : '固定'}
         </button>
-        <button type="button" className="btn-secondary" onClick={duplicateActiveAtom}>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={duplicateActiveAtom}
+        >
           复制
         </button>
         <button type="button" className="btn-danger" onClick={removeActiveAtom}>
@@ -500,5 +295,5 @@ function rgbToHex(input: string): string | null {
   const m = input.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
   if (!m) return null
   const hex = (n: string) => Number(n).toString(16).padStart(2, '0')
-  return `#${hex(m[1])}${hex(m[2])}${hex(m[3])}`
+  return `#${hex(m[1]!)}${hex(m[2]!)}${hex(m[3]!)}`
 }

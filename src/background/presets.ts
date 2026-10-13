@@ -171,7 +171,7 @@ export const BUILTIN_PRESETS: BgPreset[] = [
 ]
 
 /** Default sample / new decks — non-image soft paper. */
-export const DEFAULT_PRESET_ID = 'soft-paper'
+export const DEFAULT_PRESET_ID = 'conference-white'
 
 export function getBuiltinPreset(id: string): BgPreset | undefined {
   return BUILTIN_PRESETS.find((p) => p.id === id)

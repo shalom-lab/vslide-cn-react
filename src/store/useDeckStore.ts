@@ -20,6 +20,7 @@ import {
   type LayerAction,
 } from '../utils/layerOrder'
 import type { GridLayoutRect } from '../utils/grid'
+import { setByPath } from '../utils/pathSet'
 
 import { createTableAtom } from '../atoms/registry'
 
@@ -72,6 +73,8 @@ interface DeckState {
     atomId: string,
     detail: Record<string, unknown>,
   ) => void
+  /** Vue-style path patch: e.g. atomContent.detail.title.text / atomBorder.width */
+  patchAtomPath: (slideId: string, atomId: string, path: string, value: unknown) => void
   addSlide: () => void
   duplicateSlide: () => void
   removeSlide: () => void
@@ -83,6 +86,10 @@ interface DeckState {
   reorderActiveAtom: (action: LayerAction) => void
   saveActiveAtomToGallery: () => void
   setBackground: (bg: BackgroundConfig) => void
+  updateSlideAnimation: (
+    slideId: string,
+    patch: Partial<import('../types/deck').SlideAnimation>,
+  ) => void
   replaceDeck: (deck: DeckFile | unknown) => void
   resetSample: () => void
   undo: () => void
@@ -391,6 +398,64 @@ export const useDeckStore = create<DeckState>((set, get) => ({
     }))
   },
 
+  patchAtomPath: (slideId, atomId, path, value) => {
+    if (!detailSnapshot) {
+      detailSnapshot = cloneDeck(get().deck)
+    }
+    if (detailTimer) clearTimeout(detailTimer)
+    detailTimer = setTimeout(() => {
+      const snap = detailSnapshot
+      detailSnapshot = null
+      detailTimer = null
+      if (!snap) return
+      set((s) => ({
+        past: [...s.past, snap].slice(-HISTORY_LIMIT),
+        future: [],
+      }))
+    }, 400)
+
+    set((s) => {
+      const deck = s.deck
+      return {
+        deck: withGetBackground({
+          ...deck,
+          slides: deck.slides.map((sl) => {
+            if (sl.i !== slideId) return sl
+            return {
+              ...sl,
+              slideContent: sl.slideContent.map((a) => {
+                if (a.i !== atomId) return a
+                let next = setByPath(a, path, value)
+                // Keep nr/nc in sync when sheetData is patched via path
+                if (
+                  path.includes('sheetData') &&
+                  (next.atomType === 'echart' || next.atomType === 'tables')
+                ) {
+                  const sheet = next.atomContent.detail.sheetData
+                  if (Array.isArray(sheet)) {
+                    const dims = sheetNrNc(sheet as (string | number)[][])
+                    next = {
+                      ...next,
+                      atomContent: {
+                        ...next.atomContent,
+                        detail: {
+                          ...next.atomContent.detail,
+                          nr: dims.nr,
+                          nc: dims.nc,
+                        },
+                      },
+                    }
+                  }
+                }
+                return next
+              }),
+            }
+          }),
+        }),
+      }
+    })
+  },
+
   addSlide: () => {
     const { deck, activeSlideId } = get()
     const active = deck.slides.find((s) => s.i === activeSlideId)
@@ -604,6 +669,24 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       ...pushHistory(s),
       deck: withGetBackground({ ...s.deck, background: bg }),
     })),
+
+  updateSlideAnimation: (slideId, patch) => {
+    const { deck } = get()
+    set((s) => ({
+      ...pushHistory(s),
+      deck: withGetBackground({
+        ...deck,
+        slides: deck.slides.map((sl) =>
+          sl.i === slideId
+            ? {
+                ...sl,
+                slideAnimation: { ...sl.slideAnimation, ...patch },
+              }
+            : sl,
+        ),
+      }),
+    }))
+  },
 
   replaceDeck: (raw) => {
     const deck = normalizeDeck(raw)
