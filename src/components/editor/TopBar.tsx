@@ -1,6 +1,19 @@
 import { useCallback, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
+  BarChart3,
+  Heading1,
+  Image as ImageIcon,
+  MonitorPlay,
+  Palette,
+  Pencil,
+  Plus,
+  Redo2,
+  Table2,
+  Type,
+  Undo2,
+} from 'lucide-react'
+import {
   createImageAtom,
   createTableAtom,
   createTextAtom,
@@ -8,6 +21,8 @@ import {
   useDeckStore,
 } from '../../store/useDeckStore'
 import { ChartInsertDrawer } from './ChartInsertDrawer'
+
+const I = { size: 20, strokeWidth: 1.75 }
 
 export function TopBar() {
   const addSlide = useDeckStore((s) => s.addSlide)
@@ -37,10 +52,13 @@ export function TopBar() {
     <>
       <div className="topbar">
         <div className="topbar-left">
-          <button type="button" className="icon-btn" onClick={addSlide}>
-            <span className="icon">＋</span>
+          <button type="button" className="icon-btn" onClick={addSlide} title="新建幻灯片">
+            <span className="icon">
+              <Plus {...I} />
+            </span>
             <span className="label">新建幻灯片</span>
           </button>
+          <span className="topbar-sep" aria-hidden />
           <button
             type="button"
             className="icon-btn"
@@ -48,7 +66,9 @@ export function TopBar() {
             onClick={undo}
             title="撤销 Ctrl+Z"
           >
-            <span className="icon">↶</span>
+            <span className="icon">
+              <Undo2 {...I} />
+            </span>
             <span className="label">撤销</span>
           </button>
           <button
@@ -58,17 +78,23 @@ export function TopBar() {
             onClick={redo}
             title="重做 Ctrl+Y"
           >
-            <span className="icon">↷</span>
+            <span className="icon">
+              <Redo2 {...I} />
+            </span>
             <span className="label">重做</span>
           </button>
         </div>
         <div className="topbar-mode">
-          <Link to="/play" className="icon-btn">
-            <span className="icon">▶</span>
+          <Link to="/play" className="icon-btn" title="放映">
+            <span className="icon">
+              <MonitorPlay {...I} />
+            </span>
             <span className="label">放映</span>
           </Link>
-          <Link to="/edit" className="icon-btn active">
-            <span className="icon">✎</span>
+          <Link to="/edit" className="icon-btn active" title="编辑">
+            <span className="icon">
+              <Pencil {...I} />
+            </span>
             <span className="label">编辑</span>
           </Link>
         </div>
@@ -79,41 +105,56 @@ export function TopBar() {
             onClick={() => setChartOpen(true)}
             title="打开图表库"
           >
-            <span className="icon">📊</span>
+            <span className="icon">
+              <BarChart3 {...I} />
+            </span>
             <span className="label">图表</span>
           </button>
           <button
             type="button"
             className="icon-btn"
             onClick={() => addAtom(createTextAtom())}
+            title="插入文本"
           >
-            <span className="icon">T</span>
+            <span className="icon">
+              <Type {...I} />
+            </span>
             <span className="label">文本</span>
           </button>
           <button
             type="button"
             className="icon-btn"
             onClick={() => addAtom(createTextShadowAtom())}
+            title="插入标题"
           >
-            <span className="icon">🅣</span>
+            <span className="icon">
+              <Heading1 {...I} />
+            </span>
             <span className="label">标题</span>
           </button>
           <button
             type="button"
             className="icon-btn"
             onClick={() => addAtom(createTableAtom())}
+            title="插入表格"
           >
-            <span className="icon">▦</span>
+            <span className="icon">
+              <Table2 {...I} />
+            </span>
             <span className="label">表格</span>
           </button>
           <button
             type="button"
             className="icon-btn"
             onClick={() => fileRef.current?.click()}
+            title="插入图片"
           >
-            <span className="icon">🖼</span>
+            <span className="icon">
+              <ImageIcon {...I} />
+            </span>
             <span className="label">图片</span>
           </button>
+          <span className="topbar-sep" aria-hidden />
           <button
             type="button"
             className="icon-btn"
@@ -121,8 +162,11 @@ export function TopBar() {
               setActiveAtom(null)
               setEditorFocus(null)
             }}
+            title="幻灯片背景"
           >
-            <span className="icon">⚙</span>
+            <span className="icon">
+              <Palette {...I} />
+            </span>
             <span className="label">背景</span>
           </button>
           <input

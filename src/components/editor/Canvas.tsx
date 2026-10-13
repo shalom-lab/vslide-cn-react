@@ -1,6 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import GridLayout, { WidthProvider, type Layout } from 'react-grid-layout'
 import {
+  ArrowDown,
+  ArrowDownToLine,
+  ArrowUp,
+  ArrowUpToLine,
+  Copy,
+  Database,
+  Download,
+  Lock,
+  Paintbrush,
+  Pin,
+  Sparkles,
+  Square,
+  Trash2,
+  Unlock,
+} from 'lucide-react'
+import {
   selectActiveAtom,
   selectActiveSlide,
   useDeckStore,
@@ -16,6 +32,7 @@ import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
 const AutoGrid = WidthProvider(GridLayout)
+const CTX = { size: 14, strokeWidth: 1.75 }
 
 interface MenuState {
   x: number
@@ -110,7 +127,7 @@ export function Canvas() {
         {
           key: 'sheetData',
           label: '数据',
-          icon: '▦',
+          icon: <Database {...CTX} />,
           disabled:
             forbidden || !['echart', 'tables'].includes(menuAtom.atomType),
           onClick: () => {
@@ -121,7 +138,7 @@ export function Canvas() {
         {
           key: 'atomContent',
           label: '样式',
-          icon: '✎',
+          icon: <Paintbrush {...CTX} />,
           disabled:
             forbidden ||
             ['text-md', 'simple-table'].includes(menuAtom.atomContent.atomName),
@@ -133,7 +150,7 @@ export function Canvas() {
         {
           key: 'atomBorder',
           label: '边框',
-          icon: '▢',
+          icon: <Square {...CTX} />,
           disabled: forbidden,
           onClick: () => {
             setActiveAtom(menuAtom.i)
@@ -143,7 +160,7 @@ export function Canvas() {
         {
           key: 'atomAnimation',
           label: '动画',
-          icon: '✦',
+          icon: <Sparkles {...CTX} />,
           disabled: forbidden,
           onClick: () => {
             setActiveAtom(menuAtom.i)
@@ -153,7 +170,7 @@ export function Canvas() {
         {
           key: 'front',
           label: '置顶',
-          icon: '⬆',
+          icon: <ArrowUpToLine {...CTX} />,
           disabled:
             forbidden ||
             !canLayerAction(slide?.slideContent ?? [], menuAtom.i, 'front'),
@@ -162,7 +179,7 @@ export function Canvas() {
         {
           key: 'forward',
           label: '上移一层',
-          icon: '↑',
+          icon: <ArrowUp {...CTX} />,
           disabled:
             forbidden ||
             !canLayerAction(slide?.slideContent ?? [], menuAtom.i, 'forward'),
@@ -171,7 +188,7 @@ export function Canvas() {
         {
           key: 'backward',
           label: '下移一层',
-          icon: '↓',
+          icon: <ArrowDown {...CTX} />,
           disabled:
             forbidden ||
             !canLayerAction(slide?.slideContent ?? [], menuAtom.i, 'backward'),
@@ -180,7 +197,7 @@ export function Canvas() {
         {
           key: 'back',
           label: '置底',
-          icon: '⬇',
+          icon: <ArrowDownToLine {...CTX} />,
           disabled:
             forbidden ||
             !canLayerAction(slide?.slideContent ?? [], menuAtom.i, 'back'),
@@ -189,28 +206,28 @@ export function Canvas() {
         {
           key: 'fixed',
           label: menuAtom.static ? '取消固定' : '固定',
-          icon: '📌',
+          icon: menuAtom.static ? <Unlock {...CTX} /> : <Pin {...CTX} />,
           disabled: forbidden,
           onClick: () => toggleFixedActiveAtom(),
         },
         {
           key: 'copy',
           label: '复制',
-          icon: '⧉',
+          icon: <Copy {...CTX} />,
           disabled: forbidden,
           onClick: () => duplicateActiveAtom(),
         },
         {
           key: 'delete',
           label: '删除',
-          icon: '🗑',
+          icon: <Trash2 {...CTX} />,
           danger: true,
           onClick: () => removeActiveAtom(),
         },
         {
           key: 'save',
           label: '保存',
-          icon: '⬇',
+          icon: <Download {...CTX} />,
           disabled: forbidden,
           onClick: () => saveActiveAtomToGallery(),
         },
@@ -235,15 +252,17 @@ export function Canvas() {
           layout={layout}
           cols={18}
           rowHeight={rowHeight}
-          margin={[5, 5]}
+          margin={[4, 4]}
+          containerPadding={[0, 0]}
           isDraggable
           isResizable
           compactType={null}
           preventCollision={false}
-          useCSSTransforms={false}
+          useCSSTransforms
           onDragStop={onLayoutChange}
           onResizeStop={onLayoutChange}
-          draggableHandle=".drag-handle"
+          resizeHandles={['nw', 'ne', 'sw', 'se']}
+          draggableCancel=".atom-no-drag,input,textarea,button,a"
         >
           {slide.slideContent.map((atom, index) => (
             <div
@@ -265,7 +284,11 @@ export function Canvas() {
               }}
               onContextMenu={(e) => openAtomMenu(e, atom.i)}
             >
-              <div className="drag-handle" title="拖动" />
+              {atom.static ? (
+                <span className="lock-badge" title="已固定" aria-hidden>
+                  <Lock size={10} strokeWidth={2} />
+                </span>
+              ) : null}
               <div className="canvas-item-body">
                 <AtomRenderer atom={atom} />
               </div>

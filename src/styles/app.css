@@ -2,18 +2,21 @@
   color-scheme: light;
   font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
     'Microsoft YaHei', Arial, sans-serif;
-  color: #2c3e50;
-  /* From vslide-vue Edit / Top / Toolbar / Left */
-  --bar: #e6e6e6;
-  --panel: rgba(233, 230, 230, 0.945);
-  --border: rgba(198, 194, 194, 0.603);
-  --accent: #3a99b2;
-  --active-slide: rgb(230, 28, 78);
-  --active-slide-soft: rgba(221, 83, 115, 0.705);
-  --toolbar-grad: linear-gradient(to top, rgb(220, 209, 209), rgb(186, 172, 172));
-  --icon-grad: linear-gradient(to bottom, rgb(220, 209, 209), rgb(186, 172, 172));
-  --icon-grad-hover: linear-gradient(to top, rgb(245, 245, 245), rgb(211, 203, 203));
-  --icon-grad-active: linear-gradient(to bottom, rgb(245, 245, 245), rgb(211, 203, 203));
+  color: #202124;
+  /* Google Slides–inspired chrome */
+  --bar: #ffffff;
+  --panel: #f8f9fa;
+  --border: #dadce0;
+  --accent: #1a73e8;
+  --accent-soft: #e8f0fe;
+  --icon-muted: #5f6368;
+  --icon-hover-bg: #f1f3f4;
+  --active-slide: #1a73e8;
+  --active-slide-soft: rgba(26, 115, 232, 0.28);
+  --selection: #1a73e8;
+  --selection-shadow: 0 1px 3px rgba(60, 64, 67, 0.18);
+  --toolbar-grad: #ffffff;
+  --topbar-h: 64px;
 }
 
 * {
@@ -151,21 +154,21 @@ select {
 .editor-page {
   height: 100%;
   display: grid;
-  grid-template-rows: 20px 80px 1fr 20px;
+  grid-template-rows: 28px var(--topbar-h) 1fr 22px;
   overflow: hidden;
 }
 
-/* Toolbar.vue */
+/* Toolbar — quiet document chrome */
 .toolbar {
   display: grid;
-  grid-template-columns: 300px 1fr 200px;
+  grid-template-columns: 280px 1fr 200px;
   align-items: center;
-  background: var(--toolbar-grad);
-  font-size: 13px;
-  font-family: Georgia, 'Times New Roman', Times, serif;
-  padding: 0;
-  line-height: 20px;
-  height: 20px;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  padding: 0 8px;
+  line-height: 28px;
+  height: 28px;
   -webkit-app-region: drag;
 }
 .toolbar .menu {
@@ -173,115 +176,130 @@ select {
   list-style: none;
   padding: 0;
   margin: 0;
-  gap: 0;
-  height: 20px;
+  gap: 2px;
+  height: 28px;
+  align-items: center;
 }
 .toolbar .menu li,
 .toolbar .menu a,
 .toolbar .file-label {
-  padding: 0 3px;
+  padding: 0 8px;
   margin: 0;
-  height: 20px;
-  line-height: 20px;
+  height: 22px;
+  line-height: 22px;
   cursor: pointer;
-  border-radius: 0;
-  color: black;
+  border-radius: 4px;
+  color: var(--icon-muted);
   -webkit-app-region: no-drag;
   display: inline-block;
   text-align: center;
+  font-size: 12px;
 }
 .toolbar .menu li:hover,
 .toolbar .file-label:hover {
-  background: rgb(176, 165, 154);
+  background: var(--icon-hover-bg);
+  color: #202124;
 }
 .toolbar-title {
   text-align: center;
-  font-size: 13px;
-  color: #222;
-  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 12px;
+  color: #5f6368;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .toolbar-spacer {
-  height: 20px;
+  height: 28px;
 }
 
-/* Top.vue */
+/* TopBar — Google Slides–like icon strip */
 .topbar {
   background: var(--bar);
   display: grid;
-  grid-template-columns: 250px 300px 1fr;
+  grid-template-columns: minmax(200px, 280px) minmax(120px, 180px) 1fr;
   align-items: center;
   justify-items: center;
-  height: 80px;
+  height: var(--topbar-h);
+  border-bottom: 1px solid var(--border);
+  padding: 0 8px;
 }
 .topbar-left,
 .topbar-mode,
 .topbar-atoms {
   display: flex;
-  gap: 0;
+  gap: 2px;
   align-items: center;
   justify-content: center;
   height: 100%;
   width: 100%;
 }
+.topbar-sep {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+  margin: 0 6px;
+  flex-shrink: 0;
+}
 
-/* IconButton.vue — bevelled compact buttons */
+/* Flat outlined icon buttons */
 .icon-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  gap: 0;
-  min-width: 52px;
+  justify-content: center;
+  gap: 2px;
+  min-width: 48px;
   height: auto;
   border: none;
   background: transparent;
   cursor: pointer;
-  border-radius: 0;
-  color: #222;
-  padding: 0 1px;
+  border-radius: 8px;
+  color: var(--icon-muted);
+  padding: 4px 6px;
   text-decoration: none;
+  transition: color 0.12s ease;
 }
-.icon-btn:hover,
+.icon-btn:hover {
+  color: #202124;
+}
 .icon-btn.active {
-  background: transparent;
+  color: var(--accent);
 }
 .icon-btn .icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2em;
-  height: 1.15em;
-  font-size: 26px;
+  width: 40px;
+  height: 32px;
   line-height: 1;
-  padding: 5px 8px;
-  border-radius: 5px;
-  box-shadow: 0 1px 0 rgb(255, 241, 241) inset, 0 1px 1px rgb(186, 172, 172);
-  background: var(--icon-grad);
-  color: #333;
+  padding: 0;
+  border-radius: 8px;
+  box-shadow: none;
+  background: transparent;
+  color: inherit;
   cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
 }
 .icon-btn:hover .icon {
-  background: var(--icon-grad-hover);
+  background: var(--icon-hover-bg);
 }
 .icon-btn:active .icon,
 .icon-btn.active .icon {
-  background: var(--icon-grad-active);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 .icon-btn .label {
   display: block;
-  position: relative;
-  bottom: 2px;
-  font-size: 12px;
-  font-family: Arial, sans-serif;
-  padding-left: 2px;
-  letter-spacing: 2px;
+  font-size: 11px;
+  font-family: inherit;
+  padding: 0;
+  letter-spacing: 0.02em;
   cursor: default;
   user-select: none;
-  margin-top: 2px;
+  margin-top: 0;
   white-space: nowrap;
+  color: inherit;
+  line-height: 1.2;
 }
 
 /* Edit.vue main: left 250 + center; React keeps slim right props */
@@ -289,14 +307,14 @@ select {
   display: grid;
   grid-template-columns: 250px 1fr 220px;
   min-height: 0;
-  border-top: solid 1px grey;
+  border-top: none;
   background: #fff;
 }
 
 /* Left.vue / Edit.vue .left */
 .slide-list {
-  background: #e6e6e6;
-  border-right: solid 1px var(--border);
+  background: #f1f3f4;
+  border-right: 1px solid var(--border);
   padding: 5px;
   display: flex;
   flex-direction: column;
@@ -368,11 +386,11 @@ select {
 
 /* Edit.vue .right */
 .editor-center {
-  background: var(--panel);
+  background: #e8eaed;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5px;
+  padding: 12px;
   min-width: 0;
 }
 .canvas-wrap {
@@ -382,9 +400,10 @@ select {
 }
 /* WorkingSlide.vue */
 .canvas-stage {
-  outline: 1px solid rgba(119, 119, 119, 0.322);
+  outline: 1px solid rgba(60, 64, 67, 0.18);
   position: relative;
   overflow: hidden;
+  background-clip: padding-box;
 }
 .canvas-grid {
   width: 100% !important;
@@ -392,24 +411,43 @@ select {
 }
 .canvas-item {
   box-sizing: border-box;
+  cursor: move;
+  border-radius: 1px;
 }
-.canvas-item:hover {
-  outline: 1px solid rgb(119, 119, 119);
+.canvas-item:hover:not(.selected):not(.locked) {
+  outline: 1px solid rgba(95, 99, 104, 0.55);
+  outline-offset: 0;
 }
 .canvas-item.selected {
-  outline: 2px solid var(--active-slide);
-}
-.drag-handle {
-  height: 5px;
+  outline: 1.5px solid var(--selection);
+  outline-offset: 0;
+  box-shadow: var(--selection-shadow);
   cursor: move;
-  background: transparent;
 }
-.drag-handle:hover {
-  background: rgb(177, 177, 191);
+.canvas-item.locked {
+  cursor: default;
 }
 .canvas-item-body {
-  height: calc(100% - 5px);
+  height: 100%;
+  width: 100%;
   overflow: hidden;
+  pointer-events: none; /* drag whole frame; props panel edits content */
+}
+.lock-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #f9ab00;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+  pointer-events: none;
 }
 
 /* Compact right property panel (React addition; denser to stay 小巧) */
@@ -501,14 +539,14 @@ select {
 }
 
 .footer {
-  background: var(--panel);
-  box-shadow: 1px 1px 2px #393838fb;
+  background: #fff;
+  border-top: 1px solid var(--border);
   font-size: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #666;
-  height: 20px;
+  color: #80868b;
+  height: 22px;
 }
 
 /* Play */
@@ -573,8 +611,9 @@ select {
 }
 
 .react-grid-item.react-grid-placeholder {
-  background: rgb(166, 177, 182) !important;
-  opacity: 0.3;
+  background: var(--accent) !important;
+  opacity: 0.18 !important;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar {
@@ -628,9 +667,20 @@ select {
   color: #c0392b;
 }
 .ctx-icon {
-  width: 1.1em;
-  text-align: center;
-  opacity: 0.75;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.8;
+  color: var(--icon-muted);
+}
+.ctx-item:hover:not(.disabled) .ctx-icon {
+  color: var(--accent);
+}
+.ctx-item.danger .ctx-icon {
+  color: #c5221f;
 }
 .ctx-divider {
   height: 1px;
@@ -638,9 +688,6 @@ select {
   margin: 2px 0;
 }
 
-.canvas-item.locked .drag-handle {
-  background: #f0ad4e;
-}
 .toast {
   position: fixed;
   bottom: 24px;
@@ -674,11 +721,13 @@ select {
 /* —— Wave polish: denser chrome, selection, drawer, play —— */
 
 .icon-btn:disabled {
-  opacity: 0.35;
+  opacity: 0.38;
   cursor: not-allowed;
+  pointer-events: none;
 }
 .icon-btn:disabled .icon {
   box-shadow: none;
+  background: transparent !important;
 }
 
 .canvas-stage {
@@ -689,30 +738,17 @@ select {
 }
 
 .canvas-item {
-  transition: outline-color 0.12s ease, box-shadow 0.12s ease;
+  transition: outline-color 0.1s ease, box-shadow 0.1s ease;
 }
 
+/* Google Slides–style selection (no neon / dashed frame) */
 .canvas-item.selected {
-  outline: 2px solid var(--active-slide);
-  box-shadow: 0 0 0 3px rgba(230, 28, 78, 0.18);
+  outline: 1.5px solid var(--selection);
+  box-shadow: var(--selection-shadow);
 }
 
 .canvas-item.selected::after {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  pointer-events: none;
-  border: 1px dashed rgba(230, 28, 78, 0.45);
-  border-radius: 1px;
-}
-
-.canvas-item.selected .drag-handle {
-  background: linear-gradient(90deg, #e61c4e, #c779d0, #3a99b2);
-  opacity: 0.85;
-}
-
-.drag-handle {
-  border-radius: 1px 1px 0 0;
+  display: none;
 }
 
 /* Chart insert drawer */
@@ -759,16 +795,19 @@ select {
 .drawer-close {
   border: none;
   background: transparent;
-  font-size: 20px;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
-  color: #666;
-  padding: 2px 6px;
-  border-radius: 4px;
+  color: var(--icon-muted);
+  padding: 0;
+  border-radius: 50%;
 }
 .drawer-close:hover {
-  background: #ebe7e7;
-  color: #222;
+  background: var(--icon-hover-bg);
+  color: #202124;
 }
 .drawer-tabs {
   display: flex;
@@ -786,7 +825,7 @@ select {
   color: #555;
 }
 .drawer-tab.active {
-  background: #e8f4f8;
+  background: var(--accent-soft);
   border-color: var(--accent);
   color: var(--accent);
   font-weight: 600;
@@ -886,12 +925,9 @@ select {
   border-radius: 10px;
 }
 .home-card:hover {
-  border-color: rgba(58, 153, 178, 0.45);
+  border-color: rgba(26, 115, 232, 0.45);
 }
 
-.props {
-  background: linear-gradient(180deg, #f5f3f3, #efecec);
-}
 .props h3 {
   letter-spacing: 0.02em;
 }
@@ -900,6 +936,108 @@ select {
   cursor: not-allowed;
 }
 
-.topbar {
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset;
+
+
+/* —— Slides-like resize handles & drag feedback —— */
+.react-grid-item > .react-resizable-handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border: 1.5px solid var(--selection);
+  border-radius: 1px;
+  box-sizing: border-box;
+  z-index: 5;
+  opacity: 0;
+  pointer-events: none;
+  padding: 0;
+}
+.react-grid-item > .react-resizable-handle::after {
+  display: none !important;
+  content: none !important;
+  background: none !important;
+}
+
+/* Only show handles on the selected (non-locked) atom */
+.canvas-item.selected:not(.locked) > .react-resizable-handle {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.react-resizable-handle-se {
+  bottom: -4px;
+  right: -4px;
+  cursor: se-resize;
+}
+.react-resizable-handle-sw {
+  bottom: -4px;
+  left: -4px;
+  cursor: sw-resize;
+}
+.react-resizable-handle-ne {
+  top: -4px;
+  right: -4px;
+  cursor: ne-resize;
+}
+.react-resizable-handle-nw {
+  top: -4px;
+  left: -4px;
+  cursor: nw-resize;
+}
+
+.react-grid-item.react-draggable-dragging {
+  opacity: 0.88;
+  outline: 1.5px solid var(--selection) !important;
+  box-shadow: 0 8px 24px rgba(60, 64, 67, 0.22) !important;
+  z-index: 100000 !important;
+}
+.react-grid-item.resizing {
+  outline: 1.5px solid var(--selection) !important;
+  z-index: 100000 !important;
+}
+
+.canvas-item.locked.selected {
+  outline-color: #f9ab00;
+  box-shadow: 0 1px 3px rgba(249, 171, 0, 0.25);
+}
+.canvas-item.locked:not(.selected):hover {
+  outline: 1px dashed rgba(249, 171, 0, 0.55);
+}
+
+.props {
+  background: #fff;
+  border-left: 1px solid var(--border);
+}
+.props h3 {
+  color: #202124;
+}
+.focus-flash {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+
+.slide-thumb {
+  outline: 1px solid #dadce0;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.slide-thumb:hover {
+  outline: 1px solid rgba(26, 115, 232, 0.45);
+}
+.slide-thumb.actived,
+.slide-thumb.actived:hover {
+  outline: 2px solid var(--accent);
+}
+
+.chart-preview-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 14px rgba(26, 115, 232, 0.16);
+}
+
+.home-side .nav-item.active,
+.home-side button.active {
+  background: var(--accent-soft);
+  color: var(--accent);
 }

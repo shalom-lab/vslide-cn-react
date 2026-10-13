@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { X } from 'lucide-react'
 import {
   CHART_GROUPS,
   CHART_INSERT_LIST,
@@ -54,8 +55,8 @@ export function ChartInsertDrawer({ open, onClose }: Props) {
       <aside className="drawer-panel chart-drawer">
         <header className="drawer-header">
           <h3>插入图表</h3>
-          <button type="button" className="drawer-close" onClick={onClose}>
-            ×
+          <button type="button" className="drawer-close" onClick={onClose} aria-label="关闭">
+            <X size={18} strokeWidth={1.75} />
           </button>
         </header>
         <div className="drawer-tabs">

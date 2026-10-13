@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { Copy, Plus, Trash2 } from 'lucide-react'
 import { useDeckStore } from '../../store/useDeckStore'
 import { cssBackground } from '../../utils/background'
 import { AtomRenderer } from '../atoms/AtomRenderer'
@@ -9,6 +10,7 @@ import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
 const AutoGrid = WidthProvider(GridLayout)
+const CTX = { size: 14, strokeWidth: 1.75 }
 
 function Thumb({
   slideContent,
@@ -77,19 +79,19 @@ export function SlideList() {
     {
       key: 'new',
       label: '新建幻灯片',
-      icon: '＋',
+      icon: <Plus {...CTX} />,
       onClick: () => addSlide(),
     },
     {
       key: 'copy',
       label: '复制幻灯片',
-      icon: '⧉',
+      icon: <Copy {...CTX} />,
       onClick: () => duplicateSlide(),
     },
     {
       key: 'delete',
       label: '删除幻灯片',
-      icon: '🗑',
+      icon: <Trash2 {...CTX} />,
       danger: true,
       disabled: slides.length <= 1,
       onClick: () => removeSlide(),
