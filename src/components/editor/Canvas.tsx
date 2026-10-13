@@ -37,6 +37,7 @@ import {
   atomStackStyle,
   canLayerAction,
 } from '../../utils/layerOrder'
+import { stageTypographyStyle } from '../../utils/typography'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
@@ -269,7 +270,7 @@ export function Canvas() {
           icon: <Paintbrush {...CTX} />,
           disabled:
             forbidden ||
-            ['text-md', 'simple-table'].includes(menuAtom.atomContent.atomName),
+            menuAtom.atomContent.atomName === 'text-md',
           onClick: () => {
             setActiveAtom(menuAtom.i)
             setEditorFocus('atomContent')
@@ -376,7 +377,7 @@ export function Canvas() {
       <div
         ref={stageRef}
         className={'canvas-stage' + (placing ? ' place-mode' : '')}
-        style={{ width: size.w, height: size.h, background }}
+        style={{ width: size.w, height: size.h, background, ...stageTypographyStyle(size.h) }}
         onClick={() => {
           if (placing) return
           setActiveAtom(null)

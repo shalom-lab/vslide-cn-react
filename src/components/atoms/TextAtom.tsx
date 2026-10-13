@@ -3,6 +3,7 @@ import MarkdownIt from 'markdown-it'
 import markdownItKatex from '@traptitech/markdown-it-katex'
 import type { AtomContent } from '../../types/deck'
 import { sanitizeHtml } from '../../utils/sanitizeHtml'
+import { designPxToRem } from '../../utils/typography'
 
 const md = new MarkdownIt({
   html: true, // allow embedded HTML; sanitized before render
@@ -42,12 +43,16 @@ function TextShadowView({ detail }: { detail: Record<string, unknown> }) {
       blur?: number
       color?: string
     }) || {}
-  const textShadow = `${Number(shadow.h) || 0}px ${Number(shadow.v) || 0}px ${Number(shadow.blur) || 0}px ${shadow.color || 'transparent'}`
+  const h = designPxToRem(Number(shadow.h) || 0)
+  const v = designPxToRem(Number(shadow.v) || 0)
+  const blur = designPxToRem(Number(shadow.blur) || 0)
+  const textShadow = `${h}rem ${v}rem ${blur}rem ${shadow.color || 'transparent'}`
+  const fontSizePx = Number(detail.fontSize) || 28
   return (
     <div
       className="atom-text-shadow"
       style={{
-        fontSize: Number(detail.fontSize) || 28,
+        fontSize: `${designPxToRem(fontSizePx)}rem`,
         fontWeight: (detail.fontWeight as number | string) || 900,
         fontFamily: String(detail.fontFamily || 'Arial'),
         color: String(detail.color || '#2c3e50'),
@@ -57,7 +62,7 @@ function TextShadowView({ detail }: { detail: Record<string, unknown> }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '4px 8px',
+        padding: '0.25rem 0.5rem',
         boxSizing: 'border-box',
         textAlign: 'center',
       }}
@@ -84,10 +89,10 @@ function TextMdView({ detail }: { detail: Record<string, unknown> }) {
         width: '100%',
         height: '100%',
         overflow: 'auto',
-        padding: '8px 12px',
+        padding: '0.5rem 0.75rem',
         boxSizing: 'border-box',
         textAlign: 'left',
-        fontSize: 14,
+        fontSize: '1rem',
         lineHeight: 1.6,
         color: '#2c3e50',
       }}

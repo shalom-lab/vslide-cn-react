@@ -7,6 +7,7 @@ import { GRID_COLS, calcRowHeight } from '../../utils/grid'
 import { AtomRenderer } from '../atoms/AtomRenderer'
 import { ContextMenu, type ContextMenuItem } from './ContextMenu'
 import { atomStackStyle } from '../../utils/layerOrder'
+import { stageTypographyStyle } from '../../utils/typography'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
@@ -37,7 +38,7 @@ function Thumb({
   }))
   return (
     <div className="thumb-viewport">
-      <div className="thumb-scale" style={{ background }}>
+      <div className="thumb-scale" style={{ background, ...stageTypographyStyle(THUMB_FULL_HEIGHT) }}>
         <AutoGrid
           className="thumb-grid"
           layout={layout}

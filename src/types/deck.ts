@@ -57,11 +57,66 @@ export interface CustomHtmlDetail {
   editorId?: string
 }
 
+export type TableCellAlign = 'left' | 'center' | 'right'
+
+/** simple-table presentation (stored in atom detail; Vue may omit). */
+export interface TableFormat {
+  /** First sheet row is a header (default true). */
+  headerRow: boolean
+  cellAlign: TableCellAlign
+  boldHeader: boolean
+  borderColor: string
+  borderWidth: number
+  headerBackground: string
+  /** Alternating body row tint (default true). */
+  zebra: boolean
+}
+
 export interface TableDetail {
   sheetData: (string | number)[][]
   nr: number
   nc: number
   pagination: { pageSize: number; show: boolean }
+  headerRow?: boolean
+  cellAlign?: TableCellAlign
+  boldHeader?: boolean
+  borderColor?: string
+  borderWidth?: number
+  headerBackground?: string
+  zebra?: boolean
+}
+
+export const defaultTableFormat = (): TableFormat => ({
+  headerRow: true,
+  cellAlign: 'center',
+  boldHeader: true,
+  borderColor: '#d0d0d0',
+  borderWidth: 1,
+  headerBackground: '#eef3f6',
+  zebra: true,
+})
+
+/** Resolve table format with defaults (legacy decks omit fields). */
+export function resolveTableFormat(
+  detail: Record<string, unknown>,
+): TableFormat {
+  const d = defaultTableFormat()
+  if (typeof detail.headerRow === 'boolean') d.headerRow = detail.headerRow
+  if (detail.cellAlign === 'left' || detail.cellAlign === 'center' || detail.cellAlign === 'right') {
+    d.cellAlign = detail.cellAlign
+  }
+  if (typeof detail.boldHeader === 'boolean') d.boldHeader = detail.boldHeader
+  if (typeof detail.borderColor === 'string' && detail.borderColor) {
+    d.borderColor = detail.borderColor
+  }
+  if (typeof detail.borderWidth === 'number' && Number.isFinite(detail.borderWidth)) {
+    d.borderWidth = Math.max(0, detail.borderWidth)
+  }
+  if (typeof detail.headerBackground === 'string' && detail.headerBackground) {
+    d.headerBackground = detail.headerBackground
+  }
+  if (typeof detail.zebra === 'boolean') d.zebra = detail.zebra
+  return d
 }
 
 export interface SingleImageDetail {

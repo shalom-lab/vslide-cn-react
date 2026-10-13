@@ -6,6 +6,7 @@ import { cssBackground } from '../../utils/background'
 import { GRID_COLS, calcRowHeight } from '../../utils/grid'
 import { AtomRenderer } from '../atoms/AtomRenderer'
 import { atomStackStyle } from '../../utils/layerOrder'
+import { stageTypographyStyle } from '../../utils/typography'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
@@ -80,7 +81,7 @@ export function PlayPage() {
   return (
     <div
       className="play-page"
-      style={{ background, height }}
+      style={{ background, height, ...stageTypographyStyle(height) }}
       onClick={next}
       onContextMenu={(e) => {
         e.preventDefault()

@@ -4,7 +4,11 @@ import {
   selectActiveSlide,
   useDeckStore,
 } from '../../store/useDeckStore'
-import { defaultEchartTitle } from '../../types/deck'
+import {
+  defaultEchartTitle,
+  resolveTableFormat,
+  type TableCellAlign,
+} from '../../types/deck'
 import { cssBackground } from '../../utils/background'
 import { canLayerAction } from '../../utils/layerOrder'
 
@@ -66,6 +70,10 @@ export function PropertyPanel() {
         <p className="hint">
           当前幻灯片 #{slide ? slide.y + 1 : '-'} ·{' '}
           {slide?.slideContent.length ?? 0} 个组件 · 模式 {bg.mode}
+        </p>
+        <p className="hint">
+          文字 rem：画布 / 播放 / 缩略图舞台按「高度÷36」设根字号，Markdown /
+          标题 / HTML / 表格用 rem·em 随舞台缩放。
         </p>
       </aside>
     )
@@ -135,7 +143,7 @@ export function PropertyPanel() {
               />
             </label>
             <label className="field">
-              字号
+              字号（设计 px → rem）
               <input
                 type="number"
                 value={Number(d.fontSize) || 28}
@@ -145,6 +153,9 @@ export function PropertyPanel() {
                   })
                 }
               />
+              <span className="hint">
+                相对舞台缩放：舞台字号 = 高度/36，字号按设计稿 540 高换算为 rem
+              </span>
             </label>
             <label className="field">
               字体
@@ -184,7 +195,9 @@ export function PropertyPanel() {
                 })
               }
             />
-            <span className="hint">经 DOMPurify 消毒，不执行 JS</span>
+            <span className="hint">
+              经 DOMPurify 消毒，不执行 JS · 正文字号跟随舞台 rem
+            </span>
           </label>
         )}
 
@@ -223,6 +236,94 @@ export function PropertyPanel() {
             />
           </label>
         )}
+        {atom.atomContent.atomName === 'simple-table' &&
+          (() => {
+            const fmt = resolveTableFormat(d)
+            const patch = (partial: Record<string, unknown>) =>
+              updateAtomDetail(activeSlideId, atom.i, partial)
+            return (
+              <>
+            <h4>表格样式</h4>
+            <label className="field checkbox-field">
+              <span>首行为表头</span>
+              <input
+                type="checkbox"
+                checked={fmt.headerRow}
+                onChange={(e) => patch({ headerRow: e.target.checked })}
+              />
+            </label>
+            <label className="field checkbox-field">
+              <span>表头加粗</span>
+              <input
+                type="checkbox"
+                checked={fmt.boldHeader}
+                disabled={!fmt.headerRow}
+                onChange={(e) => patch({ boldHeader: e.target.checked })}
+              />
+            </label>
+            <label className="field checkbox-field">
+              <span>斑马纹</span>
+              <input
+                type="checkbox"
+                checked={fmt.zebra}
+                onChange={(e) => patch({ zebra: e.target.checked })}
+              />
+            </label>
+            <label className="field">
+              单元格对齐
+              <select
+                value={fmt.cellAlign}
+                onChange={(e) =>
+                  patch({ cellAlign: e.target.value as TableCellAlign })
+                }
+              >
+                <option value="left">左对齐</option>
+                <option value="center">居中</option>
+                <option value="right">右对齐</option>
+              </select>
+            </label>
+            <label className="field">
+              表头背景
+              <input
+                type="color"
+                value={
+                  fmt.headerBackground.startsWith('#')
+                    ? fmt.headerBackground.slice(0, 7)
+                    : '#eef3f6'
+                }
+                disabled={!fmt.headerRow}
+                onChange={(e) => patch({ headerBackground: e.target.value })}
+              />
+            </label>
+            <label className="field">
+              边框颜色
+              <input
+                type="color"
+                value={
+                  fmt.borderColor.startsWith('#')
+                    ? fmt.borderColor.slice(0, 7)
+                    : '#d0d0d0'
+                }
+                onChange={(e) => patch({ borderColor: e.target.value })}
+              />
+            </label>
+            <label className="field">
+              边框宽度
+              <input
+                type="number"
+                min={0}
+                max={8}
+                step={1}
+                value={fmt.borderWidth}
+                onChange={(e) =>
+                  patch({ borderWidth: Number(e.target.value) })
+                }
+              />
+            </label>
+              <p className="hint">下方 JSON 仍可直接改 sheetData（高级）。</p>
+              </>
+            )
+          })()}
       </div>
 
       {(atom.atomType === 'echart' || atom.atomType === 'tables') && (

@@ -202,7 +202,7 @@ Defaults from factories / `atomBorder.js` / `atomAnimation.js`:
 **text-md:** `{ editorId | editorid, markdown }` — React: KaTeX + DOMPurify (never executes JS)  
 **text-shadow:** `{ text, color, fontFamily, fontSize, fontWeight, shadow: { h, v, blur, color } }`  
 **custom-html:** `{ editorId?, html }` — React-only; sanitized HTML only (no scripts / iframes / `on*`)  
-**simple-table:** `{ sheetData, nr, nc, pagination: { pageSize, show } }`  
+**simple-table:** `{ sheetData, nr, nc, pagination: { pageSize, show }, headerRow?, cellAlign?, boldHeader?, borderColor?, borderWidth?, headerBackground?, zebra? }` (React format fields; Vue may omit)  
 **single-image:** `{ src }` only  
 **image-group:** `{ src: string[], height, gap }`  
 **echart (common):** `{ sheetData, nr, nc, animation, palette, backgroundPalette, title /* ECharts title object */, grid?, xAxis?, yAxis?, legend?, label?, itemStyle?, emphasis?, <chartSpecific> }`  

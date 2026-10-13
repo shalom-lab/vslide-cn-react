@@ -545,6 +545,17 @@ body.pane-resizing * {
   user-select: text;
   font-size: 12px;
 }
+.field.checkbox-field {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.field.checkbox-field input[type='checkbox'] {
+  width: auto;
+  margin: 0;
+  accent-color: var(--accent);
+}
 .btn-danger,
 .btn-secondary {
   margin-top: 6px;
@@ -621,23 +632,13 @@ body.pane-resizing * {
   font-size: 12px;
 }
 
-/* Table atom */
+/* Table atom — cell border/align/header come from TableAtom inline styles */
 .atom-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 0.92rem;
 }
-.atom-table th,
-.atom-table td {
-  border: 1px solid #d0d0d0;
-  padding: 6px 10px;
-  text-align: center;
-}
-.atom-table th {
-  background: #eef3f6;
-  font-weight: 600;
-}
-.atom-table tr:nth-child(even) td {
+.atom-table--zebra tbody tr:nth-child(even) td {
   background: #fafafa;
 }
 /* Markdown prose (text-md) + shared rich text look */
@@ -745,7 +746,7 @@ body.pane-resizing * {
 .atom-custom-html {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
   color: #2c3e50;
-  font-size: 14px;
+  /* font-size set inline to 1rem — scales with stage */
   line-height: 1.55;
 }
 
@@ -1060,11 +1061,8 @@ body.pane-resizing * {
 }
 
 .atom-table {
-  border-radius: 4px;
+  border-radius: 0.25rem;
   overflow: hidden;
-}
-.atom-table th {
-  background: linear-gradient(180deg, #f2f6f9, #e8eef3);
 }
 
 .home-card {
