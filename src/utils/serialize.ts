@@ -18,6 +18,7 @@ import {
   type Slide,
 } from '../types/deck'
 import { cssBackground } from './background'
+import { withZIndex } from './layerOrder'
 
 function asRecord(v: unknown): Record<string, unknown> {
   return v && typeof v === 'object' ? (v as Record<string, unknown>) : {}
@@ -148,6 +149,9 @@ function normalizeAtom(raw: unknown, index: number): Atom {
       atomName: String(content.atomName || atomName),
       detail,
     },
+    ...(typeof a.zIndex === 'number' && Number.isFinite(a.zIndex)
+      ? { zIndex: Number(a.zIndex) }
+      : { zIndex: index + 1 }),
     ...(typeof a.moved === 'boolean' ? { moved: a.moved } : {}),
   }
 }
@@ -167,7 +171,14 @@ function normalizeSlide(raw: unknown, index: number): Slide {
       enter: String(anim.enter || 'fadeIn'),
       leave: String(anim.leave || 'fadeOut'),
     },
-    slideContent: content.map((a, i) => normalizeAtom(a, i)),
+    slideContent: (() => {
+      const atoms = content.map((a, i) => normalizeAtom(a, i))
+      // If any atom carried an explicit zIndex, sort so paint order survives reload.
+      if (atoms.some((a) => typeof a.zIndex === 'number')) {
+        atoms.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0))
+      }
+      return withZIndex(atoms)
+    })(),
     ...(typeof s.moved === 'boolean' ? { moved: s.moved } : {}),
   }
 }
@@ -239,6 +250,7 @@ export function serializeDeck(deck: DeckFile): DeckFile {
           atomBorder: a.atomBorder,
           atomAnimation: a.atomAnimation,
           atomContent: { atomName: a.atomContent.atomName, detail },
+          zIndex: typeof a.zIndex === 'number' ? a.zIndex : ai + 1,
           ...(a.moved != null ? { moved: a.moved } : {}),
         }
       }),

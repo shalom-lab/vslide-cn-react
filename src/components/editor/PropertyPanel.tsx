@@ -5,6 +5,7 @@ import {
   useDeckStore,
 } from '../../store/useDeckStore'
 import { defaultBackground, defaultEchartTitle } from '../../types/deck'
+import { canLayerAction } from '../../utils/layerOrder'
 
 export function PropertyPanel() {
   const atom = useDeckStore(selectActiveAtom)
@@ -16,6 +17,7 @@ export function PropertyPanel() {
   const removeActiveAtom = useDeckStore((s) => s.removeActiveAtom)
   const toggleFixedActiveAtom = useDeckStore((s) => s.toggleFixedActiveAtom)
   const duplicateActiveAtom = useDeckStore((s) => s.duplicateActiveAtom)
+  const reorderActiveAtom = useDeckStore((s) => s.reorderActiveAtom)
   const setBackground = useDeckStore((s) => s.setBackground)
   const activeSlideId = useDeckStore((s) => s.activeSlideId)
 
@@ -142,7 +144,34 @@ export function PropertyPanel() {
         {atom.atomType} / {atom.atomContent.atomName}
         {atom.static ? ' · 已固定' : ''}
         {atom.super ? ' · super' : ''}
+        {typeof atom.zIndex === 'number' ? ` · 层 ${atom.zIndex}` : ''}
       </p>
+
+      <h4>图层</h4>
+      <div className="layer-btns">
+        {(
+          [
+            ['front', '置顶'],
+            ['forward', '上移'],
+            ['backward', '下移'],
+            ['back', '置底'],
+          ] as const
+        ).map(([action, label]) => (
+          <button
+            key={action}
+            type="button"
+            className="btn-secondary layer-btn"
+            disabled={
+              atom.super ||
+              !canLayerAction(slide?.slideContent ?? [], atom.i, action)
+            }
+            onClick={() => reorderActiveAtom(action)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <p className="hint">右键菜单同样支持图层；拖动重叠组件时仍可缩放。</p>
 
       <div ref={styleRef}>
         {atom.atomContent.atomName === 'text-shadow' && (

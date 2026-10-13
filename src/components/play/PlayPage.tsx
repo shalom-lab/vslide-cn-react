@@ -4,6 +4,7 @@ import GridLayout, { WidthProvider } from 'react-grid-layout'
 import { useDeckStore } from '../../store/useDeckStore'
 import { cssBackground } from '../../utils/background'
 import { AtomRenderer } from '../atoms/AtomRenderer'
+import { atomStackStyle } from '../../utils/layerOrder'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
@@ -97,8 +98,12 @@ export function PlayPage() {
         useCSSTransforms={false}
         style={{ height: '100%' }}
       >
-        {slide.slideContent.map((atom) => (
-          <div key={atom.i} className="play-item">
+        {slide.slideContent.map((atom, index) => (
+          <div
+            key={atom.i}
+            className="play-item"
+            style={atomStackStyle(atom, index)}
+          >
             <AtomRenderer atom={atom} />
           </div>
         ))}

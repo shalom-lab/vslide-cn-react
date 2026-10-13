@@ -92,6 +92,12 @@ export interface Atom {
   atomBorder: AtomBorder
   atomAnimation: AtomAnimation
   atomContent: AtomContent
+  /**
+   * Paint order for overlap (React extension). Higher = on top.
+   * Canonical order is still slideContent array index; zIndex mirrors 1..n.
+   * Vue has no zIndex — overlap uses DOM/array order only.
+   */
+  zIndex?: number
   /** vue-grid-layout runtime flag, preserved on round-trip */
   moved?: boolean
 }

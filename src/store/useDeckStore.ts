@@ -17,6 +17,11 @@ import {
 } from '../types/deck'
 import { cssBackground } from '../utils/background'
 import { normalizeDeck } from '../utils/serialize'
+import {
+  applyLayerOrder,
+  withZIndex,
+  type LayerAction,
+} from '../utils/layerOrder'
 
 const LOCAL_ATOMS_KEY = 'vslide-cn-react:localAtoms'
 
@@ -45,6 +50,8 @@ interface DeckState {
   duplicateActiveAtom: () => void
   removeActiveAtom: () => void
   toggleFixedActiveAtom: () => void
+  /** 置顶 / 置底 / 上移一层 / 下移一层 */
+  reorderActiveAtom: (action: LayerAction) => void
   saveActiveAtomToGallery: () => void
   setBackground: (bg: BackgroundConfig) => void
   replaceDeck: (deck: DeckFile | unknown) => void
@@ -235,7 +242,10 @@ export const useDeckStore = create<DeckState>((set, get) => ({
         ...deck,
         slides: deck.slides.map((sl) =>
           sl.i === activeSlideId
-            ? { ...sl, slideContent: [...sl.slideContent, atom] }
+            ? {
+                ...sl,
+                slideContent: withZIndex([...sl.slideContent, atom]),
+              }
             : sl,
         ),
       }),
@@ -261,7 +271,10 @@ export const useDeckStore = create<DeckState>((set, get) => ({
         ...deck,
         slides: deck.slides.map((sl) =>
           sl.i === activeSlideId
-            ? { ...sl, slideContent: [...sl.slideContent, copy] }
+            ? {
+                ...sl,
+                slideContent: withZIndex([...sl.slideContent, copy]),
+              }
             : sl,
         ),
       }),
@@ -279,8 +292,8 @@ export const useDeckStore = create<DeckState>((set, get) => ({
           sl.i === activeSlideId
             ? {
                 ...sl,
-                slideContent: sl.slideContent.filter(
-                  (a) => a.i !== activeAtomId,
+                slideContent: withZIndex(
+                  sl.slideContent.filter((a) => a.i !== activeAtomId),
                 ),
               }
             : sl,
@@ -307,6 +320,21 @@ export const useDeckStore = create<DeckState>((set, get) => ({
                 ),
               },
         ),
+      }),
+    })
+  },
+
+  reorderActiveAtom: (action) => {
+    const { deck, activeSlideId, activeAtomId } = get()
+    if (!activeAtomId) return
+    set({
+      deck: withGetBackground({
+        ...deck,
+        slides: deck.slides.map((sl) => {
+          if (sl.i !== activeSlideId) return sl
+          const next = applyLayerOrder(sl.slideContent, activeAtomId, action)
+          return next ? { ...sl, slideContent: next } : sl
+        }),
       }),
     })
   },
@@ -529,3 +557,5 @@ export function selectActiveAtom(state: DeckState): Atom | undefined {
   if (!slide || !state.activeAtomId) return undefined
   return slide.slideContent.find((a) => a.i === state.activeAtomId)
 }
+
+export type { LayerAction }

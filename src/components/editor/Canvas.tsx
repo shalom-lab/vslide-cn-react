@@ -8,6 +8,10 @@ import {
 import { cssBackground } from '../../utils/background'
 import { AtomRenderer } from '../atoms/AtomRenderer'
 import { ContextMenu, type ContextMenuItem } from './ContextMenu'
+import {
+  atomStackStyle,
+  canLayerAction,
+} from '../../utils/layerOrder'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
@@ -29,6 +33,7 @@ export function Canvas() {
   const duplicateActiveAtom = useDeckStore((s) => s.duplicateActiveAtom)
   const removeActiveAtom = useDeckStore((s) => s.removeActiveAtom)
   const toggleFixedActiveAtom = useDeckStore((s) => s.toggleFixedActiveAtom)
+  const reorderActiveAtom = useDeckStore((s) => s.reorderActiveAtom)
   const saveActiveAtomToGallery = useDeckStore((s) => s.saveActiveAtomToGallery)
   const toast = useDeckStore((s) => s.toast)
   const clearToast = useDeckStore((s) => s.clearToast)
@@ -146,6 +151,42 @@ export function Canvas() {
           },
         },
         {
+          key: 'front',
+          label: '置顶',
+          icon: '⬆',
+          disabled:
+            forbidden ||
+            !canLayerAction(slide?.slideContent ?? [], menuAtom.i, 'front'),
+          onClick: () => reorderActiveAtom('front'),
+        },
+        {
+          key: 'forward',
+          label: '上移一层',
+          icon: '↑',
+          disabled:
+            forbidden ||
+            !canLayerAction(slide?.slideContent ?? [], menuAtom.i, 'forward'),
+          onClick: () => reorderActiveAtom('forward'),
+        },
+        {
+          key: 'backward',
+          label: '下移一层',
+          icon: '↓',
+          disabled:
+            forbidden ||
+            !canLayerAction(slide?.slideContent ?? [], menuAtom.i, 'backward'),
+          onClick: () => reorderActiveAtom('backward'),
+        },
+        {
+          key: 'back',
+          label: '置底',
+          icon: '⬇',
+          disabled:
+            forbidden ||
+            !canLayerAction(slide?.slideContent ?? [], menuAtom.i, 'back'),
+          onClick: () => reorderActiveAtom('back'),
+        },
+        {
           key: 'fixed',
           label: menuAtom.static ? '取消固定' : '固定',
           icon: '📌',
@@ -204,7 +245,7 @@ export function Canvas() {
           onResizeStop={onLayoutChange}
           draggableHandle=".drag-handle"
         >
-          {slide.slideContent.map((atom) => (
+          {slide.slideContent.map((atom, index) => (
             <div
               key={atom.i}
               className={
@@ -212,6 +253,7 @@ export function Canvas() {
                 (atom.i === activeAtomId ? ' selected' : '') +
                 (atom.static ? ' locked' : '')
               }
+              style={atomStackStyle(atom, index, atom.i === activeAtomId)}
               onClick={(e) => {
                 e.stopPropagation()
                 setActiveAtom(atom.i)

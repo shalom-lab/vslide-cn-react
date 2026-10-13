@@ -120,19 +120,20 @@ export function createSampleDeck(): DeckFile {
           },
         },
       }),
+      // Intentionally overlaps the brand title so layer stacking is tryable
       atom({
         i: '2',
-        x: 2,
-        y: 12,
-        w: 14,
-        h: 2,
+        x: 3,
+        y: 9,
+        w: 12,
+        h: 3,
         atomType: 'text',
         atomContent: {
           atomName: 'text-md',
           detail: {
             editorId: nanoid(10),
             markdown:
-              'React + TypeScript 重写 · ← → / Space 放映 · Esc 返回编辑 · 右键组件打开菜单',
+              '右键 → **置顶 / 上移 / 下移 / 置底** 试图层叠加 · ← → 放映 · Esc 编辑',
           },
         },
       }),

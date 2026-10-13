@@ -3,6 +3,7 @@ import { useDeckStore } from '../../store/useDeckStore'
 import { cssBackground } from '../../utils/background'
 import { AtomRenderer } from '../atoms/AtomRenderer'
 import { ContextMenu, type ContextMenuItem } from './ContextMenu'
+import { atomStackStyle } from '../../utils/layerOrder'
 import GridLayout, { WidthProvider } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
@@ -40,8 +41,12 @@ function Thumb({
         preventCollision={false}
         useCSSTransforms
       >
-        {slideContent.map((atom) => (
-          <div key={atom.i} className="thumb-item">
+        {slideContent.map((atom, index) => (
+          <div
+            key={atom.i}
+            className="thumb-item"
+            style={atomStackStyle(atom, index)}
+          >
             <AtomRenderer atom={atom} />
           </div>
         ))}

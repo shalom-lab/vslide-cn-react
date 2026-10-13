@@ -41,6 +41,32 @@ Charts carry `detail.sheetData` (2D array) + style knobs; Vue builds ECharts opt
 - Working slide: click select atom, context menu for 数据/样式/边框/动画/固定/复制/删除/保存到「我的图表」.
 - Left list: ↑↓ navigate slides; context 新建/复制/删除 (keep first).
 
+
+## Atom stacking / z-order (图层叠加)
+
+### What Vue does
+
+- **vue-grid-layout** with `preventCollision={false}` + `vertical-compact={false}` → atoms **may overlap**.
+- Paint order = **`slideContent` array / DOM order** (later siblings on top). No `zIndex` field on atoms.
+- Context menu (**WorkingSlide.vue**): 数据 / 样式 / 边框 / 动画 / 固定 / 复制 / 删除 / 保存 — **no 置顶/置底/上移/下移**.
+- Library only bumps z-index while dragging/resizing (`.vue-draggable-dragging` / `.resizing` → `z-index: 3`); placeholder `z-index: 2`. Idle overlap is pure stacking context from DOM order.
+- There is **no** bring-forward / send-back mutation in Vuex.
+
+### What React ships (this pass)
+
+- Optional **`atom.zIndex`** (React extension; 1..n mirrors array order). Serialize round-trips it; Vue JSON without it gets index-based defaults.
+- Canonical order remains **`slideContent` array** (last = top). `reorderActiveAtom` reorders the array and reassigns `zIndex`.
+- UI: atom context menu **置顶 / 上移一层 / 下移一层 / 置底** + property panel **图层** buttons.
+- Canvas / play / thumbs apply `style.zIndex`. Selected atom gets a temporary (+50000) boost for editing; drag/resize forced to `z-index: 100000 !important` so RGL’s default 1–3 does not lose to user layers.
+- `preventCollision={false}` unchanged — drag/resize over overlaps still works.
+
+### Known limits
+
+- No multi-select layer ops; no keyboard shortcuts for layers yet.
+- Temporary selection boost is visual-only (not persisted).
+- Vue files ignore `zIndex` on import into Vue; React re-sorts by `zIndex` when present on load.
+- Clicking through fully covered atoms still requires layer reorder or selecting via other UI.
+
 ## Play mode
 
 - Full-viewport grid, non-interactive.
@@ -191,7 +217,9 @@ Chart-specific nests: `simpleLine`, `simpleBar`, `simplePie`, `simpleRadar`, `si
 7. 删除 → `removeAtom()`
 8. 保存 → clone into `gallery.localLayout`「我的图表」
 
-**Not present in Vue:** bring forward / send back / layer z-order.
+**React-only layer items (not in Vue menu):** 置顶 / 上移一层 / 下移一层 / 置底
+
+**Not present in Vue:** bring forward / send back / layer z-order UI (overlap via DOM order only — see **Atom stacking / z-order**).
 
 ### Slide list context menu (Left.vue)
 
@@ -228,5 +256,5 @@ Still missing vs Vue:
 
 - Full echart zoo + style nests editing UI; Handsontable sheet editor; animate.css play timeline
 - `gallery.templateLayout` / CloudBase / IndexedDB multi-file `document.fileList`
-- Layer z-order (not in Vue either)
+- ~~Layer z-order~~ → React added 置顶/置底/上移/下移 + `zIndex` (Vue still DOM-order only)
 - `simple-bar` remains React subset alias (Vue: multi-bar / stack-bar / …)
