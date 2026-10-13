@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import GridLayout, { WidthProvider, type Layout } from 'react-grid-layout'
 import {
   ArrowDown,
@@ -22,6 +22,12 @@ import {
   useDeckStore,
 } from '../../store/useDeckStore'
 import { cssBackground } from '../../utils/background'
+import {
+  buildGridMetrics,
+  gridToPixels,
+  pixelsToGrid,
+  type GridLayoutRect,
+} from '../../utils/grid'
 import { AtomRenderer } from '../atoms/AtomRenderer'
 import { ContextMenu, type ContextMenuItem } from './ContextMenu'
 import {
@@ -40,6 +46,13 @@ interface MenuState {
   atomId: string
 }
 
+interface DragDraft {
+  originX: number
+  originY: number
+  currentX: number
+  currentY: number
+}
+
 export function Canvas() {
   const deck = useDeckStore((s) => s.deck)
   const activeSlideId = useDeckStore((s) => s.activeSlideId)
@@ -54,11 +67,19 @@ export function Canvas() {
   const saveActiveAtomToGallery = useDeckStore((s) => s.saveActiveAtomToGallery)
   const toast = useDeckStore((s) => s.toast)
   const clearToast = useDeckStore((s) => s.clearToast)
+  const placeMode = useDeckStore((s) => s.placeMode)
+  const pendingLayout = useDeckStore((s) => s.pendingLayout)
+  const finishPlaceRect = useDeckStore((s) => s.finishPlaceRect)
+  const cancelPlaceMode = useDeckStore((s) => s.cancelPlaceMode)
   const slide = useDeckStore(selectActiveSlide)
   const activeAtom = useDeckStore(selectActiveAtom)
 
   const [size, setSize] = useState({ w: 640, h: 360 })
   const [menu, setMenu] = useState<MenuState | null>(null)
+  const [dragDraft, setDragDraft] = useState<DragDraft | null>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
+  const dragRef = useRef<DragDraft | null>(null)
+  const placing = placeMode === 'chart'
 
   useEffect(() => {
     const measure = () => {
@@ -80,6 +101,14 @@ export function Canvas() {
     return () => window.clearTimeout(t)
   }, [toast, clearToast])
 
+  // Clear in-progress drag when place mode ends
+  useEffect(() => {
+    if (!placing) {
+      dragRef.current = null
+      setDragDraft(null)
+    }
+  }, [placing])
+
   const layout: Layout[] = useMemo(
     () =>
       (slide?.slideContent ?? []).map((a) => ({
@@ -93,7 +122,11 @@ export function Canvas() {
     [slide?.slideContent],
   )
 
-  const rowHeight = Math.max(8, Math.floor(size.h / 18))
+  const metrics = useMemo(
+    () => buildGridMetrics(size.w, size.h),
+    [size.w, size.h],
+  )
+  const rowHeight = metrics.rowHeight
   const background = cssBackground(deck.background)
 
   const onLayoutChange = (next: Layout[]) => {
@@ -114,6 +147,84 @@ export function Canvas() {
     setActiveAtom(atomId)
     setMenu({ x: e.clientX, y: e.clientY, atomId })
   }
+
+  const localPoint = (e: React.MouseEvent | MouseEvent) => {
+    const el = stageRef.current
+    if (!el) return { x: 0, y: 0 }
+    const r = el.getBoundingClientRect()
+    return {
+      x: Math.max(0, Math.min(e.clientX - r.left, r.width)),
+      y: Math.max(0, Math.min(e.clientY - r.top, r.height)),
+    }
+  }
+
+  const draftToGrid = (draft: DragDraft): GridLayoutRect => {
+    const left = Math.min(draft.originX, draft.currentX)
+    const top = Math.min(draft.originY, draft.currentY)
+    const width = Math.abs(draft.currentX - draft.originX)
+    const height = Math.abs(draft.currentY - draft.originY)
+    return pixelsToGrid(left, top, width, height, metrics)
+  }
+
+  const onPlacePointerDown = (e: React.MouseEvent) => {
+    if (!placing || e.button !== 0) return
+    e.preventDefault()
+    e.stopPropagation()
+    closeMenu()
+    const p = localPoint(e)
+    const draft = {
+      originX: p.x,
+      originY: p.y,
+      currentX: p.x,
+      currentY: p.y,
+    }
+    dragRef.current = draft
+    setDragDraft(draft)
+  }
+
+  useEffect(() => {
+    if (!dragDraft) return
+
+    const onMove = (e: MouseEvent) => {
+      const d = dragRef.current
+      if (!d) return
+      const p = localPoint(e)
+      const next = { ...d, currentX: p.x, currentY: p.y }
+      dragRef.current = next
+      setDragDraft(next)
+    }
+    const onUp = (e: MouseEvent) => {
+      const d = dragRef.current
+      dragRef.current = null
+      setDragDraft(null)
+      if (!d) return
+      const p = localPoint(e)
+      const final = { ...d, currentX: p.x, currentY: p.y }
+      const dx = Math.abs(final.currentX - final.originX)
+      const dy = Math.abs(final.currentY - final.originY)
+      // Tiny click without drag → cancel place (click empty)
+      if (dx < 4 && dy < 4) {
+        cancelPlaceMode()
+        return
+      }
+      finishPlaceRect(draftToGrid(final))
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dragDraft ? 1 : 0, metrics, finishPlaceRect, cancelPlaceMode])
+
+  const previewRect: GridLayoutRect | null = dragDraft
+    ? draftToGrid(dragDraft)
+    : pendingLayout && placing
+      ? pendingLayout
+      : null
+
+  const previewBox = previewRect ? gridToPixels(previewRect, metrics) : null
 
   const menuAtom =
     menu && slide
@@ -238,10 +349,17 @@ export function Canvas() {
 
   return (
     <div className="canvas-wrap">
+      {placing && (
+        <div className="place-hint" role="status">
+          在画布上拖拽框选图表位置 · Esc 取消
+        </div>
+      )}
       <div
-        className="canvas-stage"
+        ref={stageRef}
+        className={'canvas-stage' + (placing ? ' place-mode' : '')}
         style={{ width: size.w, height: size.h, background }}
         onClick={() => {
+          if (placing) return
           setActiveAtom(null)
           setEditorFocus(null)
           closeMenu()
@@ -254,8 +372,8 @@ export function Canvas() {
           rowHeight={rowHeight}
           margin={[4, 4]}
           containerPadding={[0, 0]}
-          isDraggable
-          isResizable
+          isDraggable={!placing}
+          isResizable={!placing}
           compactType={null}
           preventCollision={false}
           useCSSTransforms
@@ -274,15 +392,23 @@ export function Canvas() {
               }
               style={atomStackStyle(atom, index, atom.i === activeAtomId)}
               onClick={(e) => {
+                if (placing) return
                 e.stopPropagation()
                 setActiveAtom(atom.i)
               }}
               onDoubleClick={(e) => {
+                if (placing) return
                 e.stopPropagation()
                 setActiveAtom(atom.i)
                 window.setTimeout(() => toggleFixedActiveAtom(), 0)
               }}
-              onContextMenu={(e) => openAtomMenu(e, atom.i)}
+              onContextMenu={(e) => {
+                if (placing) {
+                  e.preventDefault()
+                  return
+                }
+                openAtomMenu(e, atom.i)
+              }}
             >
               {atom.static ? (
                 <span className="lock-badge" title="已固定" aria-hidden>
@@ -295,6 +421,32 @@ export function Canvas() {
             </div>
           ))}
         </AutoGrid>
+
+        {placing && (
+          <div
+            className="place-overlay"
+            onMouseDown={onPlacePointerDown}
+            onContextMenu={(e) => {
+              e.preventDefault()
+              cancelPlaceMode()
+            }}
+          />
+        )}
+
+        {previewBox && (
+          <div
+            className={
+              'place-rect' + (dragDraft ? ' placing' : ' pending')
+            }
+            style={{
+              left: previewBox.left,
+              top: previewBox.top,
+              width: previewBox.width,
+              height: previewBox.height,
+            }}
+            aria-hidden
+          />
+        )}
       </div>
       {menu && (
         <ContextMenu

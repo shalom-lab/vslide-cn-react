@@ -19,6 +19,7 @@ import {
   withZIndex,
   type LayerAction,
 } from '../utils/layerOrder'
+import type { GridLayoutRect } from '../utils/grid'
 
 export {
   createTextAtom,
@@ -32,6 +33,8 @@ export {
 const LOCAL_ATOMS_KEY = 'vslide-cn-react:localAtoms'
 const HISTORY_LIMIT = 50
 
+export type PlaceMode = 'chart' | null
+
 interface DeckState {
   deck: DeckFile
   activeSlideId: string
@@ -41,10 +44,18 @@ interface DeckState {
   toast: string | null
   past: DeckFile[]
   future: DeckFile[]
+  /** Google Slides–like place-first insert (currently charts). */
+  placeMode: PlaceMode
+  pendingLayout: GridLayoutRect | null
+  chartDrawerOpen: boolean
   setActiveSlide: (id: string) => void
   setActiveAtom: (id: string | null) => void
   setEditorFocus: (focus: EditorFocus) => void
   clearToast: () => void
+  startChartPlace: () => void
+  finishPlaceRect: (layout: GridLayoutRect) => void
+  cancelPlaceMode: () => void
+  setChartDrawerOpen: (open: boolean) => void
   updateSlideLayout: (slideId: string, atoms: Atom[]) => void
   updateAtom: (slideId: string, atomId: string, patch: Partial<Atom>) => void
   updateAtomDetail: (
@@ -132,6 +143,43 @@ export const useDeckStore = create<DeckState>((set, get) => ({
   toast: null,
   past: [],
   future: [],
+  placeMode: null,
+  pendingLayout: null,
+  chartDrawerOpen: false,
+
+  startChartPlace: () =>
+    set({
+      placeMode: 'chart',
+      pendingLayout: null,
+      chartDrawerOpen: false,
+      activeAtomId: null,
+      editorFocus: null,
+    }),
+
+  finishPlaceRect: (layout) =>
+    set({
+      pendingLayout: layout,
+      chartDrawerOpen: true,
+      // stay in placeMode so Esc still cancels until insert
+    }),
+
+  cancelPlaceMode: () =>
+    set({
+      placeMode: null,
+      pendingLayout: null,
+      chartDrawerOpen: false,
+    }),
+
+  setChartDrawerOpen: (open) =>
+    set(
+      open
+        ? { chartDrawerOpen: true }
+        : {
+            chartDrawerOpen: false,
+            placeMode: null,
+            pendingLayout: null,
+          },
+    ),
 
   setActiveSlide: (id) =>
     set({ activeSlideId: id, activeAtomId: null, editorFocus: null }),
@@ -336,6 +384,9 @@ export const useDeckStore = create<DeckState>((set, get) => ({
         ),
       }),
       activeAtomId: atom.i,
+      placeMode: null,
+      pendingLayout: null,
+      chartDrawerOpen: false,
     }))
   },
 

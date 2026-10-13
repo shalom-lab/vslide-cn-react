@@ -23,15 +23,19 @@ const previewAtoms: Record<string, Atom> = Object.fromEntries(
   }),
 )
 
-/** Right-side chart insert drawer (Vue SEchart analogue). Click to insert. */
+/** Right-side chart insert drawer. Inserts at pending place-first layout when set. */
 export function ChartInsertDrawer({ open, onClose }: Props) {
   const addAtom = useDeckStore((s) => s.addAtom)
+  const pendingLayout = useDeckStore((s) => s.pendingLayout)
   const [tab, setTab] = useState<(typeof CHART_GROUPS)[number]['id']>('bar')
 
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -45,8 +49,8 @@ export function ChartInsertDrawer({ open, onClose }: Props) {
   if (!open) return null
 
   const insert = (entry: AtomRegistryEntry) => {
-    addAtom(entry.create())
-    onClose()
+    addAtom(entry.create(pendingLayout ?? undefined))
+    // addAtom clears place mode + drawer
   }
 
   return (
@@ -72,7 +76,11 @@ export function ChartInsertDrawer({ open, onClose }: Props) {
           ))}
         </div>
         <div className="drawer-body">
-          <p className="drawer-hint">点击预览插入 · Esc 关闭</p>
+          <p className="drawer-hint">
+            {pendingLayout
+              ? `将插入到已框选位置（${pendingLayout.w}×${pendingLayout.h}）· Esc 取消`
+              : '点击预览插入到默认位置 · Esc 关闭'}
+          </p>
           {list.map((entry) => (
             <button
               key={entry.atomName}

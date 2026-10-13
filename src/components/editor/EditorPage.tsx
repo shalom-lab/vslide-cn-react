@@ -12,6 +12,9 @@ export function EditorPage() {
   const removeActiveAtom = useDeckStore((s) => s.removeActiveAtom)
   const duplicateActiveAtom = useDeckStore((s) => s.duplicateActiveAtom)
   const activeAtomId = useDeckStore((s) => s.activeAtomId)
+  const placeMode = useDeckStore((s) => s.placeMode)
+  const chartDrawerOpen = useDeckStore((s) => s.chartDrawerOpen)
+  const cancelPlaceMode = useDeckStore((s) => s.cancelPlaceMode)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -22,6 +25,17 @@ export function EditorPage() {
         tag === 'TEXTAREA' ||
         tag === 'SELECT' ||
         target?.isContentEditable
+
+      // Place-first: Esc cancels (drawer has its own Esc when open)
+      if (
+        e.key === 'Escape' &&
+        (placeMode || chartDrawerOpen) &&
+        !chartDrawerOpen
+      ) {
+        e.preventDefault()
+        cancelPlaceMode()
+        return
+      }
 
       const mod = e.ctrlKey || e.metaKey
       if (mod && e.key.toLowerCase() === 'z' && !e.shiftKey) {
@@ -47,7 +61,16 @@ export function EditorPage() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [undo, redo, removeActiveAtom, duplicateActiveAtom, activeAtomId])
+  }, [
+    undo,
+    redo,
+    removeActiveAtom,
+    duplicateActiveAtom,
+    activeAtomId,
+    placeMode,
+    chartDrawerOpen,
+    cancelPlaceMode,
+  ])
 
   return (
     <div className="editor-page">

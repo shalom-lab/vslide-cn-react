@@ -32,6 +32,9 @@ export type ChartKind =
 
 export type AtomCategory = 'chart' | 'text' | 'table' | 'image'
 
+/** Optional grid layout override when inserting (place-first). */
+export type AtomLayoutOverride = Partial<Pick<Atom, 'x' | 'y' | 'w' | 'h'>>
+
 export interface AtomRegistryEntry {
   atomName: string
   atomType: AtomType
@@ -42,8 +45,8 @@ export interface AtomRegistryEntry {
   hint?: string
   /** Group tab in chart drawer */
   chartGroup?: 'bar' | 'line' | 'pie' | 'scatter' | 'other'
-  /** Factory used by insert drawer / TopBar */
-  create: () => Atom
+  /** Factory used by insert drawer / TopBar; layout overrides default position/size */
+  create: (layout?: AtomLayoutOverride) => Atom
   /** ECharts option builder (echart only) */
   buildOption?: ChartOptionBuilder
 }
@@ -90,124 +93,168 @@ function baseAtom(
   }
 }
 
+function applyLayout(atom: Atom, layout?: AtomLayoutOverride): Atom {
+  if (!layout) return atom
+  return {
+    ...atom,
+    ...(layout.x !== undefined ? { x: layout.x } : {}),
+    ...(layout.y !== undefined ? { y: layout.y } : {}),
+    ...(layout.w !== undefined ? { w: layout.w } : {}),
+    ...(layout.h !== undefined ? { h: layout.h } : {}),
+  }
+}
+
 function echartAtom(
   atomName: string,
   sheetData: (string | number)[][],
   extra: Record<string, unknown> = {},
+  layout?: AtomLayoutOverride,
 ): Atom {
   const { nr, nc } = sheetNrNc(sheetData)
-  return baseAtom({
-    i: nanoid(8),
-    x: 1,
-    y: 1,
-    w: 10,
-    h: 8,
-    atomType: 'echart',
-    atomContent: {
-      atomName,
-      detail: {
-        sheetData,
-        nr,
-        nc,
-        animation: true,
-        title: defaultEchartTitle(atomName),
-        ...extra,
+  return applyLayout(
+    baseAtom({
+      i: nanoid(8),
+      x: 1,
+      y: 1,
+      w: 10,
+      h: 8,
+      atomType: 'echart',
+      atomContent: {
+        atomName,
+        detail: {
+          sheetData,
+          nr,
+          nc,
+          animation: true,
+          title: defaultEchartTitle(atomName),
+          ...extra,
+        },
       },
-    },
-  })
+    }),
+    layout,
+  )
 }
 
-export function createTextAtom(markdown = '## 新文本'): Atom {
-  return baseAtom({
-    i: nanoid(8),
-    x: 1,
-    y: 1,
-    w: 8,
-    h: 4,
-    atomType: 'text',
-    atomContent: {
-      atomName: 'text-md',
-      detail: { editorId: nanoid(10), markdown },
-    },
-  })
-}
-
-export function createTextShadowAtom(text = '标题'): Atom {
-  return baseAtom({
-    i: nanoid(8),
-    x: 1,
-    y: 1,
-    w: 16,
-    h: 3,
-    atomType: 'text',
-    atomContent: {
-      atomName: 'text-shadow',
-      detail: {
-        text,
-        color: 'rgb(114, 138, 154)',
-        fontFamily: 'Arial',
-        fontSize: 40,
-        fontWeight: 900,
-        shadow: { h: 2, v: 2, blur: 4, color: 'rgba(48, 34, 34, 1)' },
+export function createTextAtom(
+  markdown = '## 新文本',
+  layout?: AtomLayoutOverride,
+): Atom {
+  return applyLayout(
+    baseAtom({
+      i: nanoid(8),
+      x: 1,
+      y: 1,
+      w: 8,
+      h: 4,
+      atomType: 'text',
+      atomContent: {
+        atomName: 'text-md',
+        detail: { editorId: nanoid(10), markdown },
       },
-    },
-  })
+    }),
+    layout,
+  )
 }
 
-export function createTableAtom(): Atom {
+export function createTextShadowAtom(
+  text = '标题',
+  layout?: AtomLayoutOverride,
+): Atom {
+  return applyLayout(
+    baseAtom({
+      i: nanoid(8),
+      x: 1,
+      y: 1,
+      w: 16,
+      h: 3,
+      atomType: 'text',
+      atomContent: {
+        atomName: 'text-shadow',
+        detail: {
+          text,
+          color: 'rgb(114, 138, 154)',
+          fontFamily: 'Arial',
+          fontSize: 40,
+          fontWeight: 900,
+          shadow: { h: 2, v: 2, blur: 4, color: 'rgba(48, 34, 34, 1)' },
+        },
+      },
+    }),
+    layout,
+  )
+}
+
+export function createTableAtom(layout?: AtomLayoutOverride): Atom {
   const sheetData: (string | number)[][] = [
     ['列A', '列B', '列C'],
     ['1', '2', '3'],
     ['4', '5', '6'],
   ]
   const { nr, nc } = sheetNrNc(sheetData)
-  return baseAtom({
-    i: nanoid(8),
-    x: 1,
-    y: 1,
-    w: 12,
-    h: 8,
-    atomType: 'tables',
-    atomContent: {
-      atomName: 'simple-table',
-      detail: {
-        sheetData,
-        nr,
-        nc,
-        pagination: { pageSize: 5, show: false },
+  return applyLayout(
+    baseAtom({
+      i: nanoid(8),
+      x: 1,
+      y: 1,
+      w: 12,
+      h: 8,
+      atomType: 'tables',
+      atomContent: {
+        atomName: 'simple-table',
+        detail: {
+          sheetData,
+          nr,
+          nc,
+          pagination: { pageSize: 5, show: false },
+        },
+      },
+    }),
+    layout,
+  )
+}
+
+export function createImageAtom(
+  src: string,
+  layout?: AtomLayoutOverride,
+): Atom {
+  return applyLayout(
+    baseAtom({
+      i: nanoid(8),
+      x: 1,
+      y: 1,
+      w: 8,
+      h: 8,
+      atomType: 'images',
+      atomContent: {
+        atomName: 'single-image',
+        detail: { src },
+      },
+    }),
+    layout,
+  )
+}
+
+export function createChartAtom(
+  kind: ChartKind,
+  layout?: AtomLayoutOverride,
+): Atom {
+  const entry = ATOM_REGISTRY[kind]
+  if (entry?.atomType === 'echart') return entry.create(layout)
+  // fallback
+  return echartAtom(
+    kind,
+    defaultBarSheet,
+    {
+      simpleBar: {
+        barMaxWidth: 40,
+        barGap: '30%',
+        barCategoryGap: '20%',
+        borderRadius: 0,
+        showBackground: false,
       },
     },
-  })
-}
-
-export function createImageAtom(src: string): Atom {
-  return baseAtom({
-    i: nanoid(8),
-    x: 1,
-    y: 1,
-    w: 8,
-    h: 8,
-    atomType: 'images',
-    atomContent: {
-      atomName: 'single-image',
-      detail: { src },
-    },
-  })
-}
-
-export function createChartAtom(kind: ChartKind): Atom {
-  const entry = ATOM_REGISTRY[kind]
-  if (entry?.atomType === 'echart') return entry.create()
-  // fallback
-  return echartAtom(kind, defaultBarSheet, {
-    simpleBar: {
-      barMaxWidth: 40,
-      barGap: '30%',
-      barCategoryGap: '20%',
-      borderRadius: 0,
-      showBackground: false,
-    },
-  })
+    layout,
+  )
 }
 
 /** Canonical registry keyed by atomName (Vue names preferred). */
@@ -218,7 +265,7 @@ export const ATOM_REGISTRY: Record<string, AtomRegistryEntry> = {
     category: 'text',
     label: 'Markdown',
     hint: 'Markdown 文本',
-    create: () => createTextAtom(),
+    create: (layout) => createTextAtom(undefined, layout),
   },
   'text-shadow': {
     atomName: 'text-shadow',
@@ -226,21 +273,21 @@ export const ATOM_REGISTRY: Record<string, AtomRegistryEntry> = {
     category: 'text',
     label: '阴影标题',
     hint: '大字标题 + 阴影',
-    create: () => createTextShadowAtom(),
+    create: (layout) => createTextShadowAtom(undefined, layout),
   },
   'simple-table': {
     atomName: 'simple-table',
     atomType: 'tables',
     category: 'table',
     label: '表格',
-    create: () => createTableAtom(),
+    create: (layout) => createTableAtom(layout),
   },
   'single-image': {
     atomName: 'single-image',
     atomType: 'images',
     category: 'image',
     label: '图片',
-    create: () => createImageAtom(''),
+    create: (layout) => createImageAtom('', layout),
   },
   'simple-line': {
     atomName: 'simple-line',
@@ -249,14 +296,19 @@ export const ATOM_REGISTRY: Record<string, AtomRegistryEntry> = {
     label: '折线图',
     chartGroup: 'line',
     buildOption: sheetToLineOption,
-    create: () =>
-      echartAtom('simple-line', defaultBarSheet, {
-        simpleLine: {
-          lineStyle: { width: 2, type: 'solid' },
-          smooth: false,
-          areaStyle: { opacity: 0.2 },
+    create: (layout) =>
+      echartAtom(
+        'simple-line',
+        defaultBarSheet,
+        {
+          simpleLine: {
+            lineStyle: { width: 2, type: 'solid' },
+            smooth: false,
+            areaStyle: { opacity: 0.2 },
+          },
         },
-      }),
+        layout,
+      ),
   },
   'simple-bar': {
     atomName: 'simple-bar',
@@ -266,16 +318,21 @@ export const ATOM_REGISTRY: Record<string, AtomRegistryEntry> = {
     hint: 'React 子集；Vue 多用 multi-bar',
     chartGroup: 'bar',
     buildOption: sheetToBarOption,
-    create: () =>
-      echartAtom('simple-bar', defaultBarSheet, {
-        simpleBar: {
-          barMaxWidth: 40,
-          barGap: '30%',
-          barCategoryGap: '20%',
-          borderRadius: 0,
-          showBackground: false,
+    create: (layout) =>
+      echartAtom(
+        'simple-bar',
+        defaultBarSheet,
+        {
+          simpleBar: {
+            barMaxWidth: 40,
+            barGap: '30%',
+            barCategoryGap: '20%',
+            borderRadius: 0,
+            showBackground: false,
+          },
         },
-      }),
+        layout,
+      ),
   },
   'multi-bar': {
     atomName: 'multi-bar',
@@ -284,16 +341,21 @@ export const ATOM_REGISTRY: Record<string, AtomRegistryEntry> = {
     label: '分组柱状',
     chartGroup: 'bar',
     buildOption: sheetToBarOption,
-    create: () =>
-      echartAtom('multi-bar', defaultBarSheet, {
-        simpleBar: {
-          barMaxWidth: 40,
-          barGap: '30%',
-          barCategoryGap: '20%',
-          borderRadius: 0,
-          showBackground: false,
+    create: (layout) =>
+      echartAtom(
+        'multi-bar',
+        defaultBarSheet,
+        {
+          simpleBar: {
+            barMaxWidth: 40,
+            barGap: '30%',
+            barCategoryGap: '20%',
+            borderRadius: 0,
+            showBackground: false,
+          },
         },
-      }),
+        layout,
+      ),
   },
   'stack-bar': {
     atomName: 'stack-bar',
@@ -302,7 +364,7 @@ export const ATOM_REGISTRY: Record<string, AtomRegistryEntry> = {
     label: '堆叠柱状',
     chartGroup: 'bar',
     buildOption: sheetToStackBarOption,
-    create: () =>
+    create: (layout) =>
       echartAtom(
         'stack-bar',
         [
@@ -320,6 +382,7 @@ export const ATOM_REGISTRY: Record<string, AtomRegistryEntry> = {
             showBackground: false,
           },
         },
+        layout,
       ),
   },
   'hor-bar': {
@@ -330,7 +393,7 @@ export const ATOM_REGISTRY: Record<string, AtomRegistryEntry> = {
     hint: '横向柱状',
     chartGroup: 'bar',
     buildOption: sheetToHorBarOption,
-    create: () =>
+    create: (layout) =>
       echartAtom(
         'hor-bar',
         [
@@ -348,6 +411,7 @@ export const ATOM_REGISTRY: Record<string, AtomRegistryEntry> = {
             showBackground: false,
           },
         },
+        layout,
       ),
   },
   'simple-pie': {
@@ -357,15 +421,20 @@ export const ATOM_REGISTRY: Record<string, AtomRegistryEntry> = {
     label: '饼图',
     chartGroup: 'pie',
     buildOption: sheetToPieOption,
-    create: () =>
-      echartAtom('simple-pie', defaultPieSheet, {
-        simplePie: {
-          clockwise: true,
-          startAngle: 90,
-          center: ['50%', '55%'],
-          radius: ['30%', '65%'],
+    create: (layout) =>
+      echartAtom(
+        'simple-pie',
+        defaultPieSheet,
+        {
+          simplePie: {
+            clockwise: true,
+            startAngle: 90,
+            center: ['50%', '55%'],
+            radius: ['30%', '65%'],
+          },
         },
-      }),
+        layout,
+      ),
   },
   'simple-scatter': {
     atomName: 'simple-scatter',
@@ -374,10 +443,15 @@ export const ATOM_REGISTRY: Record<string, AtomRegistryEntry> = {
     label: '散点图',
     chartGroup: 'scatter',
     buildOption: sheetToScatterOption,
-    create: () =>
-      echartAtom('simple-scatter', defaultScatterSheet, {
-        simpleScatter: { symbol: 'circle', symbolSize: 14 },
-      }),
+    create: (layout) =>
+      echartAtom(
+        'simple-scatter',
+        defaultScatterSheet,
+        {
+          simpleScatter: { symbol: 'circle', symbolSize: 14 },
+        },
+        layout,
+      ),
   },
 }
 

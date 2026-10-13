@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   BarChart3,
@@ -33,9 +33,14 @@ export function TopBar() {
   const redo = useDeckStore((s) => s.redo)
   const pastLen = useDeckStore((s) => s.past.length)
   const futureLen = useDeckStore((s) => s.future.length)
+  const placeMode = useDeckStore((s) => s.placeMode)
+  const chartDrawerOpen = useDeckStore((s) => s.chartDrawerOpen)
+  const startChartPlace = useDeckStore((s) => s.startChartPlace)
+  const cancelPlaceMode = useDeckStore((s) => s.cancelPlaceMode)
+  const setChartDrawerOpen = useDeckStore((s) => s.setChartDrawerOpen)
   const fileRef = useRef<HTMLInputElement>(null)
-  const [chartOpen, setChartOpen] = useState(false)
-  const closeChart = useCallback(() => setChartOpen(false), [])
+
+  const chartActive = placeMode === 'chart' || chartDrawerOpen
 
   const onImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -46,6 +51,14 @@ export function TopBar() {
       e.target.value = ''
     }
     reader.readAsDataURL(file)
+  }
+
+  const onChartClick = () => {
+    if (chartActive) {
+      cancelPlaceMode()
+      return
+    }
+    startChartPlace()
   }
 
   return (
@@ -101,9 +114,9 @@ export function TopBar() {
         <div className="topbar-atoms">
           <button
             type="button"
-            className={'icon-btn' + (chartOpen ? ' active' : '')}
-            onClick={() => setChartOpen(true)}
-            title="打开图表库"
+            className={'icon-btn' + (chartActive ? ' active' : '')}
+            onClick={onChartClick}
+            title="在画布拖框后插入图表"
           >
             <span className="icon">
               <BarChart3 {...I} />
@@ -178,7 +191,10 @@ export function TopBar() {
           />
         </div>
       </div>
-      <ChartInsertDrawer open={chartOpen} onClose={closeChart} />
+      <ChartInsertDrawer
+        open={chartDrawerOpen}
+        onClose={() => setChartDrawerOpen(false)}
+      />
     </>
   )
 }

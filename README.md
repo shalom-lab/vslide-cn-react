@@ -10,7 +10,7 @@ React + TypeScript rewrite of the interactive slide editor, faithful to the comp
 - 18×18 **react-grid-layout** canvas (drag / resize / overlap + 置顶/置底)
 - **Shared `AtomRenderer`** for edit · play · thumbs (no dual drift)
 - **Atom registry** (`src/atoms/registry.ts`) for text / chart / table / image
-- Charts: line · bar · **stack-bar** · **hor-bar** · pie · **scatter** via insert drawer
+- Charts: line · bar · **stack-bar** · **hor-bar** · pie · **scatter** — **place-first** (拖框再选图) via insert drawer
 - Undo / redo (`Ctrl+Z` / `Ctrl+Y`) for deck mutations
 - Compact Chinese chrome; sample deck (~6 slides)
 - Play: `←` `→` / Space / Esc→edit
