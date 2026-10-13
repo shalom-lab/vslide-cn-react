@@ -1,12 +1,14 @@
 /**
  * Slide-stage relative typography.
  * Set font-size on the stage root from slide height so children using rem scale.
- * Design reference: 540px tall → 1rem = 15px (540 / 36).
+ * Design reference: STAGE_REF_HEIGHT (540) → 1rem = 15px (540 / 36).
  */
+
+import { STAGE_REF_HEIGHT } from './grid'
 
 export const SLIDE_FONT_DIVISOR = 36
 /** Design-time slide height used when converting stored “px” detail values → rem. */
-export const SLIDE_REF_HEIGHT = 540
+export const SLIDE_REF_HEIGHT = STAGE_REF_HEIGHT
 
 /** CSS px for stage root font-size (= 1rem for descendants). */
 export function slideFontSizePx(heightPx: number): number {

@@ -490,7 +490,7 @@ body.pane-resizing * {
   padding: 0 3px;
   border-radius: 2px;
 }
-/* Vue Left.vue: viewport clips; inner is 400% + scale(0.25) */
+/* Thumbs: fixed 960×540 stage + JS scale(viewport/960); viewport clips */
 .thumb-viewport {
   width: 100%;
   height: 100%;
@@ -499,11 +499,10 @@ body.pane-resizing * {
   position: relative;
 }
 .thumb-scale {
-  width: 400%;
-  height: 400%;
-  transform: scale(0.25);
+  /* width/height/transform set inline to STAGE_REF_* + scale */
   transform-origin: 0 0;
   pointer-events: none;
+  overflow: hidden;
 }
 .thumb-grid {
   height: 100% !important;

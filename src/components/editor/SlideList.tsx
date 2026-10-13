@@ -1,9 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import GridLayout, { WidthProvider, type Layout } from 'react-grid-layout'
+import GridLayout, { type Layout } from 'react-grid-layout'
 import { Copy, Plus, Trash2 } from 'lucide-react'
 import { useDeckStore } from '../../store/useDeckStore'
 import { cssBackground } from '../../utils/background'
-import { GRID_COLS, GRID_MARGIN, calcRowHeight } from '../../utils/grid'
+import {
+  GRID_COLS,
+  GRID_MARGIN,
+  GRID_PADDING,
+  STAGE_ASPECT_H,
+  STAGE_ASPECT_W,
+  STAGE_REF_HEIGHT,
+  STAGE_REF_WIDTH,
+  buildGridMetrics,
+} from '../../utils/grid'
 import { AtomRenderer } from '../atoms/AtomRenderer'
 import { ContextMenu, type ContextMenuItem } from './ContextMenu'
 import { atomStackStyle } from '../../utils/layerOrder'
@@ -11,23 +20,27 @@ import { stageTypographyStyle } from '../../utils/typography'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
-const AutoGrid = WidthProvider(GridLayout)
 const CTX = { size: 14, strokeWidth: 1.75 }
 
-/** Match Vue Left.vue + VSlide: render at height 540, then scale(0.25). */
-const THUMB_FULL_HEIGHT = 540
-const THUMB_ROW_HEIGHT = calcRowHeight(THUMB_FULL_HEIGHT)
-/** Match canvas GRID_MARGIN so thumb layout matches the stage. */
-const THUMB_MARGIN = GRID_MARGIN
+/**
+ * Thumbs render at the canonical 960×540 stage (same cols/margin/rowHeight
+ * formula as Canvas), then CSS-scale into the 16:9 list slot. The old
+ * WidthProvider + 400%/scale(0.25) path measured a pane-dependent width
+ * while rowHeight stayed locked to 540 — cell aspect drifted from canvas.
+ */
+const THUMB_METRICS = buildGridMetrics(STAGE_REF_WIDTH, STAGE_REF_HEIGHT)
 
 function Thumb({
   slideContent,
   background,
+  scale,
 }: {
   slideContent: ReturnType<
     typeof useDeckStore.getState
   >['deck']['slides'][0]['slideContent']
   background: string
+  /** viewportWidth / STAGE_REF_WIDTH — keeps 16:9 thumbs matched to canvas. */
+  scale: number
 }) {
   const layout = slideContent.map((a) => ({
     i: a.i,
@@ -41,22 +54,29 @@ function Thumb({
     <div className="thumb-viewport">
       <div
         className="thumb-scale"
-        style={{ background, ...stageTypographyStyle(THUMB_FULL_HEIGHT) }}
+        style={{
+          width: STAGE_REF_WIDTH,
+          height: STAGE_REF_HEIGHT,
+          transform: `scale(${scale})`,
+          background,
+          ...stageTypographyStyle(STAGE_REF_HEIGHT),
+        }}
       >
-        <AutoGrid
+        <GridLayout
           className="thumb-grid"
+          width={STAGE_REF_WIDTH}
           layout={layout}
           cols={GRID_COLS}
-          rowHeight={THUMB_ROW_HEIGHT}
-          margin={THUMB_MARGIN}
-          containerPadding={[0, 0]}
+          rowHeight={THUMB_METRICS.rowHeight}
+          margin={GRID_MARGIN}
+          containerPadding={GRID_PADDING}
           isDraggable={false}
           isResizable={false}
           compactType={null}
           preventCollision={false}
           allowOverlap
           useCSSTransforms={false}
-          style={{ height: '100%' }}
+          style={{ width: STAGE_REF_WIDTH, height: STAGE_REF_HEIGHT }}
         >
           {slideContent.map((atom, index) => (
             <div
@@ -67,7 +87,7 @@ function Thumb({
               <AtomRenderer atom={atom} />
             </div>
           ))}
-        </AutoGrid>
+        </GridLayout>
       </div>
     </div>
   )
@@ -126,8 +146,12 @@ export function SlideList() {
     [sorted],
   )
 
-  // Vue Left.vue: row-height ≈ width * 9/16 for 16:9 thumbs
-  const rowHeight = Math.max(48, (gridWidth * 9) / 16)
+  // 16:9 thumb slots (same aspect as canvas / play stage)
+  const rowHeight = Math.max(
+    48,
+    (gridWidth * STAGE_ASPECT_H) / STAGE_ASPECT_W,
+  )
+  const thumbScale = gridWidth / STAGE_REF_WIDTH
 
   // RGL/react-draggable often swallows click after a press; select on
   // drag-start (mousedown) so a tap focuses the slide, and still reorder on stop.
@@ -231,6 +255,7 @@ export function SlideList() {
               <Thumb
                 slideContent={slide.slideContent}
                 background={background}
+                scale={thumbScale}
               />
             </div>
           ))}

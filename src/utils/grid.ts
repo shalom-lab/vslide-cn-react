@@ -1,5 +1,14 @@
 /** Pixel ↔ react-grid-layout cell math (matches Canvas: 48 cols, margin [4,4], padding [0,0]). */
 
+/** Canonical 16:9 stage used by thumbs (and typography ref height). */
+export const STAGE_ASPECT_W = 16
+export const STAGE_ASPECT_H = 9
+/** Design-time slide height; typography SLIDE_REF_HEIGHT re-exports this. */
+export const STAGE_REF_HEIGHT = 540
+export const STAGE_REF_WIDTH = Math.round(
+  (STAGE_REF_HEIGHT * STAGE_ASPECT_W) / STAGE_ASPECT_H,
+) // 960
+
 export const GRID_COLS = 48
 /** Historical vue-grid-layout / early React col count — used for load-time migration. */
 export const LEGACY_COLS = 18

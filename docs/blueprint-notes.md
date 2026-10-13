@@ -14,7 +14,8 @@ Read-only study of `/workspace/vslide-vue` (GitHub `shalom-lab/vslide-vue`) for 
 
 - **vue-grid-layout** everywhere.
   - Slide list: `col-num=1`, vertical compact, non-resizable thumbs.
-  - Canvas / play: **`col-num=18`** in Vue (`row-height ≈ height/18`); **React uses `GRID_COLS=48`** with load-time migration from 18 (`×8/3`), `margin=[5,5]` play / `[4,4]` edit, `vertical-compact=false`, drag via thin handle (`.dragable`).
+  - Canvas / play: **`col-num=18`** in Vue (`row-height ≈ height/18`); **React uses `GRID_COLS=48`** with load-time migration from 18 (`×8/3`), shared `GRID_MARGIN=[4,4]` + `buildGridMetrics` on canvas / play / thumbs, `vertical-compact=false`, drag via thin handle (`.dragable`).
+  - Thumbs: canonical **960×540** stage (`STAGE_REF_*`) with CSS `scale(viewport/960)` into 16:9 list slots — not WidthProvider + fixed `scale(0.25)` on a pane-dependent 400% box (that drifted cell aspect vs canvas).
 - Canvas size: `height = min(innerH-150, (innerW-280)*9/16)`, `width = height*16/9`.
 
 ## JSON / atom model

@@ -26,6 +26,8 @@ import {
   GRID_COLS,
   GRID_MARGIN,
   GRID_PADDING,
+  STAGE_ASPECT_H,
+  STAGE_ASPECT_W,
   buildGridMetrics,
   gridToPixels,
   pixelsToGrid,
@@ -125,8 +127,10 @@ export function Canvas() {
       const pad = 24 // matches .editor-center padding 12px * 2
       const availW = Math.max(320, rect.width - pad)
       const availH = Math.max(200, rect.height - pad)
-      const h = Math.floor(Math.min(availH, (availW * 9) / 16))
-      const w = Math.floor((h * 16) / 9)
+      const h = Math.floor(
+        Math.min(availH, (availW * STAGE_ASPECT_H) / STAGE_ASPECT_W),
+      )
+      const w = Math.floor((h * STAGE_ASPECT_W) / STAGE_ASPECT_H)
       setSize((prev) => (prev.w === w && prev.h === h ? prev : { w, h }))
     }
 

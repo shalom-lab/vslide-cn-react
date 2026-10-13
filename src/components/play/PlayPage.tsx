@@ -3,7 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import GridLayout from 'react-grid-layout'
 import { useDeckStore } from '../../store/useDeckStore'
 import { cssBackground } from '../../utils/background'
-import { GRID_COLS, calcRowHeight } from '../../utils/grid'
+import {
+  GRID_COLS,
+  GRID_MARGIN,
+  GRID_PADDING,
+  STAGE_ASPECT_H,
+  STAGE_ASPECT_W,
+  buildGridMetrics,
+} from '../../utils/grid'
 import { AtomRenderer } from '../atoms/AtomRenderer'
 import { atomStackStyle } from '../../utils/layerOrder'
 import { stageTypographyStyle } from '../../utils/typography'
@@ -14,8 +21,11 @@ import 'animate.css'
 
 /** Play stage keeps 16:9 and letterboxes into the viewport (fit width×height). */
 function fitStage(vw: number, vh: number): { w: number; h: number; scale: number } {
-  const designH = Math.max(320, Math.min(vh, vw * (9 / 16)))
-  const designW = designH * (16 / 9)
+  const designH = Math.max(
+    320,
+    Math.min(vh, (vw * STAGE_ASPECT_H) / STAGE_ASPECT_W),
+  )
+  const designW = (designH * STAGE_ASPECT_W) / STAGE_ASPECT_H
   // If viewport is taller/wider than 16:9, letterbox; stage is already max fit.
   // scale stays 1 because we size the stage in CSS pixels to the fitted box.
   const scale = Math.min(vw / designW, vh / designH)
@@ -203,7 +213,9 @@ export function PlayPage() {
     h: a.h,
     static: true,
   }))
-  const rowHeight = calcRowHeight(stage.h, GRID_COLS, 5)
+  // Same cols / margin / rowHeight formula as Canvas (not Vue's [5,5]).
+  const metrics = buildGridMetrics(stage.w, stage.h)
+  const rowHeight = metrics.rowHeight
   const slideEnter = slide.slideAnimation.enter
   const slideAnimClass =
     slideEnter && slideEnter !== 'none'
@@ -239,7 +251,8 @@ export function PlayPage() {
           layout={layout}
           cols={GRID_COLS}
           rowHeight={rowHeight}
-          margin={[5, 5]}
+          margin={GRID_MARGIN}
+          containerPadding={GRID_PADDING}
           isDraggable={false}
           isResizable={false}
           compactType={null}
