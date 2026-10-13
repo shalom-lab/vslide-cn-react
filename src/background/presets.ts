@@ -1,6 +1,6 @@
 /**
  * Built-in PPT-like background templates.
- * Fewer, calmer presets — prefer soft image underlays + clean solids.
+ * Mostly solid / soft gradient; a few optional image underlays.
  * Each preset fills a full BackgroundConfig so deck JSON stays compatible.
  */
 import {
@@ -88,7 +88,7 @@ function softImageBg(
   })
 }
 
-/** Dark photo underlay with a dark veil (custom CSS — first-class). */
+/** Dark photo underlay with a dark veil (custom CSS). */
 function darkImageBg(src: string, veilAlpha = 0.52): BackgroundConfig {
   return makeBg({
     mode: 'custom',
@@ -105,6 +105,12 @@ const softPaper = makeBg({
   pure: '#f7f4ef',
 })
 
+/** Pure white */
+const pureWhite = makeBg({
+  mode: 'pure',
+  pure: '#ffffff',
+})
+
 /** Conference white — cool tint for light decks */
 const conferenceWhite = makeBg({
   mode: 'linear',
@@ -117,40 +123,17 @@ const warmCream = makeBg({
   linear: { angle: 140, start: '#fff8ef', end: '#f3e6d4' },
 })
 
-/** Misty mountains — elegant light photo */
-const mistMountains = softImageBg(
-  unsplash('photo-1506905925346-21bda4d32df4'),
-  62,
-  '#e8eef4',
-)
+/** Cool mist — soft blue-gray */
+const coolMist = makeBg({
+  mode: 'linear',
+  linear: { angle: 160, start: '#f4f7fa', end: '#e4ebf2' },
+})
 
-/** Soft clouds */
-const softClouds = softImageBg(
-  unsplash('photo-1513002749550-c59d786b8e6c'),
-  70,
-  '#eef3f8',
-)
-
-/** Calm ocean */
-const calmOcean = softImageBg(
-  unsplash('photo-1505142468610-359e7d316be0'),
-  65,
-  '#e6eef4',
-)
-
-/** Soft abstract / marble-like pastel */
-const warmMarble = softImageBg(
-  unsplash('photo-1618005182384-a83a8bd57fbe'),
-  72,
-  '#f4efe8',
-)
-
-/** Soft forest / botanical green */
-const softBotanical = softImageBg(
-  unsplash('photo-1441974231531-c6227db76b6e'),
-  60,
-  '#e8efe8',
-)
+/** Soft slate — light gray for calm decks */
+const softSlate = makeBg({
+  mode: 'linear',
+  linear: { angle: 150, start: '#f2f3f5', end: '#e4e6ea' },
+})
 
 /** Deep slate — dark professional solid */
 const deepSlate = makeBg({
@@ -158,34 +141,43 @@ const deepSlate = makeBg({
   linear: { angle: 145, start: '#2c3138', end: '#1a1d22' },
 })
 
-/** City dusk — dark photo underlay */
+/** Misty mountains — elegant light photo (optional image) */
+const mistMountains = softImageBg(
+  unsplash('photo-1506905925346-21bda4d32df4'),
+  62,
+  '#e8eef4',
+)
+
+/** City dusk — dark photo underlay (optional image) */
 const duskCity = darkImageBg(
   unsplash('photo-1514565131-fce0801e5785'),
   0.55,
 )
 
-/** Built-in gallery (read-only). Order = display order. ~9 calm presets. */
+/**
+ * Built-in gallery (read-only). Order = display order.
+ * Mostly solids / soft gradients; at most a couple of image backdrops.
+ */
 export const BUILTIN_PRESETS: BgPreset[] = [
   preset('soft-paper', '柔和纸质', softPaper),
+  preset('pure-white', '纯白', pureWhite),
   preset('conference-white', '会议白', conferenceWhite),
   preset('warm-cream', '暖奶油', warmCream),
-  preset('mist-mountains', '晨雾山峦', mistMountains),
-  preset('soft-clouds', '柔光云海', softClouds),
-  preset('calm-ocean', '静谧海面', calmOcean),
-  preset('warm-marble', '暖色柔纹', warmMarble),
-  preset('soft-botanical', '淡雅绿意', softBotanical),
+  preset('cool-mist', '冷雾灰', coolMist),
+  preset('soft-slate', '浅石板', softSlate),
   preset('deep-slate', '深石板', deepSlate),
+  preset('mist-mountains', '晨雾山峦', mistMountains),
   preset('dusk-city', '都市暮色', duskCity),
 ]
 
-/** Default sample / new decks — elegant soft mountain image. */
-export const DEFAULT_PRESET_ID = 'mist-mountains'
+/** Default sample / new decks — non-image soft paper. */
+export const DEFAULT_PRESET_ID = 'soft-paper'
 
 export function getBuiltinPreset(id: string): BgPreset | undefined {
   return BUILTIN_PRESETS.find((p) => p.id === id)
 }
 
-/** Default deck background — soft image underlay (not flat gray). */
+/** Default deck background — calm solid (not an image). */
 export function preferredDefaultBackground(): BackgroundConfig {
   return cloneBg(
     getBuiltinPreset(DEFAULT_PRESET_ID)?.config ?? softPaper,
