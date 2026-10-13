@@ -43,7 +43,7 @@ export function EditorPage() {
   const activeAtomId = useDeckStore((s) => s.activeAtomId)
   const placeMode = useDeckStore((s) => s.placeMode)
   const chartDrawerOpen = useDeckStore((s) => s.chartDrawerOpen)
-  const textChooserOpen = useDeckStore((s) => s.textChooserOpen)
+  const textDrawerOpen = useDeckStore((s) => s.textDrawerOpen)
   const cancelPlaceMode = useDeckStore((s) => s.cancelPlaceMode)
 
   const {
@@ -64,12 +64,12 @@ export function EditorPage() {
         tag === 'SELECT' ||
         target?.isContentEditable
 
-      // Place-first: Esc cancels (drawer / text chooser have their own Esc when open)
+      // Place-first: Esc cancels (right drawers have their own Esc when open)
       if (
         e.key === 'Escape' &&
         placeMode &&
         !chartDrawerOpen &&
-        !textChooserOpen
+        !textDrawerOpen
       ) {
         e.preventDefault()
         cancelPlaceMode()
@@ -108,7 +108,7 @@ export function EditorPage() {
     activeAtomId,
     placeMode,
     chartDrawerOpen,
-    textChooserOpen,
+    textDrawerOpen,
     cancelPlaceMode,
   ])
 

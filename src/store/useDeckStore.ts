@@ -34,7 +34,7 @@ export {
 const LOCAL_ATOMS_KEY = 'vslide-cn-react:localAtoms'
 const HISTORY_LIMIT = 50
 
-export type PlaceMode = 'chart' | 'text' | null
+export type PlaceMode = 'chart' | 'text' | 'html' | null
 
 interface DeckState {
   deck: DeckFile
@@ -45,21 +45,22 @@ interface DeckState {
   toast: string | null
   past: DeckFile[]
   future: DeckFile[]
-  /** Google Slides–like place-first insert (charts + text). */
+  /** Google Slides–like place-first insert (charts + text/html). */
   placeMode: PlaceMode
   pendingLayout: GridLayoutRect | null
   chartDrawerOpen: boolean
-  textChooserOpen: boolean
+  textDrawerOpen: boolean
   setActiveSlide: (id: string) => void
   setActiveAtom: (id: string | null) => void
   setEditorFocus: (focus: EditorFocus) => void
   clearToast: () => void
   startChartPlace: () => void
   startTextPlace: () => void
+  startHtmlPlace: () => void
   finishPlaceRect: (layout: GridLayoutRect) => void
   cancelPlaceMode: () => void
   setChartDrawerOpen: (open: boolean) => void
-  setTextChooserOpen: (open: boolean) => void
+  setTextDrawerOpen: (open: boolean) => void
   updateSlideLayout: (slideId: string, atoms: Atom[]) => void
   updateAtom: (slideId: string, atomId: string, patch: Partial<Atom>) => void
   updateAtomDetail: (
@@ -150,14 +151,14 @@ export const useDeckStore = create<DeckState>((set, get) => ({
   placeMode: null,
   pendingLayout: null,
   chartDrawerOpen: false,
-  textChooserOpen: false,
+  textDrawerOpen: false,
 
   startChartPlace: () =>
     set({
       placeMode: 'chart',
       pendingLayout: null,
       chartDrawerOpen: false,
-      textChooserOpen: false,
+      textDrawerOpen: false,
       activeAtomId: null,
       editorFocus: null,
     }),
@@ -167,17 +168,28 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       placeMode: 'text',
       pendingLayout: null,
       chartDrawerOpen: false,
-      textChooserOpen: false,
+      textDrawerOpen: false,
+      activeAtomId: null,
+      editorFocus: null,
+    }),
+
+  startHtmlPlace: () =>
+    set({
+      placeMode: 'html',
+      pendingLayout: null,
+      chartDrawerOpen: false,
+      textDrawerOpen: false,
       activeAtomId: null,
       editorFocus: null,
     }),
 
   finishPlaceRect: (layout) => {
     const mode = get().placeMode
-    if (mode === 'text') {
+    if (mode === 'text' || mode === 'html') {
       set({
         pendingLayout: layout,
-        textChooserOpen: true,
+        textDrawerOpen: true,
+        chartDrawerOpen: false,
         // stay in placeMode so Esc still cancels until insert
       })
       return
@@ -185,6 +197,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
     set({
       pendingLayout: layout,
       chartDrawerOpen: true,
+      textDrawerOpen: false,
     })
   },
 
@@ -193,27 +206,27 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       placeMode: null,
       pendingLayout: null,
       chartDrawerOpen: false,
-      textChooserOpen: false,
+      textDrawerOpen: false,
     }),
 
   setChartDrawerOpen: (open) =>
     set(
       open
-        ? { chartDrawerOpen: true, textChooserOpen: false }
+        ? { chartDrawerOpen: true, textDrawerOpen: false }
         : {
             chartDrawerOpen: false,
             placeMode: null,
             pendingLayout: null,
-            textChooserOpen: false,
+            textDrawerOpen: false,
           },
     ),
 
-  setTextChooserOpen: (open) =>
+  setTextDrawerOpen: (open) =>
     set(
       open
-        ? { textChooserOpen: true, chartDrawerOpen: false }
+        ? { textDrawerOpen: true, chartDrawerOpen: false }
         : {
-            textChooserOpen: false,
+            textDrawerOpen: false,
             placeMode: null,
             pendingLayout: null,
           },
@@ -428,7 +441,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       placeMode: null,
       pendingLayout: null,
       chartDrawerOpen: false,
-      textChooserOpen: false,
+      textDrawerOpen: false,
     }))
   },
 

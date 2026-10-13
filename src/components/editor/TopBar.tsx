@@ -14,13 +14,12 @@ import {
   Undo2,
 } from 'lucide-react'
 import {
-  createCustomHtmlAtom,
   createImageAtom,
   createTableAtom,
   useDeckStore,
 } from '../../store/useDeckStore'
 import { ChartInsertDrawer } from './ChartInsertDrawer'
-import { TextInsertChooser } from './TextInsertChooser'
+import { TextInsertDrawer } from './TextInsertDrawer'
 import { BackgroundDrawer } from './BackgroundDrawer'
 
 const I = { size: 20, strokeWidth: 1.75 }
@@ -36,17 +35,20 @@ export function TopBar() {
   const futureLen = useDeckStore((s) => s.future.length)
   const placeMode = useDeckStore((s) => s.placeMode)
   const chartDrawerOpen = useDeckStore((s) => s.chartDrawerOpen)
-  const textChooserOpen = useDeckStore((s) => s.textChooserOpen)
+  const textDrawerOpen = useDeckStore((s) => s.textDrawerOpen)
   const startChartPlace = useDeckStore((s) => s.startChartPlace)
   const startTextPlace = useDeckStore((s) => s.startTextPlace)
+  const startHtmlPlace = useDeckStore((s) => s.startHtmlPlace)
   const cancelPlaceMode = useDeckStore((s) => s.cancelPlaceMode)
   const setChartDrawerOpen = useDeckStore((s) => s.setChartDrawerOpen)
-  const setTextChooserOpen = useDeckStore((s) => s.setTextChooserOpen)
+  const setTextDrawerOpen = useDeckStore((s) => s.setTextDrawerOpen)
   const fileRef = useRef<HTMLInputElement>(null)
   const [bgDrawerOpen, setBgDrawerOpen] = useState(false)
 
   const chartActive = placeMode === 'chart' || chartDrawerOpen
-  const textActive = placeMode === 'text' || textChooserOpen
+  // placeMode stays set while the right drawer is open, so these cover both drag + chooser
+  const textActive = placeMode === 'text'
+  const htmlActive = placeMode === 'html'
 
   const onImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -73,6 +75,14 @@ export function TopBar() {
       return
     }
     startTextPlace()
+  }
+
+  const onHtmlClick = () => {
+    if (htmlActive) {
+      cancelPlaceMode()
+      return
+    }
+    startHtmlPlace()
   }
 
   return (
@@ -141,7 +151,7 @@ export function TopBar() {
             type="button"
             className={'icon-btn' + (textActive ? ' active' : '')}
             onClick={onTextClick}
-            title="在画布拖框后选择正文或标题"
+            title="在画布拖框后于右侧选择正文或标题"
           >
             <span className="icon">
               <Type {...I} />
@@ -161,9 +171,9 @@ export function TopBar() {
           </button>
           <button
             type="button"
-            className="icon-btn"
-            onClick={() => addAtom(createCustomHtmlAtom())}
-            title="插入安全 HTML（不执行 JS）"
+            className={'icon-btn' + (htmlActive ? ' active' : '')}
+            onClick={onHtmlClick}
+            title="在画布拖框后于右侧插入安全 HTML"
           >
             <span className="icon">
               <Code2 {...I} />
@@ -210,9 +220,9 @@ export function TopBar() {
         open={chartDrawerOpen}
         onClose={() => setChartDrawerOpen(false)}
       />
-      <TextInsertChooser
-        open={textChooserOpen}
-        onClose={() => setTextChooserOpen(false)}
+      <TextInsertDrawer
+        open={textDrawerOpen}
+        onClose={() => setTextDrawerOpen(false)}
       />
       <BackgroundDrawer
         open={bgDrawerOpen}

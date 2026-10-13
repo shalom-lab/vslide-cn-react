@@ -13,7 +13,7 @@ React + TypeScript rewrite of the interactive slide editor, faithful to the comp
 - **Markdown (`text-md`)** with KaTeX math (`$…$` / `$$…$$`) and prose styles; **DOMPurify** before render
 - **Safe HTML (`custom-html`)** — static markup only; scripts / event handlers / `javascript:` stripped
 - Charts: line · bar · **stack-bar** · **hor-bar** · pie · **scatter** — **place-first** (拖框再选图) via insert drawer
-- **文字** place-first：拖框后选 **正文** (`text-md`) / **标题** (`text-shadow`)；原子类型仍分开
+- **文字 / HTML** place-first：拖框后在**右侧抽屉**选 **正文** (`text-md`) / **标题** (`text-shadow`) / **HTML** (`custom-html`)，与图表一致；Esc 取消
 - Undo / redo (`Ctrl+Z` / `Ctrl+Y`) for deck mutations
 - Compact Chinese chrome; sample deck (~6 slides)
 - **背景模板库**（顶部「背景」）：柔和图片衬底 + 干净纯色预设 / 自定义 CSS·图片 / 我的背景（localStorage）
@@ -59,7 +59,7 @@ Deck / atom field names stay aligned with vslide-vue (`fileType: vslideFile`, `a
 
 ### Safe HTML atoms
 
-`text-md` and `custom-html` always run HTML through `src/utils/sanitizeHtml.ts` (DOMPurify) before `dangerouslySetInnerHTML`. They **never execute JavaScript** (no `<script>`, no `on*` handlers, no `javascript:` URLs, no iframes). Insert via TopBar **文本** (Markdown) or **HTML**.
+`text-md` and `custom-html` always run HTML through `src/utils/sanitizeHtml.ts` (DOMPurify) before `dangerouslySetInnerHTML`. They **never execute JavaScript** (no `<script>`, no `on*` handlers, no `javascript:` URLs, no iframes). Insert via TopBar **文字** / **HTML** (place-first → right drawer).
 
 ## Deferred
 
