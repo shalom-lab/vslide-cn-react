@@ -33,6 +33,12 @@ import {
   tileLayoutsInRect,
 } from '../atoms/registry'
 import { SLIDE_TEMPLATES } from '../data/slideTemplates'
+import {
+  loadLocalGallery,
+  makeGalleryItem,
+  persistLocalGallery,
+  type LocalGalleryItem,
+} from '../gallery/localGallery'
 
 export {
   createTextAtom,
@@ -46,7 +52,6 @@ export {
   type ChartKind,
 } from '../atoms/registry'
 
-const LOCAL_ATOMS_KEY = 'vslide-cn-react:localAtoms'
 const DECK_KEY = 'vslide-cn-react:deck'
 const CLIPBOARD_KEY = 'vslide-cn-react:atomClipboard'
 const HISTORY_LIMIT = 50
@@ -56,6 +61,7 @@ export type PlaceMode = 'chart' | 'text' | 'html' | 'table' | 'image' | 'icon' |
 /** Chosen atom ready to drop on the canvas (type-first insert). */
 export type PendingInsert =
   | { kind: 'chart'; atomName: string }
+  | { kind: 'saved'; atom: Atom }
   | { kind: 'text'; atomName: 'text-md' | 'text-shadow' | 'custom-html' }
   | { kind: 'table' }
   | { kind: 'image'; srcs: string[] }
@@ -66,7 +72,7 @@ interface DeckState {
   activeSlideId: string
   activeAtomId: string | null
   editorFocus: EditorFocus
-  localAtoms: Atom[]
+  localGallery: LocalGalleryItem[]
   toast: string | null
   past: DeckFile[]
   future: DeckFile[]
@@ -128,6 +134,10 @@ interface DeckState {
   /** 置顶 / 置底 / 上移一层 / 下移一层 */
   reorderActiveAtom: (action: LayerAction) => void
   saveActiveAtomToGallery: () => void
+  /** Remove one item from 「我的图表」. */
+  removeLocalGalleryItem: (id: string) => void
+  /** Rename a 「我的图表」 entry. */
+  renameLocalGalleryItem: (id: string, name: string) => void
   setBackground: (bg: BackgroundConfig) => void
   updateSlideAnimation: (
     slideId: string,
@@ -168,24 +178,6 @@ function cloneDeck(deck: DeckFile): DeckFile {
   return JSON.parse(JSON.stringify(deck)) as DeckFile
 }
 
-function loadLocalAtoms(): Atom[] {
-  try {
-    const raw = localStorage.getItem(LOCAL_ATOMS_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
-}
-
-function persistLocalAtoms(atoms: Atom[]) {
-  try {
-    localStorage.setItem(LOCAL_ATOMS_KEY, JSON.stringify(atoms))
-  } catch {
-    /* quota */
-  }
-}
 
 function loadPersistedDeck(): DeckFile | null {
   try {
@@ -245,7 +237,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
   activeSlideId: bootDeck.slides[0]?.i ?? '0',
   activeAtomId: null,
   editorFocus: null,
-  localAtoms: typeof localStorage !== 'undefined' ? loadLocalAtoms() : [],
+  localGallery: typeof localStorage !== 'undefined' ? loadLocalGallery() : [],
   toast: null,
   past: [],
   future: [],
@@ -330,7 +322,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
 
   armPendingInsert: (pending) => {
     const placeMode: PlaceMode =
-      pending.kind === 'chart'
+      pending.kind === 'chart' || pending.kind === 'saved'
         ? 'chart'
         : pending.kind === 'text'
           ? pending.atomName === 'custom-html'
@@ -363,6 +355,25 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       const entry = ATOM_REGISTRY[pending.atomName]
       if (entry) get().addAtom(entry.create(layout))
       else get().cancelPlaceMode()
+      return
+    }
+    if (pending.kind === 'saved') {
+      const copy: Atom = {
+        ...JSON.parse(JSON.stringify(pending.atom)),
+        i: nanoid(8),
+        x: layout.x,
+        y: layout.y,
+        w: layout.w,
+        h: layout.h,
+        static: false,
+      }
+      if (
+        copy.atomContent.atomName === 'text-md' ||
+        copy.atomContent.atomName === 'custom-html'
+      ) {
+        copy.atomContent.detail.editorId = nanoid(10)
+      }
+      get().addAtom(copy)
       return
     }
     if (pending.kind === 'text') {
@@ -878,23 +889,32 @@ export const useDeckStore = create<DeckState>((set, get) => ({
   saveActiveAtomToGallery: () => {
     const atom = selectActiveAtom(get())
     if (!atom) return
-    const copy: Atom = {
-      ...JSON.parse(JSON.stringify(atom)),
-      i: String(Date.now()),
-      x: 0,
-      w: 6,
-      h: 5,
-      static: false,
-    }
+    const item = makeGalleryItem(atom)
     if (
-      copy.atomContent.atomName === 'text-md' ||
-      copy.atomContent.atomName === 'custom-html'
+      item.atom.atomContent.atomName === 'text-md' ||
+      item.atom.atomContent.atomName === 'custom-html'
     ) {
-      copy.atomContent.detail.editorId = nanoid(10)
+      item.atom.atomContent.detail.editorId = nanoid(10)
     }
-    const localAtoms = [...get().localAtoms, copy]
-    persistLocalAtoms(localAtoms)
-    set({ localAtoms, toast: '已保存至我的图表' })
+    const localGallery = [...get().localGallery, item]
+    persistLocalGallery(localGallery)
+    set({ localGallery, toast: '已保存至我的图表' })
+  },
+
+  removeLocalGalleryItem: (id) => {
+    const localGallery = get().localGallery.filter((g) => g.id !== id)
+    persistLocalGallery(localGallery)
+    set({ localGallery, toast: '已从我的图表删除' })
+  },
+
+  renameLocalGalleryItem: (id, name) => {
+    const trimmed = name.trim()
+    if (!trimmed) return
+    const localGallery = get().localGallery.map((g) =>
+      g.id === id ? { ...g, name: trimmed } : g,
+    )
+    persistLocalGallery(localGallery)
+    set({ localGallery, toast: '已重命名' })
   },
 
   setBackground: (bg) =>
@@ -994,3 +1014,4 @@ export function selectActiveAtom(state: DeckState): Atom | undefined {
 }
 
 export type { LayerAction }
+export type { LocalGalleryItem }

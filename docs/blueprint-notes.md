@@ -254,7 +254,7 @@ Mirrored into React:
 - text-md `editorId`; echart/tables `nr`/`nc`; echart `title` object; table `pagination`; image `{ src }` only
 - `normalizeDeck` / `serializeDeck` adapters (tolerate `stacic`, map legacy `text-title`)
 - Atom context menu (数据/样式/边框/动画/固定/复制/删除/保存) + slide list menu (新建/复制/删除)
-- 「保存」→ `localStorage` gallery (`vslide-cn-react:localAtoms`)
+- 「保存至我的图表」→ `localStorage` gallery (`vslide-cn-react:localAtoms` as `{id,name,atom,createdAt}[]`, migrates legacy bare Atom[]) · ChartInsertDrawer「我的」tab · home browse
 
 Still missing vs Vue:
 

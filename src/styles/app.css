@@ -1847,3 +1847,119 @@ body.pane-resizing * {
   width: 100%;
   height: 100%;
 }
+
+/* ── 「我的图表」 gallery cards ── */
+.chart-preview-card.gallery-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+.gallery-card-main {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  outline: none;
+}
+.gallery-card-main:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.gallery-card-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+  padding: 0 8px 8px;
+}
+.gallery-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #fff;
+  color: #666;
+  cursor: pointer;
+}
+.gallery-action:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.gallery-action.danger:hover {
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+.gallery-rename-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2c3e50;
+  outline: none;
+}
+.home-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+  margin-top: 8px;
+}
+.home-gallery-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.home-gallery-stage {
+  height: 160px;
+  pointer-events: none;
+  background: linear-gradient(180deg, #fafbfc, #f3f5f7);
+  border-bottom: 1px solid #eee;
+  overflow: hidden;
+}
+.home-gallery-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px 4px;
+  font-size: 13px;
+}
+.home-gallery-meta strong {
+  font-weight: 600;
+  color: #2c3e50;
+}
+.home-gallery-meta span {
+  color: #999;
+  font-size: 11px;
+  font-family: ui-monospace, Menlo, monospace;
+}
+.home-gallery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px 12px;
+}
+.home-gallery-use {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  margin-left: auto;
+}
+.drawer-body .muted,
+.home-main .muted {
+  color: #999;
+  font-size: 13px;
+}

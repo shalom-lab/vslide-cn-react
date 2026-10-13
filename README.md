@@ -17,6 +17,7 @@ React + TypeScript rewrite of the interactive slide editor, faithful to the comp
 - Undo / redo (`Ctrl+Z` / `Ctrl+Y`) for deck mutations
 - Compact Chinese chrome; sample deck (~6 slides)
 - **背景模板库**（顶部「背景」）：纹理 / 点阵 / 网格 / 噪点 / 柔和渐变（CSS 填充）/ 自定义 CSS / 我的背景（localStorage）
+- **我的图表**（localStorage）：右键「保存至我的图表」；图表抽屉「我的」标签浏览 / 重命名 / 删除 / 拖框插入；首页侧栏可浏览
 - Play: `←` `→` / Space / Esc→edit
 - **相对 rem 排版**：画布 / 播放 / 缩略图舞台根字号 = 高度÷36，Markdown·标题·HTML·表格用 rem/em 随舞台缩放
 - **表格样式**（`simple-table`）：表头开关、对齐、加粗、边框色/宽、表头背景、斑马纹；JSON 仍可改数据
@@ -63,4 +64,4 @@ Deck / atom field names stay aligned with vslide-vue (`fileType: vslideFile`, `a
 
 ## Deferred
 
-CloudBase login/share · Handsontable · full animation timeline · full chart zoo · Electron · richer 模板图表 / 我的图表 galleries.
+CloudBase login/share · Handsontable · full animation timeline · full chart zoo · Electron · richer 模板图表 gallery.

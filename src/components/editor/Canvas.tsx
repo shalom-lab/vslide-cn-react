@@ -395,7 +395,7 @@ export function Canvas() {
         { key: 'div-del', divider: true },
         {
           key: 'save',
-          label: '保存',
+          label: '保存至我的图表',
           icon: <Download {...CTX} />,
           disabled: forbidden,
           onClick: () => saveActiveAtomToGallery(),
