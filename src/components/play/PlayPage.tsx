@@ -9,6 +9,7 @@ import { atomStackStyle } from '../../utils/layerOrder'
 import { stageTypographyStyle } from '../../utils/typography'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
+import 'animate.css'
 
 const AutoGrid = WidthProvider(GridLayout)
 
@@ -102,15 +103,26 @@ export function PlayPage() {
         useCSSTransforms={false}
         style={{ height: '100%' }}
       >
-        {slide.slideContent.map((atom, index) => (
-          <div
-            key={atom.i}
-            className="play-item"
-            style={atomStackStyle(atom, index)}
-          >
-            <AtomRenderer atom={atom} />
-          </div>
-        ))}
+        {slide.slideContent.map((atom, ai) => {
+          const enter = atom.atomAnimation?.enter
+          const animClass =
+            enter && enter !== 'none'
+              ? `animate__animated animate__${enter}`
+              : ''
+          const delay = Math.max(0, (atom.atomAnimation?.order ?? 1) - 1) * 0.15
+          return (
+            <div
+              key={`${slide.i}-${atom.i}-${index}`}
+              className={'play-item ' + animClass}
+              style={{
+                ...atomStackStyle(atom, ai),
+                animationDelay: `${delay}s`,
+              }}
+            >
+              <AtomRenderer atom={atom} />
+            </div>
+          )
+        })}
       </AutoGrid>
       <span className="play-page-num">
         {index + 1}/{sorted.length}

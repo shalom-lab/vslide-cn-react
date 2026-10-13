@@ -88,7 +88,8 @@ export function Canvas() {
     placeMode === 'text' ||
     placeMode === 'html' ||
     placeMode === 'table' ||
-    placeMode === 'image'
+    placeMode === 'image' ||
+    placeMode === 'icon'
 
   const wrapRef = useRef<HTMLDivElement>(null)
 
@@ -384,7 +385,9 @@ export function Canvas() {
                   ? pendingLayout
                     ? '选择图片文件 · Esc 取消'
                     : '在画布上拖拽框选图片位置 · Esc 取消'
-                  : '在画布上拖拽框选图表位置 · Esc 取消'}
+                  : placeMode === 'icon'
+                    ? '在画布上拖拽框选图标位置 · Esc 取消'
+                    : '在画布上拖拽框选图表位置 · Esc 取消'}
         </div>
       )}
       <div

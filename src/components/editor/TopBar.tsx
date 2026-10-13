@@ -4,11 +4,13 @@ import {
   BarChart3,
   Code2,
   Image as ImageIcon,
+  LayoutTemplate,
   MonitorPlay,
   Palette,
   Pencil,
   Plus,
   Redo2,
+  Shapes,
   Table2,
   Type,
   Undo2,
@@ -20,6 +22,8 @@ import {
 import { ChartInsertDrawer } from './ChartInsertDrawer'
 import { TextInsertDrawer } from './TextInsertDrawer'
 import { BackgroundDrawer } from './BackgroundDrawer'
+import { TemplateDrawer } from './TemplateDrawer'
+import { IconInsertDrawer } from './IconInsertDrawer'
 
 const I = { size: 20, strokeWidth: 1.75 }
 
@@ -36,16 +40,20 @@ export function TopBar() {
   const pendingLayout = useDeckStore((s) => s.pendingLayout)
   const chartDrawerOpen = useDeckStore((s) => s.chartDrawerOpen)
   const textDrawerOpen = useDeckStore((s) => s.textDrawerOpen)
+  const iconDrawerOpen = useDeckStore((s) => s.iconDrawerOpen)
   const startChartPlace = useDeckStore((s) => s.startChartPlace)
   const startTextPlace = useDeckStore((s) => s.startTextPlace)
   const startHtmlPlace = useDeckStore((s) => s.startHtmlPlace)
   const startTablePlace = useDeckStore((s) => s.startTablePlace)
   const startImagePlace = useDeckStore((s) => s.startImagePlace)
+  const startIconPlace = useDeckStore((s) => s.startIconPlace)
   const cancelPlaceMode = useDeckStore((s) => s.cancelPlaceMode)
   const setChartDrawerOpen = useDeckStore((s) => s.setChartDrawerOpen)
   const setTextDrawerOpen = useDeckStore((s) => s.setTextDrawerOpen)
+  const setIconDrawerOpen = useDeckStore((s) => s.setIconDrawerOpen)
   const fileRef = useRef<HTMLInputElement>(null)
   const [bgDrawerOpen, setBgDrawerOpen] = useState(false)
+  const [tplDrawerOpen, setTplDrawerOpen] = useState(false)
 
   const chartActive = placeMode === 'chart' || chartDrawerOpen
   // placeMode stays set while the right drawer is open, so these cover both drag + chooser
@@ -53,6 +61,7 @@ export function TopBar() {
   const htmlActive = placeMode === 'html'
   const tableActive = placeMode === 'table'
   const imageActive = placeMode === 'image'
+  const iconActive = placeMode === 'icon' || iconDrawerOpen
 
   // Place-first image: after drag-rect, open the file picker into pendingLayout
   useEffect(() => {
@@ -120,6 +129,14 @@ export function TopBar() {
       return
     }
     startImagePlace()
+  }
+
+  const onIconClick = () => {
+    if (iconActive) {
+      cancelPlaceMode()
+      return
+    }
+    startIconPlace()
   }
 
   return (
@@ -228,7 +245,33 @@ export function TopBar() {
             </span>
             <span className="label">图片</span>
           </button>
+          <button
+            type="button"
+            className={'icon-btn' + (iconActive ? ' active' : '')}
+            onClick={onIconClick}
+            title="在画布拖框后选择图标"
+          >
+            <span className="icon">
+              <Shapes {...I} />
+            </span>
+            <span className="label">图标</span>
+          </button>
           <span className="topbar-sep" aria-hidden />
+          <button
+            type="button"
+            className={'icon-btn' + (tplDrawerOpen ? ' active' : '')}
+            onClick={() => {
+              setActiveAtom(null)
+              setEditorFocus(null)
+              setTplDrawerOpen(true)
+            }}
+            title="插入幻灯片模板"
+          >
+            <span className="icon">
+              <LayoutTemplate {...I} />
+            </span>
+            <span className="label">模板</span>
+          </button>
           <button
             type="button"
             className={'icon-btn' + (bgDrawerOpen ? ' active' : '')}
@@ -264,6 +307,14 @@ export function TopBar() {
       <BackgroundDrawer
         open={bgDrawerOpen}
         onClose={() => setBgDrawerOpen(false)}
+      />
+      <TemplateDrawer
+        open={tplDrawerOpen}
+        onClose={() => setTplDrawerOpen(false)}
+      />
+      <IconInsertDrawer
+        open={iconDrawerOpen}
+        onClose={() => setIconDrawerOpen(false)}
       />
     </>
   )

@@ -23,6 +23,7 @@ import type { GridLayoutRect } from '../utils/grid'
 import { setByPath } from '../utils/pathSet'
 
 import { createTableAtom } from '../atoms/registry'
+import { SLIDE_TEMPLATES } from '../data/slideTemplates'
 
 export {
   createTextAtom,
@@ -37,7 +38,7 @@ export {
 const LOCAL_ATOMS_KEY = 'vslide-cn-react:localAtoms'
 const HISTORY_LIMIT = 50
 
-export type PlaceMode = 'chart' | 'text' | 'html' | 'table' | 'image' | null
+export type PlaceMode = 'chart' | 'text' | 'html' | 'table' | 'image' | 'icon' | null
 
 interface DeckState {
   deck: DeckFile
@@ -62,7 +63,12 @@ interface DeckState {
   startHtmlPlace: () => void
   startTablePlace: () => void
   startImagePlace: () => void
+  startIconPlace: () => void
   finishPlaceRect: (layout: GridLayoutRect) => void
+  /** Insert a slide layout template after the active slide */
+  insertTemplateSlide: (templateId: string) => void
+  iconDrawerOpen: boolean
+  setIconDrawerOpen: (open: boolean) => void
   cancelPlaceMode: () => void
   setChartDrawerOpen: (open: boolean) => void
   setTextDrawerOpen: (open: boolean) => void
@@ -163,6 +169,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
   pendingLayout: null,
   chartDrawerOpen: false,
   textDrawerOpen: false,
+  iconDrawerOpen: false,
 
   startChartPlace: () =>
     set({
@@ -170,6 +177,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       pendingLayout: null,
       chartDrawerOpen: false,
       textDrawerOpen: false,
+      iconDrawerOpen: false,
       activeAtomId: null,
       editorFocus: null,
     }),
@@ -180,6 +188,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       pendingLayout: null,
       chartDrawerOpen: false,
       textDrawerOpen: false,
+      iconDrawerOpen: false,
       activeAtomId: null,
       editorFocus: null,
     }),
@@ -190,6 +199,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       pendingLayout: null,
       chartDrawerOpen: false,
       textDrawerOpen: false,
+      iconDrawerOpen: false,
       activeAtomId: null,
       editorFocus: null,
     }),
@@ -200,6 +210,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       pendingLayout: null,
       chartDrawerOpen: false,
       textDrawerOpen: false,
+      iconDrawerOpen: false,
       activeAtomId: null,
       editorFocus: null,
     }),
@@ -210,6 +221,18 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       pendingLayout: null,
       chartDrawerOpen: false,
       textDrawerOpen: false,
+      iconDrawerOpen: false,
+      activeAtomId: null,
+      editorFocus: null,
+    }),
+
+  startIconPlace: () =>
+    set({
+      placeMode: 'icon',
+      pendingLayout: null,
+      chartDrawerOpen: false,
+      textDrawerOpen: false,
+      iconDrawerOpen: false,
       activeAtomId: null,
       editorFocus: null,
     }),
@@ -236,6 +259,16 @@ export const useDeckStore = create<DeckState>((set, get) => ({
         pendingLayout: layout,
         chartDrawerOpen: false,
         textDrawerOpen: false,
+        iconDrawerOpen: false,
+      })
+      return
+    }
+    if (mode === 'icon') {
+      set({
+        pendingLayout: layout,
+        chartDrawerOpen: false,
+        textDrawerOpen: false,
+        iconDrawerOpen: true,
       })
       return
     }
@@ -253,26 +286,39 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       pendingLayout: null,
       chartDrawerOpen: false,
       textDrawerOpen: false,
+      iconDrawerOpen: false,
     }),
 
   setChartDrawerOpen: (open) =>
     set(
       open
-        ? { chartDrawerOpen: true, textDrawerOpen: false }
+        ? { chartDrawerOpen: true, textDrawerOpen: false, iconDrawerOpen: false }
         : {
             chartDrawerOpen: false,
             placeMode: null,
             pendingLayout: null,
             textDrawerOpen: false,
+            iconDrawerOpen: false,
           },
     ),
 
   setTextDrawerOpen: (open) =>
     set(
       open
-        ? { textDrawerOpen: true, chartDrawerOpen: false }
+        ? { textDrawerOpen: true, chartDrawerOpen: false, iconDrawerOpen: false }
         : {
             textDrawerOpen: false,
+            placeMode: null,
+            pendingLayout: null,
+          },
+    ),
+
+  setIconDrawerOpen: (open) =>
+    set(
+      open
+        ? { iconDrawerOpen: true, chartDrawerOpen: false, textDrawerOpen: false }
+        : {
+            iconDrawerOpen: false,
             placeMode: null,
             pendingLayout: null,
           },
@@ -456,6 +502,30 @@ export const useDeckStore = create<DeckState>((set, get) => ({
     })
   },
 
+  insertTemplateSlide: (templateId) => {
+    const tpl = SLIDE_TEMPLATES.find((t) => t.id === templateId)
+    if (!tpl) return
+    const { deck, activeSlideId } = get()
+    const slide = tpl.build()
+    const idx = deck.slides.findIndex((s) => s.i === activeSlideId)
+    const insertAt = idx >= 0 ? idx + 1 : deck.slides.length
+    const slides = [
+      ...deck.slides.slice(0, insertAt),
+      slide,
+      ...deck.slides.slice(insertAt),
+    ]
+    slides.forEach((s, i) => {
+      s.y = i
+    })
+    set((s) => ({
+      ...pushHistory(s),
+      deck: withGetBackground({ ...deck, slides }),
+      activeSlideId: slide.i,
+      activeAtomId: null,
+      editorFocus: null,
+    }))
+  },
+
   addSlide: () => {
     const { deck, activeSlideId } = get()
     const active = deck.slides.find((s) => s.i === activeSlideId)
@@ -546,6 +616,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       pendingLayout: null,
       chartDrawerOpen: false,
       textDrawerOpen: false,
+      iconDrawerOpen: false,
     }))
   },
 

@@ -1553,3 +1553,72 @@ body.pane-resizing * {
   font-size: 16px;
   color: #1a73e8;
 }
+
+/* —— Slide templates —— */
+.template-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.template-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+.template-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 1px 4px rgba(26, 115, 232, 0.15);
+}
+.template-swatch {
+  height: 40px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.template-card strong {
+  font-size: 13px;
+  color: #202124;
+}
+.template-card span {
+  font-size: 11px;
+  color: #80868b;
+}
+
+/* —— Icon library —— */
+.icon-search {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.icon-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 11px;
+  color: #5f6368;
+}
+.icon-card:hover {
+  border-color: var(--accent);
+  background: #f8fbff;
+}

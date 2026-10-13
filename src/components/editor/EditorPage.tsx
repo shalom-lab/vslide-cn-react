@@ -44,6 +44,7 @@ export function EditorPage() {
   const placeMode = useDeckStore((s) => s.placeMode)
   const chartDrawerOpen = useDeckStore((s) => s.chartDrawerOpen)
   const textDrawerOpen = useDeckStore((s) => s.textDrawerOpen)
+  const iconDrawerOpen = useDeckStore((s) => s.iconDrawerOpen)
   const cancelPlaceMode = useDeckStore((s) => s.cancelPlaceMode)
 
   const {
@@ -69,7 +70,8 @@ export function EditorPage() {
         e.key === 'Escape' &&
         placeMode &&
         !chartDrawerOpen &&
-        !textDrawerOpen
+        !textDrawerOpen &&
+        !iconDrawerOpen
       ) {
         e.preventDefault()
         cancelPlaceMode()
@@ -109,6 +111,7 @@ export function EditorPage() {
     placeMode,
     chartDrawerOpen,
     textDrawerOpen,
+    iconDrawerOpen,
     cancelPlaceMode,
   ])
 
