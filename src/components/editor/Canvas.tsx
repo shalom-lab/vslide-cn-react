@@ -84,18 +84,32 @@ export function Canvas() {
   const dragRef = useRef<DragDraft | null>(null)
   const placing = placeMode === 'chart'
 
+  const wrapRef = useRef<HTMLDivElement>(null)
+
+  // Remeasure from the center column so pane drag / window resize both update the stage
   useEffect(() => {
+    const wrap = wrapRef.current
+    const host = wrap?.parentElement // .editor-center
+    if (!host) return
+
     const measure = () => {
-      // Match Vue Right.vue: min(innerH-150, (innerW-280)*9/16); React adds ~220px props
-      const availH = Math.max(200, window.innerHeight - 150)
-      const availW = Math.max(320, window.innerWidth - 250 - 220 - 20)
+      const rect = host.getBoundingClientRect()
+      const pad = 24 // matches .editor-center padding 12px * 2
+      const availW = Math.max(320, rect.width - pad)
+      const availH = Math.max(200, rect.height - pad)
       const h = Math.floor(Math.min(availH, (availW * 9) / 16))
       const w = Math.floor((h * 16) / 9)
-      setSize({ w, h })
+      setSize((prev) => (prev.w === w && prev.h === h ? prev : { w, h }))
     }
+
     measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(host)
     window.addEventListener('resize', measure)
-    return () => window.removeEventListener('resize', measure)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', measure)
+    }
   }, [])
 
   useEffect(() => {
@@ -351,7 +365,7 @@ export function Canvas() {
   if (!slide) return null
 
   return (
-    <div className="canvas-wrap">
+    <div className="canvas-wrap" ref={wrapRef}>
       {placing && (
         <div className="place-hint" role="status">
           在画布上拖拽框选图表位置 · Esc 取消

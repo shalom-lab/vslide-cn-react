@@ -302,19 +302,59 @@ select {
   line-height: 1.2;
 }
 
-/* Edit.vue main: left 250 + center; React keeps slim right props */
+/* Edit.vue main: left + center + right; column widths set inline (resizable) */
 .editor-main {
   display: grid;
-  grid-template-columns: 250px 1fr 220px;
+  grid-template-columns: 250px 5px 1fr 5px 220px;
   min-height: 0;
   border-top: none;
   background: #fff;
 }
 
+/* Vertical gutters between the three editor columns */
+.pane-resize-handle {
+  position: relative;
+  width: 5px;
+  min-width: 5px;
+  cursor: col-resize;
+  z-index: 6;
+  touch-action: none;
+  background: transparent;
+  outline: none;
+}
+.pane-resize-handle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--border);
+  transition: width 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+}
+.pane-resize-handle:hover::before,
+.pane-resize-handle.dragging::before {
+  width: 3px;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-soft);
+}
+.pane-resize-handle:hover,
+.pane-resize-handle.dragging {
+  background: var(--accent-soft);
+}
+body.pane-resizing {
+  cursor: col-resize !important;
+}
+body.pane-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
 /* Left.vue / Edit.vue .left */
 .slide-list {
   background: #f1f3f4;
-  border-right: 1px solid var(--border);
+  border-right: none;
   padding: 5px;
   display: flex;
   flex-direction: column;
@@ -457,7 +497,7 @@ select {
 /* Compact right property panel (React addition; denser to stay 小巧) */
 .props {
   background: #f3f1f1;
-  border-left: 1px solid var(--border);
+  border-left: none;
   padding: 8px 10px;
   overflow-y: auto;
   font-size: 12px;
@@ -1112,7 +1152,7 @@ select {
 
 .props {
   background: #fff;
-  border-left: 1px solid var(--border);
+  border-left: none;
 }
 .props h3 {
   color: #202124;
