@@ -4,13 +4,15 @@ React + TypeScript rewrite of the interactive slide editor, faithful to the comp
 
 > This repo is the React greenfield. Do **not** confuse with `vslide-cn` (abandoned Vue scaffold) or `vslide-vue` (read-only blueprint).
 
-## Features (v1)
+## Features
 
 - **演示文稿** path: multi-slide edit ↔ play
-- 18×18 **react-grid-layout** canvas (drag / resize)
-- Atoms: Markdown/title text · line/bar/pie (ECharts) · table · image
-- Compact Chinese chrome (toolbar · top bar · slide list · property panel)
-- Sample deck (~5 slides)
+- 18×18 **react-grid-layout** canvas (drag / resize / overlap + 置顶/置底)
+- **Shared `AtomRenderer`** for edit · play · thumbs (no dual drift)
+- **Atom registry** (`src/atoms/registry.ts`) for text / chart / table / image
+- Charts: line · bar · **stack-bar** · **hor-bar** · pie · **scatter** via insert drawer
+- Undo / redo (`Ctrl+Z` / `Ctrl+Y`) for deck mutations
+- Compact Chinese chrome; sample deck (~6 slides)
 - Play: `←` `→` / Space / Esc→edit
 
 ## Run
@@ -45,6 +47,10 @@ Private repos need a plan that includes GitHub Pages (Pro / Team / Enterprise). 
 
 See [docs/blueprint-notes.md](./docs/blueprint-notes.md).
 
+## Stable JSON (Agent skills)
+
+Deck / atom field names stay aligned with vslide-vue (`fileType: vslideFile`, `atomContent.atomName`, `detail.sheetData` + `nr`/`nc`, …). Prefer extending the registry over inventing parallel shapes.
+
 ## Deferred
 
-CloudBase login/share · Handsontable · full animation timeline · full chart zoo · Electron · 模板图表 / 我的图表 galleries.
+CloudBase login/share · Handsontable · full animation timeline · full chart zoo · Electron · richer 模板图表 / 我的图表 galleries.

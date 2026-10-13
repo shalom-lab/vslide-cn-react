@@ -58,9 +58,8 @@ export function ContextMenu({ x, y, items, onClose }: Props) {
       style={{ left: x, top: y }}
       role="menu"
     >
-      {items.map((item, idx) => (
+      {items.map((item) => (
         <div key={item.key}>
-          {idx > 0 && <div className="ctx-divider" />}
           <button
             type="button"
             className={

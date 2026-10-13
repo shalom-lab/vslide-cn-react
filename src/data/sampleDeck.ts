@@ -28,6 +28,19 @@ const pieSheet: (string | number)[][] = [
   ['配件', 25],
 ]
 
+const scatterSheet: (string | number)[][] = [
+  ['组别', 'x', 'y'],
+  ['A', 10.0, 8.04],
+  ['A', 8.0, 6.95],
+  ['A', 13.0, 7.58],
+  ['B', 9.0, 8.81],
+  ['B', 11.0, 8.33],
+  ['B', 14.0, 9.96],
+  ['C', 4.0, 4.26],
+  ['C', 12.0, 10.84],
+  ['C', 7.0, 4.82],
+]
+
 const tableSheet: (string | number)[][] = [
   ['季度', '华东', '华北', '华南', '合计'],
   ['Q1', 120, 90, 80, 290],
@@ -224,13 +237,12 @@ export function createSampleDeck(): DeckFile {
         h: 15,
         atomType: 'echart',
         atomContent: {
-          // React subset name; Vue would use multi-bar / stack-bar
-          atomName: 'simple-bar',
-          detail: echartDetail(salesSheet, '区域柱状对比', {
+          atomName: 'stack-bar',
+          detail: echartDetail(salesSheet, '区域堆叠对比', {
             simpleBar: {
-              barMaxWidth: 40,
-              barGap: '30%',
-              barCategoryGap: '20%',
+              barMaxWidth: 28,
+              barGap: '5%',
+              barCategoryGap: '15%',
               borderRadius: 0,
               showBackground: false,
             },
@@ -275,7 +287,62 @@ export function createSampleDeck(): DeckFile {
         },
       }),
     ]),
-    slide('4', 4, [
+    slide('5', 4, [
+      atom({
+        i: '0',
+        x: 0,
+        y: 0,
+        w: 18,
+        h: 2,
+        atomType: 'text',
+        atomContent: {
+          atomName: 'text-shadow',
+          detail: {
+            text: '条形图 · 散点图',
+            color: '#2c3e50',
+            fontFamily: 'Arial',
+            fontSize: 28,
+            fontWeight: 600,
+            shadow: { h: 1, v: 1, blur: 2, color: 'rgba(0,0,0,0.15)' },
+          },
+        },
+      }),
+      atom({
+        i: '1',
+        x: 0,
+        y: 2,
+        w: 9,
+        h: 15,
+        atomType: 'echart',
+        atomContent: {
+          atomName: 'hor-bar',
+          detail: echartDetail(salesSheet, '横向条形', {
+            simpleBar: {
+              barMaxWidth: 18,
+              barGap: '8%',
+              barCategoryGap: '12%',
+              borderRadius: 0,
+              showBackground: false,
+            },
+          }),
+        },
+      }),
+      atom({
+        i: '2',
+        x: 9,
+        y: 2,
+        w: 9,
+        h: 15,
+        atomType: 'echart',
+        atomContent: {
+          atomName: 'simple-scatter',
+          detail: echartDetail(scatterSheet, '分组散点', {
+            simpleScatter: { symbol: 'circle', symbolSize: 14 },
+          }),
+        },
+      }),
+    ]),
+    slide('4', 5, [
       atom({
         i: '0',
         x: 1,
@@ -292,6 +359,11 @@ export function createSampleDeck(): DeckFile {
 1. **数据为中心** — JSON 存储幻灯片，网页渲染
 2. **组件化** — 文本 / 图表 / 表格 / 图片
 3. **拖拽排版** — 18×18 网格（react-grid-layout）
+
+### 本版亮点
+- 图表插入抽屉 · 堆叠/条形/散点
+- 共享 AtomRenderer · 撤销/重做
+- 稳定 deck/atom JSON
 
 ### 下一步
 - 云端登录与分享

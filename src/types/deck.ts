@@ -10,8 +10,12 @@ export type AtomName =
   | 'text-md'
   | 'text-shadow'
   | 'simple-line'
-  | 'simple-bar' // React subset (Vue uses multi-bar / stack-bar / hor-bar …)
+  | 'simple-bar' // React subset alias (Vue: multi-bar)
+  | 'multi-bar'
+  | 'stack-bar'
+  | 'hor-bar'
   | 'simple-pie'
+  | 'simple-scatter'
   | 'simple-table'
   | 'single-image'
   | 'image-group'

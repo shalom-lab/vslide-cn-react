@@ -32,8 +32,8 @@ function HomePage() {
         <div className="home-main">
           <h1>演示文稿</h1>
           <p>
-            沿用旧版紧凑布局：左侧幻灯片列表 · 中间 16:9 网格画布 · 右侧属性面板。
-            放映支持 ←→ / Space，Esc 返回编辑。
+            紧凑布局：左侧幻灯片 · 中间 16:9 画布 · 右侧属性。图表抽屉插入堆叠/条形/散点。
+            放映 ←→ / Space · Esc 编辑 · Ctrl+Z 撤销。
           </p>
           <div className="home-cards">
             <Link to="/edit" className="home-card">

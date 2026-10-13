@@ -258,3 +258,19 @@ Still missing vs Vue:
 - `gallery.templateLayout` / CloudBase / IndexedDB multi-file `document.fileList`
 - ~~Layer z-order~~ → React added 置顶/置底/上移/下移 + `zIndex` (Vue still DOM-order only)
 - `simple-bar` remains React subset alias (Vue: multi-bar / stack-bar / …)
+
+## Atom registry + shared renderer (2026-10-13 wave)
+
+- **`src/atoms/registry.ts`** — single catalog of `atomName` → `{ atomType, label, create, buildOption? }`. Insert drawer, factories, and chart option builders read from here.
+- **`AtomRenderer`** — one path for Canvas / Play / thumbs. Dispatch by `atomType` (with registry alias resolve).
+- **Chart insert drawer** — TopBar「图表」opens right drawer (Vue `SEchart` analogue): tabs 柱状/折线/饼图/散点; click preview to insert.
+- **New chart names shipped:** `stack-bar`, `hor-bar`, `simple-scatter` (+ `multi-bar` insertable). Option builders in `utils/charts.ts`.
+- **Undo/redo** — zustand `past`/`future` deck snapshots (limit 50). `Ctrl+Z` / `Ctrl+Y` / TopBar buttons. Detail typing debounced (~400ms) into history.
+- JSON contract unchanged: prefer Vue `atomName`s; `simple-bar` remains React subset alias.
+
+### Next wave ideas
+
+- Wire「我的图表」gallery into drawer tab
+- More echart zoo (radar / funnel / sankey) via registry entries only
+- Keyboard layer shortcuts; multi-select
+- Persist undo across reload (optional)

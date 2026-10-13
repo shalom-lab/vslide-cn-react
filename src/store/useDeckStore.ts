@@ -9,9 +9,6 @@ import type {
   Slide,
 } from '../types/deck'
 import {
-  defaultAnimation,
-  defaultBorder,
-  defaultEchartTitle,
   defaultSlideAnimation,
   sheetNrNc,
 } from '../types/deck'
@@ -23,7 +20,17 @@ import {
   type LayerAction,
 } from '../utils/layerOrder'
 
+export {
+  createTextAtom,
+  createTextShadowAtom,
+  createChartAtom,
+  createTableAtom,
+  createImageAtom,
+  type ChartKind,
+} from '../atoms/registry'
+
 const LOCAL_ATOMS_KEY = 'vslide-cn-react:localAtoms'
+const HISTORY_LIMIT = 50
 
 interface DeckState {
   deck: DeckFile
@@ -32,6 +39,8 @@ interface DeckState {
   editorFocus: EditorFocus
   localAtoms: Atom[]
   toast: string | null
+  past: DeckFile[]
+  future: DeckFile[]
   setActiveSlide: (id: string) => void
   setActiveAtom: (id: string | null) => void
   setEditorFocus: (focus: EditorFocus) => void
@@ -56,6 +65,10 @@ interface DeckState {
   setBackground: (bg: BackgroundConfig) => void
   replaceDeck: (deck: DeckFile | unknown) => void
   resetSample: () => void
+  undo: () => void
+  redo: () => void
+  canUndo: () => boolean
+  canRedo: () => boolean
 }
 
 function blankSlide(y: number, i: string): Slide {
@@ -72,6 +85,10 @@ function blankSlide(y: number, i: string): Slide {
 
 function withGetBackground(deck: DeckFile): DeckFile {
   return { ...deck, getBackground: cssBackground(deck.background) }
+}
+
+function cloneDeck(deck: DeckFile): DeckFile {
+  return JSON.parse(JSON.stringify(deck)) as DeckFile
 }
 
 function loadLocalAtoms(): Atom[] {
@@ -93,6 +110,17 @@ function persistLocalAtoms(atoms: Atom[]) {
   }
 }
 
+/** Push current deck onto past before a mutating set. */
+function pushHistory(
+  s: Pick<DeckState, 'deck' | 'past'>,
+): { past: DeckFile[]; future: DeckFile[] } {
+  const past = [...s.past, cloneDeck(s.deck)].slice(-HISTORY_LIMIT)
+  return { past, future: [] }
+}
+
+let detailTimer: ReturnType<typeof setTimeout> | null = null
+let detailSnapshot: DeckFile | null = null
+
 const initial = createSampleDeck()
 
 export const useDeckStore = create<DeckState>((set, get) => ({
@@ -102,6 +130,8 @@ export const useDeckStore = create<DeckState>((set, get) => ({
   editorFocus: null,
   localAtoms: typeof localStorage !== 'undefined' ? loadLocalAtoms() : [],
   toast: null,
+  past: [],
+  future: [],
 
   setActiveSlide: (id) =>
     set({ activeSlideId: id, activeAtomId: null, editorFocus: null }),
@@ -109,8 +139,42 @@ export const useDeckStore = create<DeckState>((set, get) => ({
   setEditorFocus: (focus) => set({ editorFocus: focus }),
   clearToast: () => set({ toast: null }),
 
+  canUndo: () => get().past.length > 0,
+  canRedo: () => get().future.length > 0,
+
+  undo: () => {
+    const { past, deck, future, activeSlideId } = get()
+    if (!past.length) return
+    const prev = past[past.length - 1]
+    const stillExists = prev.slides.some((s) => s.i === activeSlideId)
+    set({
+      deck: prev,
+      past: past.slice(0, -1),
+      future: [cloneDeck(deck), ...future].slice(0, HISTORY_LIMIT),
+      activeSlideId: stillExists ? activeSlideId : (prev.slides[0]?.i ?? '0'),
+      activeAtomId: null,
+      editorFocus: null,
+    })
+  },
+
+  redo: () => {
+    const { past, deck, future, activeSlideId } = get()
+    if (!future.length) return
+    const next = future[0]
+    const stillExists = next.slides.some((s) => s.i === activeSlideId)
+    set({
+      deck: next,
+      past: [...past, cloneDeck(deck)].slice(-HISTORY_LIMIT),
+      future: future.slice(1),
+      activeSlideId: stillExists ? activeSlideId : (next.slides[0]?.i ?? '0'),
+      activeAtomId: null,
+      editorFocus: null,
+    })
+  },
+
   updateSlideLayout: (slideId, atoms) =>
     set((s) => ({
+      ...pushHistory(s),
       deck: withGetBackground({
         ...s.deck,
         slides: s.deck.slides.map((sl) =>
@@ -121,6 +185,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
 
   updateAtom: (slideId, atomId, patch) =>
     set((s) => ({
+      ...pushHistory(s),
       deck: withGetBackground({
         ...s.deck,
         slides: s.deck.slides.map((sl) =>
@@ -136,7 +201,23 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       }),
     })),
 
-  updateAtomDetail: (slideId, atomId, detail) =>
+  updateAtomDetail: (slideId, atomId, detail) => {
+    // Debounce history for rapid typing in property panel
+    if (!detailSnapshot) {
+      detailSnapshot = cloneDeck(get().deck)
+    }
+    if (detailTimer) clearTimeout(detailTimer)
+    detailTimer = setTimeout(() => {
+      const snap = detailSnapshot
+      detailSnapshot = null
+      detailTimer = null
+      if (!snap) return
+      set((s) => ({
+        past: [...s.past, snap].slice(-HISTORY_LIMIT),
+        future: [],
+      }))
+    }, 400)
+
     set((s) => ({
       deck: withGetBackground({
         ...s.deck,
@@ -169,7 +250,8 @@ export const useDeckStore = create<DeckState>((set, get) => ({
               },
         ),
       }),
-    })),
+    }))
+  },
 
   addSlide: () => {
     const { deck, activeSlideId } = get()
@@ -180,12 +262,13 @@ export const useDeckStore = create<DeckState>((set, get) => ({
     slides.forEach((s, idx) => {
       s.y = idx
     })
-    set({
+    set((s) => ({
+      ...pushHistory(s),
       deck: withGetBackground({ ...deck, slides }),
       activeSlideId: i,
       activeAtomId: null,
       editorFocus: null,
-    })
+    }))
   },
 
   duplicateSlide: () => {
@@ -210,12 +293,13 @@ export const useDeckStore = create<DeckState>((set, get) => ({
     slides.forEach((s, idx) => {
       s.y = idx
     })
-    set({
+    set((s) => ({
+      ...pushHistory(s),
       deck: withGetBackground({ ...deck, slides }),
       activeSlideId: i,
       activeAtomId: null,
       editorFocus: null,
-    })
+    }))
   },
 
   removeSlide: () => {
@@ -227,17 +311,19 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       s.y = i
     })
     const next = slides[Math.max(0, idx - 1)] ?? slides[0]
-    set({
+    set((s) => ({
+      ...pushHistory(s),
       deck: withGetBackground({ ...deck, slides }),
       activeSlideId: next.i,
       activeAtomId: null,
       editorFocus: null,
-    })
+    }))
   },
 
   addAtom: (atom) => {
     const { deck, activeSlideId } = get()
-    set({
+    set((s) => ({
+      ...pushHistory(s),
       deck: withGetBackground({
         ...deck,
         slides: deck.slides.map((sl) =>
@@ -250,7 +336,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
         ),
       }),
       activeAtomId: atom.i,
-    })
+    }))
   },
 
   duplicateActiveAtom: () => {
@@ -266,7 +352,8 @@ export const useDeckStore = create<DeckState>((set, get) => ({
     if (copy.atomContent.atomName === 'text-md') {
       copy.atomContent.detail.editorId = nanoid(10)
     }
-    set({
+    set((s) => ({
+      ...pushHistory(s),
       deck: withGetBackground({
         ...deck,
         slides: deck.slides.map((sl) =>
@@ -279,13 +366,14 @@ export const useDeckStore = create<DeckState>((set, get) => ({
         ),
       }),
       activeAtomId: copy.i,
-    })
+    }))
   },
 
   removeActiveAtom: () => {
     const { deck, activeSlideId, activeAtomId } = get()
     if (!activeAtomId) return
-    set({
+    set((s) => ({
+      ...pushHistory(s),
       deck: withGetBackground({
         ...deck,
         slides: deck.slides.map((sl) =>
@@ -301,13 +389,14 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       }),
       activeAtomId: null,
       editorFocus: null,
-    })
+    }))
   },
 
   toggleFixedActiveAtom: () => {
     const { deck, activeSlideId, activeAtomId } = get()
     if (!activeAtomId) return
-    set({
+    set((s) => ({
+      ...pushHistory(s),
       deck: withGetBackground({
         ...deck,
         slides: deck.slides.map((sl) =>
@@ -321,13 +410,14 @@ export const useDeckStore = create<DeckState>((set, get) => ({
               },
         ),
       }),
-    })
+    }))
   },
 
   reorderActiveAtom: (action) => {
     const { deck, activeSlideId, activeAtomId } = get()
     if (!activeAtomId) return
-    set({
+    set((s) => ({
+      ...pushHistory(s),
       deck: withGetBackground({
         ...deck,
         slides: deck.slides.map((sl) => {
@@ -336,7 +426,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
           return next ? { ...sl, slideContent: next } : sl
         }),
       }),
-    })
+    }))
   },
 
   saveActiveAtomToGallery: () => {
@@ -360,193 +450,32 @@ export const useDeckStore = create<DeckState>((set, get) => ({
 
   setBackground: (bg) =>
     set((s) => ({
+      ...pushHistory(s),
       deck: withGetBackground({ ...s.deck, background: bg }),
     })),
 
   replaceDeck: (raw) => {
     const deck = normalizeDeck(raw)
-    set({
+    set((s) => ({
+      ...pushHistory(s),
       deck,
       activeSlideId: deck.slides[0]?.i ?? '0',
       activeAtomId: null,
       editorFocus: null,
-    })
+    }))
   },
 
   resetSample: () => {
     const deck = createSampleDeck()
-    set({
+    set((s) => ({
+      ...pushHistory(s),
       deck,
       activeSlideId: deck.slides[0]?.i ?? '0',
       activeAtomId: null,
       editorFocus: null,
-    })
+    }))
   },
 }))
-
-export function createTextAtom(markdown = '## 新文本'): Atom {
-  return {
-    i: nanoid(8),
-    x: 1,
-    y: 1,
-    w: 8,
-    h: 4,
-    static: false,
-    super: false,
-    atomType: 'text',
-    atomBorder: defaultBorder(),
-    atomAnimation: defaultAnimation(),
-    atomContent: {
-      atomName: 'text-md',
-      detail: { editorId: nanoid(10), markdown },
-    },
-  }
-}
-
-export function createTextShadowAtom(text = '标题'): Atom {
-  return {
-    i: nanoid(8),
-    x: 1,
-    y: 1,
-    w: 16,
-    h: 3,
-    static: false,
-    super: false,
-    atomType: 'text',
-    atomBorder: defaultBorder(),
-    atomAnimation: defaultAnimation(),
-    atomContent: {
-      atomName: 'text-shadow',
-      detail: {
-        text,
-        color: 'rgb(114, 138, 154)',
-        fontFamily: 'Arial',
-        fontSize: 40,
-        fontWeight: 900,
-        shadow: { h: 2, v: 2, blur: 4, color: 'rgba(48, 34, 34, 1)' },
-      },
-    },
-  }
-}
-
-export function createChartAtom(
-  kind: 'simple-line' | 'simple-bar' | 'simple-pie',
-): Atom {
-  const sheet =
-    kind === 'simple-pie'
-      ? [
-          ['项', '值'],
-          ['A', 40],
-          ['B', 30],
-          ['C', 30],
-        ]
-      : [
-          ['', '系列1', '系列2'],
-          ['1月', 10, 20],
-          ['2月', 15, 18],
-          ['3月', 22, 25],
-        ]
-  const { nr, nc } = sheetNrNc(sheet)
-  const extra: Record<string, unknown> =
-    kind === 'simple-line'
-      ? {
-          simpleLine: {
-            lineStyle: { width: 2, type: 'solid' },
-            smooth: false,
-            areaStyle: { opacity: 0.2 },
-          },
-        }
-      : kind === 'simple-pie'
-        ? {
-            simplePie: {
-              clockwise: true,
-              startAngle: 90,
-              center: ['50%', '55%'],
-              radius: ['30%', '65%'],
-            },
-          }
-        : {
-            simpleBar: {
-              barMaxWidth: 40,
-              barGap: '30%',
-              barCategoryGap: '20%',
-              borderRadius: 0,
-              showBackground: false,
-            },
-          }
-  return {
-    i: nanoid(8),
-    x: 1,
-    y: 1,
-    w: 10,
-    h: 8,
-    static: false,
-    super: false,
-    atomType: 'echart',
-    atomBorder: defaultBorder(),
-    atomAnimation: defaultAnimation(),
-    atomContent: {
-      atomName: kind,
-      detail: {
-        sheetData: sheet,
-        nr,
-        nc,
-        animation: true,
-        title: defaultEchartTitle(kind),
-        ...extra,
-      },
-    },
-  }
-}
-
-export function createTableAtom(): Atom {
-  const sheetData: (string | number)[][] = [
-    ['列A', '列B', '列C'],
-    ['1', '2', '3'],
-    ['4', '5', '6'],
-  ]
-  const { nr, nc } = sheetNrNc(sheetData)
-  return {
-    i: nanoid(8),
-    x: 1,
-    y: 1,
-    w: 12,
-    h: 8,
-    static: false,
-    super: false,
-    atomType: 'tables',
-    atomBorder: defaultBorder(),
-    atomAnimation: defaultAnimation(),
-    atomContent: {
-      atomName: 'simple-table',
-      detail: {
-        sheetData,
-        nr,
-        nc,
-        pagination: { pageSize: 5, show: false },
-      },
-    },
-  }
-}
-
-export function createImageAtom(src: string): Atom {
-  return {
-    i: nanoid(8),
-    x: 1,
-    y: 1,
-    w: 8,
-    h: 8,
-    static: false,
-    super: false,
-    atomType: 'images',
-    atomBorder: defaultBorder(),
-    atomAnimation: defaultAnimation(),
-    atomContent: {
-      atomName: 'single-image',
-      detail: { src },
-    },
-  }
-}
 
 export function selectActiveSlide(state: DeckState): Slide | undefined {
   return state.deck.slides.find((s) => s.i === state.activeSlideId)

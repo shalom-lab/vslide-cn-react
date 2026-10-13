@@ -1,10 +1,6 @@
 import ReactECharts from 'echarts-for-react'
 import type { AtomContent, EchartTitle } from '../../types/deck'
-import {
-  sheetToBarOption,
-  sheetToLineOption,
-  sheetToPieOption,
-} from '../../utils/charts'
+import { buildChartOption } from '../../utils/charts'
 
 function titleText(title: unknown): string | undefined {
   if (!title) return undefined
@@ -16,26 +12,11 @@ function titleText(title: unknown): string | undefined {
   return undefined
 }
 
+/** Shared chart renderer for edit + play (no dual option logic). */
 export function ChartAtom({ atomContent }: { atomContent: AtomContent }) {
   const sheet = (atomContent.detail.sheetData as (string | number)[][]) || []
   const title = titleText(atomContent.detail.title)
-  let option
-  switch (atomContent.atomName) {
-    case 'simple-bar':
-    case 'multi-bar':
-    case 'stack-bar':
-    case 'hor-bar':
-      option = sheetToBarOption(sheet, title)
-      break
-    case 'simple-pie':
-      option = sheetToPieOption(sheet, title)
-      break
-    case 'simple-line':
-    case 'line-zoom':
-    default:
-      option = sheetToLineOption(sheet, title)
-      break
-  }
+  const option = buildChartOption(String(atomContent.atomName), sheet, title)
   return (
     <div style={{ width: '100%', height: '100%' }}>
       <ReactECharts
