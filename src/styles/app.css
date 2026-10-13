@@ -364,24 +364,27 @@ select {
   padding: 0 3px;
   border-radius: 2px;
 }
-.thumb-inner {
+/* Vue Left.vue: viewport clips; inner is 400% + scale(0.25) */
+.thumb-viewport {
   width: 100%;
   height: 100%;
-  pointer-events: none;
   overflow: hidden;
+  pointer-events: none;
+  position: relative;
+}
+.thumb-scale {
+  width: 400%;
+  height: 400%;
+  transform: scale(0.25);
+  transform-origin: 0 0;
+  pointer-events: none;
 }
 .thumb-grid {
   height: 100% !important;
+  width: 100%;
 }
 .thumb-item {
   overflow: hidden;
-  font-size: 4px !important;
-}
-.thumb-item .atom-text-title,
-.thumb-item .atom-text-md {
-  font-size: 6px !important;
-  padding: 0 !important;
-  line-height: 1.1 !important;
 }
 
 /* Edit.vue .right */

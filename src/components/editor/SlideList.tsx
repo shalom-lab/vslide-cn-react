@@ -1,16 +1,21 @@
 import { useCallback, useState } from 'react'
 import { Copy, Plus, Trash2 } from 'lucide-react'
+import GridLayout, { WidthProvider } from 'react-grid-layout'
 import { useDeckStore } from '../../store/useDeckStore'
 import { cssBackground } from '../../utils/background'
 import { AtomRenderer } from '../atoms/AtomRenderer'
 import { ContextMenu, type ContextMenuItem } from './ContextMenu'
 import { atomStackStyle } from '../../utils/layerOrder'
-import GridLayout, { WidthProvider } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
 const AutoGrid = WidthProvider(GridLayout)
 const CTX = { size: 14, strokeWidth: 1.75 }
+
+/** Match Vue Left.vue + VSlide: render at height 540, then scale(0.25). */
+const THUMB_FULL_HEIGHT = 540
+const THUMB_ROW_HEIGHT = Math.floor(THUMB_FULL_HEIGHT / 18)
+const THUMB_MARGIN: [number, number] = [5, 5]
 
 function Thumb({
   slideContent,
@@ -30,29 +35,33 @@ function Thumb({
     static: true,
   }))
   return (
-    <div className="thumb-inner" style={{ background }}>
-      <AutoGrid
-        className="thumb-grid"
-        layout={layout}
-        cols={18}
-        rowHeight={8}
-        margin={[2, 2]}
-        isDraggable={false}
-        isResizable={false}
-        compactType={null}
-        preventCollision={false}
-        useCSSTransforms
-      >
-        {slideContent.map((atom, index) => (
-          <div
-            key={atom.i}
-            className="thumb-item"
-            style={atomStackStyle(atom, index)}
-          >
-            <AtomRenderer atom={atom} />
-          </div>
-        ))}
-      </AutoGrid>
+    <div className="thumb-viewport">
+      <div className="thumb-scale" style={{ background }}>
+        <AutoGrid
+          className="thumb-grid"
+          layout={layout}
+          cols={18}
+          rowHeight={THUMB_ROW_HEIGHT}
+          margin={THUMB_MARGIN}
+          containerPadding={[0, 0]}
+          isDraggable={false}
+          isResizable={false}
+          compactType={null}
+          preventCollision={false}
+          useCSSTransforms={false}
+          style={{ height: '100%' }}
+        >
+          {slideContent.map((atom, index) => (
+            <div
+              key={atom.i}
+              className="thumb-item"
+              style={atomStackStyle(atom, index)}
+            >
+              <AtomRenderer atom={atom} />
+            </div>
+          ))}
+        </AutoGrid>
+      </div>
     </div>
   )
 }
