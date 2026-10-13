@@ -250,6 +250,68 @@ export function createImageAtom(
   )
 }
 
+/** Vue image-group — gallery of images in one atom (src: string[]). */
+export function createImageGroupAtom(
+  srcs: string[],
+  layout?: AtomLayoutOverride,
+): Atom {
+  return applyLayout(
+    baseAtom({
+      i: nanoid(8),
+      x: 3,
+      y: 3,
+      w: 27,
+      h: 21,
+      atomType: 'images',
+      atomContent: {
+        atomName: 'image-group',
+        detail: {
+          src: srcs.filter(Boolean),
+          height: 100,
+          gap: 5,
+        },
+      },
+    }),
+    layout,
+  )
+}
+
+/**
+ * Split a place-first rect into a grid of cell layouts for N images.
+ * Used when multi-file pick inserts multiple single-image atoms.
+ */
+export function tileLayoutsInRect(
+  layout: AtomLayoutOverride & { x: number; y: number; w: number; h: number },
+  count: number,
+): Array<{ x: number; y: number; w: number; h: number }> {
+  const n = Math.max(1, count)
+  const cols = Math.max(1, Math.ceil(Math.sqrt(n)))
+  const rows = Math.max(1, Math.ceil(n / cols))
+  const cellW = Math.max(1, Math.floor(layout.w / cols))
+  const cellH = Math.max(1, Math.floor(layout.h / rows))
+  const out: Array<{ x: number; y: number; w: number; h: number }> = []
+  for (let i = 0; i < n; i++) {
+    const col = i % cols
+    const row = Math.floor(i / cols)
+    // Last column / row absorbs remainder so we fill the dragged rect
+    const w =
+      col === cols - 1
+        ? Math.max(1, layout.w - cellW * (cols - 1))
+        : cellW
+    const h =
+      row === rows - 1
+        ? Math.max(1, layout.h - cellH * (rows - 1))
+        : cellH
+    out.push({
+      x: layout.x + col * cellW,
+      y: layout.y + row * cellH,
+      w,
+      h,
+    })
+  }
+  return out
+}
+
 
 export function createCustomHtmlAtom(
   html?: string,
@@ -358,6 +420,14 @@ export const ATOM_REGISTRY: Record<string, AtomRegistryEntry> = {
     category: 'image',
     label: '图片',
     create: (layout) => createImageAtom('', layout),
+  },
+  'image-group': {
+    atomName: 'image-group',
+    atomType: 'images',
+    category: 'image',
+    label: '图片组',
+    hint: '多图画廊（Vue image-group）',
+    create: (layout) => createImageGroupAtom([], layout),
   },
   'simple-line': {
     atomName: 'simple-line',

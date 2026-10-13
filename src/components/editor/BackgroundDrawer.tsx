@@ -251,7 +251,7 @@ export function BackgroundDrawer({ open, onClose }: Props) {
           {tab === 'presets' && (
             <>
               <p className="drawer-hint">
-                纯色 / 柔和渐变为主 · 少量图片衬底 · 点击即应用（可撤销）
+                纹理 / 点阵 / 网格 / 噪点 / 柔和渐变 · CSS 填充 · 点击即应用（可撤销）
               </p>
               <div className="bg-preset-grid">
                 {BUILTIN_PRESETS.map((p) => (
@@ -278,7 +278,7 @@ export function BackgroundDrawer({ open, onClose }: Props) {
                     rows={6}
                     value={cssDraft}
                     onChange={(e) => setCssDraft(e.target.value)}
-                    placeholder="linear-gradient(...) , #f7f4ef , url(...) center / cover"
+                    placeholder="radial-gradient(...) 0 0 / 16px 16px, #f7f4ef"
                     spellCheck={false}
                   />
                 </label>

@@ -1,11 +1,6 @@
 import { useEffect } from 'react'
 import { Code2, Heading1, Type, X } from 'lucide-react'
-import {
-  createCustomHtmlAtom,
-  createTextAtom,
-  createTextShadowAtom,
-  useDeckStore,
-} from '../../store/useDeckStore'
+import { useDeckStore } from '../../store/useDeckStore'
 
 interface Props {
   open: boolean
@@ -13,14 +8,11 @@ interface Props {
 }
 
 /**
- * Right-side insert drawer after place-first drag for「文字」/「HTML」:
- * 正文 (text-md) / 标题 (text-shadow) / HTML (custom-html) at pending layout.
- * Matches ChartInsertDrawer UX (right panel, Esc cancel).
+ * Right-side text/HTML picker. Pick a type, then drag on canvas to place.
+ * 正文 (text-md) / 标题 (text-shadow) / HTML (custom-html).
  */
 export function TextInsertDrawer({ open, onClose }: Props) {
-  const addAtom = useDeckStore((s) => s.addAtom)
-  const pendingLayout = useDeckStore((s) => s.pendingLayout)
-  const placeMode = useDeckStore((s) => s.placeMode)
+  const armPendingInsert = useDeckStore((s) => s.armPendingInsert)
 
   useEffect(() => {
     if (!open) return
@@ -36,31 +28,30 @@ export function TextInsertDrawer({ open, onClose }: Props) {
 
   if (!open) return null
 
-  const layout = pendingLayout ?? undefined
-  const title =
-    placeMode === 'html' ? '插入 HTML' : '插入文字 / HTML'
+  const pick = (atomName: 'text-md' | 'text-shadow' | 'custom-html') => {
+    armPendingInsert({ kind: 'text', atomName })
+    onClose()
+  }
 
   return (
-    <div className="drawer-root" role="dialog" aria-label={title}>
+    <div className="drawer-root" role="dialog" aria-label="插入文字 / HTML">
       <button type="button" className="drawer-mask" aria-label="关闭" onClick={onClose} />
       <aside className="drawer-panel text-insert-drawer">
         <header className="drawer-header">
-          <h3>{title}</h3>
+          <h3>插入文字 / HTML</h3>
           <button type="button" className="drawer-close" onClick={onClose} aria-label="关闭">
             <X size={18} strokeWidth={1.75} />
           </button>
         </header>
         <div className="drawer-body">
           <p className="drawer-hint">
-            {pendingLayout
-              ? `将插入到已框选位置（${pendingLayout.w}×${pendingLayout.h}）· Esc 取消`
-              : '点击选项插入到默认位置 · Esc 关闭'}
+            先选择类型，再到画布拖框放置 · Esc 关闭
           </p>
           <div className="text-insert-options">
             <button
               type="button"
               className="text-insert-option"
-              onClick={() => addAtom(createTextAtom(undefined, layout))}
+              onClick={() => pick('text-md')}
               title="Markdown 正文（支持公式）"
             >
               <span className="text-insert-option-icon">
@@ -74,7 +65,7 @@ export function TextInsertDrawer({ open, onClose }: Props) {
             <button
               type="button"
               className="text-insert-option"
-              onClick={() => addAtom(createTextShadowAtom(undefined, layout))}
+              onClick={() => pick('text-shadow')}
               title="大字阴影标题"
             >
               <span className="text-insert-option-icon">
@@ -88,7 +79,7 @@ export function TextInsertDrawer({ open, onClose }: Props) {
             <button
               type="button"
               className="text-insert-option"
-              onClick={() => addAtom(createCustomHtmlAtom(undefined, layout))}
+              onClick={() => pick('custom-html')}
               title="安全自定义 HTML（不执行 JS）"
             >
               <span className="text-insert-option-icon">

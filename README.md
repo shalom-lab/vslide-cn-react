@@ -16,7 +16,7 @@ React + TypeScript rewrite of the interactive slide editor, faithful to the comp
 - **文字 / HTML** place-first：拖框后在**右侧抽屉**选 **正文** (`text-md`) / **标题** (`text-shadow`) / **HTML** (`custom-html`)，与图表一致；Esc 取消
 - Undo / redo (`Ctrl+Z` / `Ctrl+Y`) for deck mutations
 - Compact Chinese chrome; sample deck (~6 slides)
-- **背景模板库**（顶部「背景」）：柔和图片衬底 + 干净纯色预设 / 自定义 CSS·图片 / 我的背景（localStorage）
+- **背景模板库**（顶部「背景」）：纹理 / 点阵 / 网格 / 噪点 / 柔和渐变（CSS 填充）/ 自定义 CSS / 我的背景（localStorage）
 - Play: `←` `→` / Space / Esc→edit
 - **相对 rem 排版**：画布 / 播放 / 缩略图舞台根字号 = 高度÷36，Markdown·标题·HTML·表格用 rem/em 随舞台缩放
 - **表格样式**（`simple-table`）：表头开关、对齐、加粗、边框色/宽、表头背景、斑马纹；JSON 仍可改数据

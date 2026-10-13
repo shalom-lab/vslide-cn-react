@@ -149,6 +149,18 @@ export const EDITOR_OPTIONS: Record<string, EditorOption> = {
     labels: { src: '图片地址' },
     special: { src: { type: 'image' } },
   },
+  'image-group': {
+    labels: {
+      src: '图片列表',
+      height: '图片高度',
+      gap: '间距',
+    },
+    special: {
+      src: { type: 'image', tip: '多图：属性里可粘贴 JSON 数组，或重新多选插入' },
+      height: { type: 'number' },
+      gap: { type: 'number' },
+    },
+  },
   // Shared echart detail keys — used as fallback for all chart atomNames
   echart: {
     labels: {

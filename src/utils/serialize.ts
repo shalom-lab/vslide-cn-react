@@ -209,6 +209,15 @@ function normalizeAtom(raw: unknown, index: number): Atom {
     delete detail.fit // React-only; Vue has src only
     if (typeof detail.src !== 'string') detail.src = ''
   }
+  if (atomType === 'images' && atomName === 'image-group') {
+    if (!Array.isArray(detail.src)) {
+      detail.src = typeof detail.src === 'string' && detail.src ? [detail.src] : []
+    } else {
+      detail.src = detail.src.map((s: unknown) => String(s || '')).filter(Boolean)
+    }
+    if (typeof detail.height !== 'number') detail.height = 100
+    if (typeof detail.gap !== 'number') detail.gap = 5
+  }
 
   const border = { ...defaultBorder(), ...asRecord(a.atomBorder) }
   const anim = { ...defaultAnimation(), ...asRecord(a.atomAnimation) }

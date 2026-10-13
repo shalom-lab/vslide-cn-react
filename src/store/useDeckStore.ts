@@ -22,7 +22,16 @@ import {
 import type { GridLayoutRect } from '../utils/grid'
 import { setByPath } from '../utils/pathSet'
 
-import { createTableAtom } from '../atoms/registry'
+import {
+  ATOM_REGISTRY,
+  createCustomHtmlAtom,
+  createImageAtom,
+  createImageGroupAtom,
+  createTableAtom,
+  createTextAtom,
+  createTextShadowAtom,
+  tileLayoutsInRect,
+} from '../atoms/registry'
 import { SLIDE_TEMPLATES } from '../data/slideTemplates'
 
 export {
@@ -32,6 +41,8 @@ export {
   createChartAtom,
   createTableAtom,
   createImageAtom,
+  createImageGroupAtom,
+  tileLayoutsInRect,
   type ChartKind,
 } from '../atoms/registry'
 
@@ -39,6 +50,14 @@ const LOCAL_ATOMS_KEY = 'vslide-cn-react:localAtoms'
 const HISTORY_LIMIT = 50
 
 export type PlaceMode = 'chart' | 'text' | 'html' | 'table' | 'image' | 'icon' | null
+
+/** Chosen atom ready to drop on the canvas (type-first insert). */
+export type PendingInsert =
+  | { kind: 'chart'; atomName: string }
+  | { kind: 'text'; atomName: 'text-md' | 'text-shadow' | 'custom-html' }
+  | { kind: 'table' }
+  | { kind: 'image'; srcs: string[] }
+  | { kind: 'icon'; src: string }
 
 interface DeckState {
   deck: DeckFile
@@ -49,8 +68,12 @@ interface DeckState {
   toast: string | null
   past: DeckFile[]
   future: DeckFile[]
-  /** Google Slides–like place-first insert (charts, text/html, table, image). */
+  /**
+   * Type-first insert: pick type (toolbar/drawer) → drag area to place.
+   * placeMode is armed only after pendingInsert is set.
+   */
   placeMode: PlaceMode
+  pendingInsert: PendingInsert | null
   pendingLayout: GridLayoutRect | null
   chartDrawerOpen: boolean
   textDrawerOpen: boolean
@@ -58,12 +81,20 @@ interface DeckState {
   setActiveAtom: (id: string | null) => void
   setEditorFocus: (focus: EditorFocus) => void
   clearToast: () => void
+  /** Open chart drawer to pick a chart type. */
   startChartPlace: () => void
+  /** Open text drawer to pick 正文/标题/HTML. */
   startTextPlace: () => void
+  /** Open text drawer (HTML-focused entry). */
   startHtmlPlace: () => void
+  /** Arm table and enter canvas place mode. */
   startTablePlace: () => void
+  /** Prepare image tool (TopBar opens file picker, then arms). */
   startImagePlace: () => void
+  /** Open icon drawer to pick an icon. */
   startIconPlace: () => void
+  /** After drawer/file pick — arm type and wait for canvas drag. */
+  armPendingInsert: (pending: PendingInsert) => void
   finishPlaceRect: (layout: GridLayoutRect) => void
   /** Insert a slide layout template after the active slide */
   insertTemplateSlide: (templateId: string) => void
@@ -87,6 +118,8 @@ interface DeckState {
   /** Persist left-list drag order (Vue grid-layout y). */
   reorderSlides: (order: { i: string; y: number }[]) => void
   addAtom: (atom: Atom) => void
+  /** Insert several atoms in one undo step (multi-image). */
+  addAtoms: (atoms: Atom[]) => void
   duplicateActiveAtom: () => void
   removeActiveAtom: () => void
   toggleFixedActiveAtom: () => void
@@ -168,6 +201,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
   past: [],
   future: [],
   placeMode: null,
+  pendingInsert: null,
   pendingLayout: null,
   chartDrawerOpen: false,
   textDrawerOpen: false,
@@ -175,9 +209,10 @@ export const useDeckStore = create<DeckState>((set, get) => ({
 
   startChartPlace: () =>
     set({
-      placeMode: 'chart',
+      placeMode: null,
+      pendingInsert: null,
       pendingLayout: null,
-      chartDrawerOpen: false,
+      chartDrawerOpen: true,
       textDrawerOpen: false,
       iconDrawerOpen: false,
       activeAtomId: null,
@@ -186,10 +221,11 @@ export const useDeckStore = create<DeckState>((set, get) => ({
 
   startTextPlace: () =>
     set({
-      placeMode: 'text',
+      placeMode: null,
+      pendingInsert: null,
       pendingLayout: null,
       chartDrawerOpen: false,
-      textDrawerOpen: false,
+      textDrawerOpen: true,
       iconDrawerOpen: false,
       activeAtomId: null,
       editorFocus: null,
@@ -197,10 +233,11 @@ export const useDeckStore = create<DeckState>((set, get) => ({
 
   startHtmlPlace: () =>
     set({
-      placeMode: 'html',
+      placeMode: null,
+      pendingInsert: null,
       pendingLayout: null,
       chartDrawerOpen: false,
-      textDrawerOpen: false,
+      textDrawerOpen: true,
       iconDrawerOpen: false,
       activeAtomId: null,
       editorFocus: null,
@@ -209,6 +246,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
   startTablePlace: () =>
     set({
       placeMode: 'table',
+      pendingInsert: { kind: 'table' },
       pendingLayout: null,
       chartDrawerOpen: false,
       textDrawerOpen: false,
@@ -219,7 +257,8 @@ export const useDeckStore = create<DeckState>((set, get) => ({
 
   startImagePlace: () =>
     set({
-      placeMode: 'image',
+      placeMode: null,
+      pendingInsert: null,
       pendingLayout: null,
       chartDrawerOpen: false,
       textDrawerOpen: false,
@@ -230,61 +269,97 @@ export const useDeckStore = create<DeckState>((set, get) => ({
 
   startIconPlace: () =>
     set({
-      placeMode: 'icon',
+      placeMode: null,
+      pendingInsert: null,
+      pendingLayout: null,
+      chartDrawerOpen: false,
+      textDrawerOpen: false,
+      iconDrawerOpen: true,
+      activeAtomId: null,
+      editorFocus: null,
+    }),
+
+  armPendingInsert: (pending) => {
+    const placeMode: PlaceMode =
+      pending.kind === 'chart'
+        ? 'chart'
+        : pending.kind === 'text'
+          ? pending.atomName === 'custom-html'
+            ? 'html'
+            : 'text'
+          : pending.kind === 'table'
+            ? 'table'
+            : pending.kind === 'image'
+              ? 'image'
+              : 'icon'
+    set({
+      pendingInsert: pending,
+      placeMode,
       pendingLayout: null,
       chartDrawerOpen: false,
       textDrawerOpen: false,
       iconDrawerOpen: false,
       activeAtomId: null,
       editorFocus: null,
-    }),
+    })
+  },
 
   finishPlaceRect: (layout) => {
-    const mode = get().placeMode
-    if (mode === 'text' || mode === 'html') {
-      set({
-        pendingLayout: layout,
-        textDrawerOpen: true,
-        chartDrawerOpen: false,
-        // stay in placeMode so Esc still cancels until insert
-      })
+    const pending = get().pendingInsert
+    if (!pending) {
+      set({ pendingLayout: null })
       return
     }
-    if (mode === 'table') {
-      // Single table type — insert into the dragged rect (place-first confirm)
+    if (pending.kind === 'chart') {
+      const entry = ATOM_REGISTRY[pending.atomName]
+      if (entry) get().addAtom(entry.create(layout))
+      else get().cancelPlaceMode()
+      return
+    }
+    if (pending.kind === 'text') {
+      if (pending.atomName === 'text-shadow') {
+        get().addAtom(createTextShadowAtom(undefined, layout))
+      } else if (pending.atomName === 'custom-html') {
+        get().addAtom(createCustomHtmlAtom(undefined, layout))
+      } else {
+        get().addAtom(createTextAtom(undefined, layout))
+      }
+      return
+    }
+    if (pending.kind === 'table') {
       get().addAtom(createTableAtom(layout))
       return
     }
-    if (mode === 'image') {
-      // Keep placeMode + pendingLayout; TopBar opens the file picker next
-      set({
-        pendingLayout: layout,
-        chartDrawerOpen: false,
-        textDrawerOpen: false,
-        iconDrawerOpen: false,
-      })
+    if (pending.kind === 'icon') {
+      get().addAtom(createImageAtom(pending.src, layout))
       return
     }
-    if (mode === 'icon') {
-      set({
-        pendingLayout: layout,
-        chartDrawerOpen: false,
-        textDrawerOpen: false,
-        iconDrawerOpen: true,
-      })
-      return
+    if (pending.kind === 'image') {
+      const srcs = pending.srcs
+      if (srcs.length === 0) {
+        get().cancelPlaceMode()
+        return
+      }
+      if (srcs.length === 1) {
+        get().addAtom(createImageAtom(srcs[0], layout))
+        return
+      }
+      if (layout.w >= 4 && layout.h >= 4 && srcs.length <= 12) {
+        const cells = tileLayoutsInRect(
+          { x: layout.x, y: layout.y, w: layout.w, h: layout.h },
+          srcs.length,
+        )
+        get().addAtoms(srcs.map((src, i) => createImageAtom(src, cells[i])))
+        return
+      }
+      get().addAtom(createImageGroupAtom(srcs, layout))
     }
-    // chart (default)
-    set({
-      pendingLayout: layout,
-      chartDrawerOpen: true,
-      textDrawerOpen: false,
-    })
   },
 
   cancelPlaceMode: () =>
     set({
       placeMode: null,
+      pendingInsert: null,
       pendingLayout: null,
       chartDrawerOpen: false,
       textDrawerOpen: false,
@@ -298,6 +373,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
         : {
             chartDrawerOpen: false,
             placeMode: null,
+            pendingInsert: null,
             pendingLayout: null,
             textDrawerOpen: false,
             iconDrawerOpen: false,
@@ -311,6 +387,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
         : {
             textDrawerOpen: false,
             placeMode: null,
+            pendingInsert: null,
             pendingLayout: null,
           },
     ),
@@ -322,6 +399,7 @@ export const useDeckStore = create<DeckState>((set, get) => ({
         : {
             iconDrawerOpen: false,
             placeMode: null,
+            pendingInsert: null,
             pendingLayout: null,
           },
     ),
@@ -625,6 +703,11 @@ export const useDeckStore = create<DeckState>((set, get) => ({
 
 
   addAtom: (atom) => {
+    get().addAtoms([atom])
+  },
+
+  addAtoms: (atoms) => {
+    if (!atoms.length) return
     const { deck, activeSlideId } = get()
     set((s) => ({
       ...pushHistory(s),
@@ -634,13 +717,14 @@ export const useDeckStore = create<DeckState>((set, get) => ({
           sl.i === activeSlideId
             ? {
                 ...sl,
-                slideContent: withZIndex([...sl.slideContent, atom]),
+                slideContent: withZIndex([...sl.slideContent, ...atoms]),
               }
             : sl,
         ),
       }),
-      activeAtomId: atom.i,
+      activeAtomId: atoms[atoms.length - 1]?.i ?? null,
       placeMode: null,
+      pendingInsert: null,
       pendingLayout: null,
       chartDrawerOpen: false,
       textDrawerOpen: false,

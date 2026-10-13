@@ -25,7 +25,7 @@ import {
   Zap,
   type LucideIcon,
 } from 'lucide-react'
-import { createImageAtom, useDeckStore } from '../../store/useDeckStore'
+import { useDeckStore } from '../../store/useDeckStore'
 
 interface Props {
   open: boolean
@@ -63,12 +63,10 @@ function buildIconSrc(entry: (typeof ICON_CATALOG)[number]): string {
 }
 
 /**
- * Icon library drawer (React counterpart to Vue iconfont gallery).
- * Place-first: drag rect → pick lucide icon → inserts as single-image SVG atom.
+ * Icon library drawer. Pick an icon, then drag on canvas to place (SVG image atom).
  */
 export function IconInsertDrawer({ open, onClose }: Props) {
-  const addAtom = useDeckStore((s) => s.addAtom)
-  const pendingLayout = useDeckStore((s) => s.pendingLayout)
+  const armPendingInsert = useDeckStore((s) => s.armPendingInsert)
   const [q, setQ] = useState('')
 
   useEffect(() => {
@@ -105,9 +103,7 @@ export function IconInsertDrawer({ open, onClose }: Props) {
         </header>
         <div className="drawer-body">
           <p className="drawer-hint">
-            {pendingLayout
-              ? `将插入到已框选位置（${pendingLayout.w}×${pendingLayout.h}）· Esc 取消`
-              : '点击图标插入 · Esc 关闭'}
+            先选择图标，再到画布拖框放置 · Esc 关闭
           </p>
           <input
             className="icon-search"
@@ -125,12 +121,10 @@ export function IconInsertDrawer({ open, onClose }: Props) {
                   className="icon-card"
                   title={entry.label}
                   onClick={() => {
-                    addAtom(
-                      createImageAtom(
-                        buildIconSrc(entry),
-                        pendingLayout ?? undefined,
-                      ),
-                    )
+                    armPendingInsert({
+                      kind: 'icon',
+                      src: buildIconSrc(entry),
+                    })
                     onClose()
                   }}
                 >

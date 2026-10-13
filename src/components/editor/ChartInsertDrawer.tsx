@@ -23,10 +23,9 @@ const previewAtoms: Record<string, Atom> = Object.fromEntries(
   }),
 )
 
-/** Right-side chart insert drawer. Inserts at pending place-first layout when set. */
+/** Right-side chart picker. Pick a type, then drag on canvas to place. */
 export function ChartInsertDrawer({ open, onClose }: Props) {
-  const addAtom = useDeckStore((s) => s.addAtom)
-  const pendingLayout = useDeckStore((s) => s.pendingLayout)
+  const armPendingInsert = useDeckStore((s) => s.armPendingInsert)
   const [tab, setTab] = useState<(typeof CHART_GROUPS)[number]['id']>('bar')
 
   useEffect(() => {
@@ -48,9 +47,9 @@ export function ChartInsertDrawer({ open, onClose }: Props) {
 
   if (!open) return null
 
-  const insert = (entry: AtomRegistryEntry) => {
-    addAtom(entry.create(pendingLayout ?? undefined))
-    // addAtom clears place mode + drawer
+  const pick = (entry: AtomRegistryEntry) => {
+    armPendingInsert({ kind: 'chart', atomName: entry.atomName })
+    onClose()
   }
 
   return (
@@ -77,16 +76,14 @@ export function ChartInsertDrawer({ open, onClose }: Props) {
         </div>
         <div className="drawer-body">
           <p className="drawer-hint">
-            {pendingLayout
-              ? `将插入到已框选位置（${pendingLayout.w}×${pendingLayout.h}）· Esc 取消`
-              : '点击预览插入到默认位置 · Esc 关闭'}
+            先选择图表类型，再到画布拖框放置 · Esc 关闭
           </p>
           {list.map((entry) => (
             <button
               key={entry.atomName}
               type="button"
               className="chart-preview-card"
-              onClick={() => insert(entry)}
+              onClick={() => pick(entry)}
               title={entry.hint || entry.label}
             >
               <div className="chart-preview-stage">

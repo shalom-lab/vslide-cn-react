@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   BarChart3,
@@ -16,10 +16,7 @@ import {
   Type,
   Undo2,
 } from 'lucide-react'
-import {
-  createImageAtom,
-  useDeckStore,
-} from '../../store/useDeckStore'
+import { useDeckStore } from '../../store/useDeckStore'
 import { ChartInsertDrawer } from './ChartInsertDrawer'
 import { TextInsertDrawer } from './TextInsertDrawer'
 import { BackgroundDrawer } from './BackgroundDrawer'
@@ -31,7 +28,6 @@ const I = { size: 20, strokeWidth: 1.75 }
 
 export function TopBar() {
   const addSlide = useDeckStore((s) => s.addSlide)
-  const addAtom = useDeckStore((s) => s.addAtom)
   const setActiveAtom = useDeckStore((s) => s.setActiveAtom)
   const setEditorFocus = useDeckStore((s) => s.setEditorFocus)
   const undo = useDeckStore((s) => s.undo)
@@ -39,7 +35,6 @@ export function TopBar() {
   const pastLen = useDeckStore((s) => s.past.length)
   const futureLen = useDeckStore((s) => s.future.length)
   const placeMode = useDeckStore((s) => s.placeMode)
-  const pendingLayout = useDeckStore((s) => s.pendingLayout)
   const chartDrawerOpen = useDeckStore((s) => s.chartDrawerOpen)
   const textDrawerOpen = useDeckStore((s) => s.textDrawerOpen)
   const iconDrawerOpen = useDeckStore((s) => s.iconDrawerOpen)
@@ -49,6 +44,7 @@ export function TopBar() {
   const startTablePlace = useDeckStore((s) => s.startTablePlace)
   const startImagePlace = useDeckStore((s) => s.startImagePlace)
   const startIconPlace = useDeckStore((s) => s.startIconPlace)
+  const armPendingInsert = useDeckStore((s) => s.armPendingInsert)
   const cancelPlaceMode = useDeckStore((s) => s.cancelPlaceMode)
   const setChartDrawerOpen = useDeckStore((s) => s.setChartDrawerOpen)
   const setTextDrawerOpen = useDeckStore((s) => s.setTextDrawerOpen)
@@ -57,36 +53,44 @@ export function TopBar() {
   const [bgDrawerOpen, setBgDrawerOpen] = useState(false)
   const [tplDrawerOpen, setTplDrawerOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  /** True while waiting for native file dialog after clicking 图片. */
+  const [imagePicking, setImagePicking] = useState(false)
 
   const chartActive = placeMode === 'chart' || chartDrawerOpen
-  // placeMode stays set while the right drawer is open, so these cover both drag + chooser
-  const textActive = placeMode === 'text'
+  const textActive = placeMode === 'text' || textDrawerOpen
   const htmlActive = placeMode === 'html'
   const tableActive = placeMode === 'table'
-  const imageActive = placeMode === 'image'
+  const imageActive = placeMode === 'image' || imagePicking
   const iconActive = placeMode === 'icon' || iconDrawerOpen
 
-  // Place-first image: after drag-rect, open the file picker into pendingLayout
-  useEffect(() => {
-    if (placeMode !== 'image' || !pendingLayout) return
-    // Defer so the place-rect paints before the native dialog steals focus
-    const t = window.setTimeout(() => fileRef.current?.click(), 0)
-    return () => window.clearTimeout(t)
-  }, [placeMode, pendingLayout])
-
   const onImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    const layout = useDeckStore.getState().pendingLayout ?? undefined
+    const files = Array.from(e.target.files ?? []).filter((f) =>
+      f.type.startsWith('image/'),
+    )
     e.target.value = ''
-    if (!file) {
-      // Dialog dismissed without a file — stay in place mode until Esc / re-pick
+    setImagePicking(false)
+    if (files.length === 0) {
+      // Dialog dismissed — leave idle (type-first: no place mode without files)
       return
     }
-    const reader = new FileReader()
-    reader.onload = () => {
-      addAtom(createImageAtom(String(reader.result), layout))
-    }
-    reader.readAsDataURL(file)
+
+    const readAll = (list: File[]) =>
+      Promise.all(
+        list.map(
+          (file) =>
+            new Promise<string>((resolve, reject) => {
+              const reader = new FileReader()
+              reader.onload = () => resolve(String(reader.result))
+              reader.onerror = () => reject(reader.error)
+              reader.readAsDataURL(file)
+            }),
+        ),
+      )
+
+    void readAll(files).then((srcs) => {
+      // Arm image(s) then drag on canvas to place (single or multi)
+      armPendingInsert({ kind: 'image', srcs })
+    })
   }
 
   const onChartClick = () => {
@@ -98,7 +102,7 @@ export function TopBar() {
   }
 
   const onTextClick = () => {
-    if (textActive) {
+    if (textActive && !htmlActive) {
       cancelPlaceMode()
       return
     }
@@ -110,6 +114,7 @@ export function TopBar() {
       cancelPlaceMode()
       return
     }
+    // Same drawer as text — user picks HTML there
     startHtmlPlace()
   }
 
@@ -123,15 +128,14 @@ export function TopBar() {
 
   const onImageClick = () => {
     if (imageActive) {
-      // Rect already placed — re-open file picker; Esc / empty-click cancels
-      if (pendingLayout) {
-        fileRef.current?.click()
-        return
-      }
       cancelPlaceMode()
+      setImagePicking(false)
       return
     }
     startImagePlace()
+    setImagePicking(true)
+    // Defer so toolbar click settles before native dialog
+    window.setTimeout(() => fileRef.current?.click(), 0)
   }
 
   const onIconClick = () => {
@@ -197,7 +201,7 @@ export function TopBar() {
             type="button"
             className={'icon-btn' + (chartActive ? ' active' : '')}
             onClick={onChartClick}
-            title="在画布拖框后插入图表"
+            title="先选图表类型，再拖框放置"
           >
             <span className="icon">
               <BarChart3 {...I} />
@@ -208,7 +212,7 @@ export function TopBar() {
             type="button"
             className={'icon-btn' + (textActive ? ' active' : '')}
             onClick={onTextClick}
-            title="在画布拖框后于右侧选择正文或标题"
+            title="先选文字类型，再拖框放置"
           >
             <span className="icon">
               <Type {...I} />
@@ -219,7 +223,7 @@ export function TopBar() {
             type="button"
             className={'icon-btn' + (tableActive ? ' active' : '')}
             onClick={onTableClick}
-            title="在画布拖框后插入表格"
+            title="选择后在画布拖框放置表格"
           >
             <span className="icon">
               <Table2 {...I} />
@@ -230,7 +234,7 @@ export function TopBar() {
             type="button"
             className={'icon-btn' + (htmlActive ? ' active' : '')}
             onClick={onHtmlClick}
-            title="在画布拖框后于右侧插入安全 HTML"
+            title="先选 HTML，再拖框放置"
           >
             <span className="icon">
               <Code2 {...I} />
@@ -241,7 +245,7 @@ export function TopBar() {
             type="button"
             className={'icon-btn' + (imageActive ? ' active' : '')}
             onClick={onImageClick}
-            title="在画布拖框后选择图片"
+            title="先选图片（可多选），再拖框放置"
           >
             <span className="icon">
               <ImageIcon {...I} />
@@ -252,7 +256,7 @@ export function TopBar() {
             type="button"
             className={'icon-btn' + (iconActive ? ' active' : '')}
             onClick={onIconClick}
-            title="在画布拖框后选择图标"
+            title="先选图标，再拖框放置"
           >
             <span className="icon">
               <Shapes {...I} />
@@ -309,6 +313,7 @@ export function TopBar() {
             ref={fileRef}
             type="file"
             accept="image/*"
+            multiple
             hidden
             onChange={onImage}
           />
