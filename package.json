@@ -6,7 +6,7 @@
   "description": "微思文稿 — React + TypeScript rewrite of VSlide (blueprint: vslide-vue)",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && cp dist/index.html dist/404.html",
     "preview": "vite preview --host 0.0.0.0 --port 4173",
     "lint": "oxlint"
   },

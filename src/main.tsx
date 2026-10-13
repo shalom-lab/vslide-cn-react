@@ -3,9 +3,12 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 
+// Vite BASE_URL mirrors vite.config `base` (trailing slash). Strip for react-router.
+const basename = import.meta.env.BASE_URL.replace(/\/$/, '')
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={basename || undefined}>
       <App />
     </BrowserRouter>
   </StrictMode>,

@@ -25,6 +25,22 @@ npm run dev -- --host 0.0.0.0
 npm run build
 ```
 
+Local dev uses Vite `base: '/'`. CI sets `GITHUB_ACTIONS` so production builds use `base: '/vslide-cn-react/'` for the GitHub Pages project site.
+
+## GitHub Pages
+
+**Live URL:** https://shalom-lab.github.io/vslide-cn-react/
+
+CI/CD: every push to `main` runs [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml) (`npm ci` → `npm run build` → upload Pages artifact → deploy). SPA routes (`/edit`, `/play`) work on refresh via a `404.html` copy of `index.html` (GitHub Pages serves that for unknown paths).
+
+### One-time enable (if not already on)
+
+1. Open **Settings → Pages**
+2. Under **Build and deployment → Source**, choose **GitHub Actions**
+3. Re-run the **Deploy GitHub Pages** workflow if the first deploy waited on Pages being enabled (`Actions` → workflow → **Re-run**)
+
+Private repos need a plan that includes GitHub Pages (Pro / Team / Enterprise). Site visibility follows your Pages visibility setting.
+
 ## Blueprint notes
 
 See [docs/blueprint-notes.md](./docs/blueprint-notes.md).
