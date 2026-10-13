@@ -129,11 +129,35 @@ export function SlideList() {
   // Vue Left.vue: row-height ≈ width * 9/16 for 16:9 thumbs
   const rowHeight = Math.max(48, (gridWidth * 9) / 16)
 
+  // RGL/react-draggable often swallows click after a press; select on
+  // drag-start (mousedown) so a tap focuses the slide, and still reorder on stop.
+  const dragMovedRef = useRef(false)
+
+  const onDragStart = useCallback(
+    (_layout: Layout[], _oldItem: Layout, newItem: Layout) => {
+      dragMovedRef.current = false
+      if (newItem?.i) setActiveSlide(newItem.i)
+    },
+    [setActiveSlide],
+  )
+
+  const onDrag = useCallback(() => {
+    dragMovedRef.current = true
+  }, [])
+
   const onDragStop = useCallback(
     (next: Layout[]) => {
       reorderSlides(next.map((l) => ({ i: l.i, y: l.y })))
     },
     [reorderSlides],
+  )
+
+  const onSlideClick = useCallback(
+    (id: string) => {
+      // Backup if a true click event still fires (no drag movement).
+      if (!dragMovedRef.current) setActiveSlide(id)
+    },
+    [setActiveSlide],
   )
 
   const menuItems: ContextMenuItem[] = [
@@ -186,6 +210,8 @@ export function SlideList() {
           compactType="vertical"
           preventCollision={false}
           useCSSTransforms
+          onDragStart={onDragStart}
+          onDrag={onDrag}
           onDragStop={onDragStop}
         >
           {sorted.map((slide, index) => (
@@ -194,7 +220,7 @@ export function SlideList() {
               className={
                 'slide-thumb' + (slide.i === activeSlideId ? ' actived' : '')
               }
-              onClick={() => setActiveSlide(slide.i)}
+              onClick={() => onSlideClick(slide.i)}
               onContextMenu={(e) => {
                 e.preventDefault()
                 setActiveSlide(slide.i)
