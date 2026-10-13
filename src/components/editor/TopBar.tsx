@@ -10,6 +10,7 @@ import {
   Pencil,
   Plus,
   Redo2,
+  Settings,
   Shapes,
   Table2,
   Type,
@@ -24,6 +25,7 @@ import { TextInsertDrawer } from './TextInsertDrawer'
 import { BackgroundDrawer } from './BackgroundDrawer'
 import { TemplateDrawer } from './TemplateDrawer'
 import { IconInsertDrawer } from './IconInsertDrawer'
+import { SettingsDrawer } from './SettingsDrawer'
 
 const I = { size: 20, strokeWidth: 1.75 }
 
@@ -54,6 +56,7 @@ export function TopBar() {
   const fileRef = useRef<HTMLInputElement>(null)
   const [bgDrawerOpen, setBgDrawerOpen] = useState(false)
   const [tplDrawerOpen, setTplDrawerOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const chartActive = placeMode === 'chart' || chartDrawerOpen
   // placeMode stays set while the right drawer is open, so these cover both drag + chooser
@@ -287,6 +290,21 @@ export function TopBar() {
             </span>
             <span className="label">背景</span>
           </button>
+          <button
+            type="button"
+            className={'icon-btn' + (settingsOpen ? ' active' : '')}
+            onClick={() => {
+              setActiveAtom(null)
+              setEditorFocus(null)
+              setSettingsOpen(true)
+            }}
+            title="设置"
+          >
+            <span className="icon">
+              <Settings {...I} />
+            </span>
+            <span className="label">设置</span>
+          </button>
           <input
             ref={fileRef}
             type="file"
@@ -315,6 +333,10 @@ export function TopBar() {
       <IconInsertDrawer
         open={iconDrawerOpen}
         onClose={() => setIconDrawerOpen(false)}
+      />
+      <SettingsDrawer
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
       />
     </>
   )

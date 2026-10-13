@@ -1,6 +1,5 @@
 import type { EChartsOption } from 'echarts'
-
-const palette = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272']
+import { getActiveChartColors } from '../store/useSettingsStore'
 
 function titleOpt(title?: string) {
   return title
@@ -29,7 +28,7 @@ export function sheetToLineOption(
     areaStyle: { opacity: 0.15 },
   }))
   return {
-    color: palette,
+    color: getActiveChartColors(),
     title: titleOpt(title),
     tooltip: { trigger: 'axis' },
     legend: { top: 24 },
@@ -52,7 +51,7 @@ export function sheetToBarOption(
     data: sheetData.slice(1).map((r) => Number(r[si + 1]) || 0),
   }))
   return {
-    color: palette,
+    color: getActiveChartColors(),
     title: titleOpt(title),
     tooltip: { trigger: 'axis' },
     legend: { top: 24 },
@@ -78,7 +77,7 @@ export function sheetToStackBarOption(
     data: sheetData.slice(1).map((r) => Number(r[si + 1]) || 0),
   }))
   return {
-    color: palette,
+    color: getActiveChartColors(),
     title: titleOpt(title),
     tooltip: { trigger: 'axis' },
     legend: { top: 24 },
@@ -102,7 +101,7 @@ export function sheetToHorBarOption(
     data: sheetData.slice(1).map((r) => Number(r[si + 1]) || 0),
   }))
   return {
-    color: palette,
+    color: getActiveChartColors(),
     title: titleOpt(title),
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     legend: { top: 24 },
@@ -123,7 +122,7 @@ export function sheetToPieOption(
     value: Number(r[1]) || 0,
   }))
   return {
-    color: palette,
+    color: getActiveChartColors(),
     title: titleOpt(title),
     tooltip: { trigger: 'item' },
     legend: { top: 24 },
@@ -164,7 +163,7 @@ export function sheetToScatterOption(
     data,
   }))
   return {
-    color: palette,
+    color: getActiveChartColors(),
     title: titleOpt(title),
     tooltip: {
       trigger: 'item',
