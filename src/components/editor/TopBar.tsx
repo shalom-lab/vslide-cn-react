@@ -5,9 +5,7 @@ import {
   Code2,
   Image as ImageIcon,
   LayoutTemplate,
-  MonitorPlay,
   Palette,
-  Pencil,
   Plus,
   Redo2,
   Settings,
@@ -16,6 +14,7 @@ import {
   Type,
   Undo2,
 } from 'lucide-react'
+import { SketchPencil, SketchPlay } from '../icons/SketchIcons'
 import { useDeckStore } from '../../store/useDeckStore'
 import { ChartInsertDrawer } from './ChartInsertDrawer'
 import { TextInsertDrawer } from './TextInsertDrawer'
@@ -185,13 +184,13 @@ export function TopBar() {
         <div className="topbar-mode">
           <Link to="/play" className="icon-btn" title="放映">
             <span className="icon">
-              <MonitorPlay {...I} />
+              <SketchPlay size={I.size} strokeWidth={I.strokeWidth} />
             </span>
             <span className="label">放映</span>
           </Link>
           <Link to="/edit" className="icon-btn active" title="编辑">
             <span className="icon">
-              <Pencil {...I} />
+              <SketchPencil size={I.size} strokeWidth={I.strokeWidth} />
             </span>
             <span className="label">编辑</span>
           </Link>

@@ -690,32 +690,63 @@ body.pane-resizing * {
   height: 22px;
 }
 
-/* Play */
+/* Play — letterboxed 16:9 stage, warm presentation chrome */
 .play-page {
   width: 100%;
+  height: 100%;
   overflow: hidden;
   position: relative;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Warm letterbox matte behind the 16:9 stage */
+  background:
+    radial-gradient(ellipse at 50% 40%, #3a342e 0%, #2a2622 55%, #1c1916 100%);
+}
+.play-stage {
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow:
+    0 0 0 1px rgba(255, 236, 210, 0.06),
+    0 18px 48px rgba(0, 0, 0, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.35);
+  border-radius: 2px;
+  background-size: cover;
 }
 .play-grid {
+  width: 100% !important;
   height: 100% !important;
 }
 .play-item {
   overflow: hidden;
 }
+.play-item-inner {
+  width: 100%;
+  height: 100%;
+}
 .play-page-num {
   position: absolute;
-  bottom: 8px;
-  left: 12px;
-  color: silver;
+  bottom: 14px;
+  left: 16px;
+  color: #f3e6d4;
   font-size: 13px;
+  z-index: 4;
 }
 .play-hint {
   position: absolute;
-  bottom: 8px;
-  right: 12px;
-  color: rgba(0, 0, 0, 0.35);
+  bottom: 14px;
+  right: 16px;
+  color: rgba(243, 230, 212, 0.72);
   font-size: 12px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: min(520px, 70vw);
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 /* Table atom — cell border/align/header come from TableAtom inline styles */
@@ -1117,24 +1148,66 @@ body.pane-resizing * {
   font-family: ui-monospace, Menlo, monospace;
 }
 
-/* Play stage polish */
-.play-page {
-  background-size: cover;
-}
+/* Play stage polish — warm matte chrome */
 .play-page-num {
-  background: rgba(0, 0, 0, 0.28);
-  color: #fff;
-  padding: 2px 8px;
+  background: rgba(42, 34, 28, 0.72);
+  color: #f6ead8;
+  padding: 3px 10px;
   border-radius: 999px;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
   font-variant-numeric: tabular-nums;
+  border: 1px solid rgba(243, 230, 212, 0.14);
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
 }
 .play-hint {
-  background: rgba(255, 255, 255, 0.55);
-  padding: 2px 8px;
+  background: rgba(42, 34, 28, 0.62);
+  padding: 4px 12px;
   border-radius: 999px;
-  backdrop-filter: blur(4px);
-  color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  color: rgba(243, 230, 212, 0.82);
+  border: 1px solid rgba(243, 230, 212, 0.12);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+.play-hint-keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.play-hint-sep {
+  opacity: 0.45;
+  margin: 0 1px;
+}
+.play-hint-dot {
+  opacity: 0.4;
+  margin: 0 1px;
+}
+.play-hint-text {
+  white-space: nowrap;
+}
+.play-hint kbd {
+  font: inherit;
+  font-size: 11px;
+  padding: 0 5px;
+  border-radius: 4px;
+  border: 1px solid rgba(243, 230, 212, 0.28);
+  background: rgba(255, 248, 235, 0.08);
+  color: #f6ead8;
+  line-height: 1.4;
+}
+.play-sketch-icon {
+  display: inline-block;
+  vertical-align: -3px;
+  opacity: 0.9;
+  /* slight hand-drawn wobble feel */
+  filter: url(#play-sketch) drop-shadow(0 0.5px 0 rgba(0, 0, 0, 0.15));
+}
+.play-slide-wrap {
+  width: 100%;
+  height: 100%;
+}
+.play-brand {
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.45));
 }
 
 .atom-unknown {
@@ -1842,10 +1915,6 @@ body.pane-resizing * {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.85rem;
   line-height: 1.4;
-}
-.play-slide-wrap {
-  width: 100%;
-  height: 100%;
 }
 
 /* ── 「我的图表」 gallery cards ── */
