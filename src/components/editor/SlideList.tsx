@@ -227,13 +227,6 @@ export function SlideList() {
                 setMenu({ x: e.clientX, y: e.clientY, slideId: slide.i })
               }}
             >
-              {/* Corner decorations on hover/active (Vue-style selection chrome) */}
-              <span className="slide-corners" aria-hidden="true">
-                <span className="slide-corner tl" />
-                <span className="slide-corner tr" />
-                <span className="slide-corner bl" />
-                <span className="slide-corner br" />
-              </span>
               <span className="slide-num">{index + 1}</span>
               <Thumb
                 slideContent={slide.slideContent}

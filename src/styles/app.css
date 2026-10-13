@@ -434,8 +434,8 @@ body.pane-resizing * {
   overflow-y: auto;
   overflow-x: hidden;
   flex: 1;
-  /* Match Vue Left.vue margin 0 10px; pad so outside outline + corner markers are not clipped */
-  padding: 6px 12px 10px;
+  /* Match Vue Left.vue margin 0 10px; pad so outside outline is not clipped */
+  padding: 4px 10px 8px;
   margin: 0;
 }
 .slide-list-grid {
@@ -443,8 +443,6 @@ body.pane-resizing * {
 }
 .slide-list-grid .react-grid-item {
   transition: none;
-  /* Allow slide-thumb corner markers to paint outside the grid cell */
-  overflow: visible;
 }
 .slide-list-grid .react-grid-item.cssTransforms {
   transition-property: transform;
@@ -454,7 +452,7 @@ body.pane-resizing * {
   opacity: 0.92;
   cursor: grabbing;
 }
-/* Match Vue Left.vue .gridItem / .actived — outside outline + four corner markers */
+/* Match Vue Left.vue .gridItem / .actived — outside outline, crimson frame */
 .slide-thumb {
   display: block;
   width: 100%;
@@ -468,8 +466,7 @@ body.pane-resizing * {
   cursor: grab;
   position: relative;
   border-radius: 0;
-  /* visible so corner markers at -3px are not clipped; thumb-viewport clips content */
-  overflow: visible;
+  overflow: hidden;
   box-shadow: 1px 1px 1px #888888;
   box-sizing: border-box;
 }
@@ -482,34 +479,6 @@ body.pane-resizing * {
   padding: 0;
   outline: 2px solid rgb(230, 28, 78);
 }
-/* Four corner decorations — shown on hover and when selected */
-.slide-corners {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 4;
-  opacity: 0;
-}
-.slide-thumb:hover .slide-corners,
-.slide-thumb.actived .slide-corners {
-  opacity: 1;
-}
-.slide-corner {
-  position: absolute;
-  width: 7px;
-  height: 7px;
-  background: #fff;
-  border: 1.5px solid rgba(221, 83, 115, 0.95);
-  box-sizing: border-box;
-}
-.slide-thumb.actived .slide-corner {
-  border-color: rgb(230, 28, 78);
-  border-width: 2px;
-}
-.slide-corner.tl { top: -3px; left: -3px; }
-.slide-corner.tr { top: -3px; right: -3px; }
-.slide-corner.bl { bottom: -3px; left: -3px; }
-.slide-corner.br { bottom: -3px; right: -3px; }
 .slide-num {
   position: absolute;
   left: 3px;
