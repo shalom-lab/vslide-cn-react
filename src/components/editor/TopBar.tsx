@@ -15,6 +15,7 @@ import {
   Undo2,
 } from 'lucide-react'
 import { SketchPencil, SketchPlay } from '../icons/SketchIcons'
+import { requestAppFullscreen } from '../../utils/fullscreen'
 import { useDeckStore } from '../../store/useDeckStore'
 import { ChartInsertDrawer } from './ChartInsertDrawer'
 import { TextInsertDrawer } from './TextInsertDrawer'
@@ -182,7 +183,12 @@ export function TopBar() {
           </button>
         </div>
         <div className="topbar-mode">
-          <Link to="/play" className="icon-btn" title="放映">
+          <Link
+            to="/play"
+            className="icon-btn"
+            title="放映"
+            onClick={() => requestAppFullscreen()}
+          >
             <span className="icon">
               <SketchPlay size={I.size} strokeWidth={I.strokeWidth} />
             </span>

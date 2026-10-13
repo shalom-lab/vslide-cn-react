@@ -689,7 +689,7 @@ body.pane-resizing * {
   height: 22px;
 }
 
-/* Play — letterboxed 16:9 stage, warm presentation chrome */
+/* Play — cover-scale 16:9 stage fills viewport edges (minimal matte) */
 .play-page {
   width: 100%;
   height: 100%;
@@ -699,19 +699,16 @@ body.pane-resizing * {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Warm letterbox matte behind the 16:9 stage */
-  background:
-    radial-gradient(ellipse at 50% 40%, #3a342e 0%, #2a2622 55%, #1c1916 100%);
+  /* Near-black fallback only if cover math leaves a sub-pixel gap */
+  background: #0e0c0a;
 }
 .play-stage {
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
-  box-shadow:
-    0 0 0 1px rgba(255, 236, 210, 0.06),
-    0 18px 48px rgba(0, 0, 0, 0.45),
-    0 2px 8px rgba(0, 0, 0, 0.35);
-  border-radius: 2px;
+  /* Edge-to-edge: no floating card chrome */
+  box-shadow: none;
+  border-radius: 0;
   background-size: cover;
 }
 .play-grid {

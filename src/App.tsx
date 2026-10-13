@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Navigate, Route, Routes, Link } from 'react-router-dom'
+import { requestAppFullscreen } from './utils/fullscreen'
 import { EditorPage } from './components/editor/EditorPage'
 import { PlayPage } from './components/play/PlayPage'
 import { useDeckStore } from './store/useDeckStore'
@@ -63,7 +64,11 @@ function HomePage() {
                   <h3>{fileName}</h3>
                   <p>{n} 页示例文稿 · 点击进入编辑</p>
                 </Link>
-                <Link to="/play" className="home-card">
+                <Link
+                  to="/play"
+                  className="home-card"
+                  onClick={() => requestAppFullscreen()}
+                >
                   <h3>立即放映</h3>
                   <p>全屏播放当前示例</p>
                 </Link>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import GridLayout from 'react-grid-layout'
 import { useDeckStore } from '../../store/useDeckStore'
@@ -14,26 +14,28 @@ import {
 import { AtomRenderer } from '../atoms/AtomRenderer'
 import { atomStackStyle } from '../../utils/layerOrder'
 import { stageTypographyStyle } from '../../utils/typography'
+import {
+  exitAppFullscreen,
+  requestAppFullscreen,
+} from '../../utils/fullscreen'
 import { BrandLogo } from '../BrandLogo'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import 'animate.css'
 
-/** Play stage keeps 16:9 and letterboxes into the viewport (fit width×height). */
-function fitStage(vw: number, vh: number): { w: number; h: number; scale: number } {
-  const designH = Math.max(
-    320,
-    Math.min(vh, (vw * STAGE_ASPECT_H) / STAGE_ASPECT_W),
-  )
-  const designW = (designH * STAGE_ASPECT_W) / STAGE_ASPECT_H
-  // If viewport is taller/wider than 16:9, letterbox; stage is already max fit.
-  // scale stays 1 because we size the stage in CSS pixels to the fitted box.
-  const scale = Math.min(vw / designW, vh / designH)
-  return {
-    w: Math.floor(designW * scale),
-    h: Math.floor(designH * scale),
-    scale,
+/**
+ * Play stage keeps 16:9 and covers the viewport (fills edges).
+ * Prefer filling over letterbox matte; slight crop on non-16:9 is OK.
+ */
+function coverStage(vw: number, vh: number): { w: number; h: number } {
+  const aspect = STAGE_ASPECT_W / STAGE_ASPECT_H
+  let w = vw
+  let h = vw / aspect
+  if (h < vh) {
+    h = vh
+    w = vh * aspect
   }
+  return { w: Math.ceil(w), h: Math.ceil(h) }
 }
 
 function slideMaxStep(atoms: { atomAnimation?: { order?: number } }[], steps: number) {
@@ -103,6 +105,7 @@ function SketchEsc() {
 
 export function PlayPage() {
   const navigate = useNavigate()
+  const pageRef = useRef<HTMLDivElement>(null)
   const slides = useDeckStore((s) => s.deck.slides)
   const background = useDeckStore((s) => cssBackground(s.deck.background))
   const sorted = useMemo(
@@ -121,11 +124,24 @@ export function PlayPage() {
     const onResize = () =>
       setViewport({ w: window.innerWidth, h: window.innerHeight })
     window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
+    // Fullscreen change also alters usable viewport on some browsers.
+    document.addEventListener('fullscreenchange', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      document.removeEventListener('fullscreenchange', onResize)
+    }
+  }, [])
+
+  // Best-effort Fullscreen API on enter; exit when leaving play.
+  useEffect(() => {
+    requestAppFullscreen(pageRef.current ?? document.documentElement)
+    return () => {
+      exitAppFullscreen()
+    }
   }, [])
 
   const stage = useMemo(
-    () => fitStage(viewport.w, viewport.h),
+    () => coverStage(viewport.w, viewport.h),
     [viewport.w, viewport.h],
   )
 
@@ -133,6 +149,11 @@ export function PlayPage() {
   const maxStep = slide
     ? slideMaxStep(slide.slideContent, slide.slideAnimation.steps)
     : 1
+
+  const leavePlay = useCallback(() => {
+    exitAppFullscreen()
+    navigate('/edit')
+  }, [navigate])
 
   const goSlide = useCallback(
     (nextIndex: number) => {
@@ -164,7 +185,7 @@ export function PlayPage() {
         case 'Escape':
         case 'e':
         case 'E':
-          navigate('/edit')
+          leavePlay()
           break
         case 'ArrowRight':
         case 'ArrowDown':
@@ -194,11 +215,16 @@ export function PlayPage() {
           e.preventDefault()
           goSlide(sorted.length - 1)
           break
+        case 'f':
+        case 'F':
+          e.preventDefault()
+          requestAppFullscreen(pageRef.current ?? document.documentElement)
+          break
       }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [navigate, next, prev, goSlide, sorted.length])
+  }, [leavePlay, next, prev, goSlide, sorted.length])
 
   if (!slide) return null
 
@@ -224,11 +250,12 @@ export function PlayPage() {
 
   return (
     <div
+      ref={pageRef}
       className="play-page"
       onClick={next}
       onContextMenu={(e) => {
         e.preventDefault()
-        navigate('/edit')
+        leavePlay()
       }}
     >
       <div
@@ -302,6 +329,8 @@ export function PlayPage() {
           <kbd>Space</kbd>
         </span>
         <span className="play-hint-text">步进翻页</span>
+        <span className="play-hint-dot">·</span>
+        <span className="play-hint-text">F 全屏</span>
         <span className="play-hint-dot">·</span>
         <span className="play-hint-text">Home/End</span>
         <span className="play-hint-dot">·</span>
