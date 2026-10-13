@@ -21,6 +21,8 @@ import {
 } from '../utils/layerOrder'
 import type { GridLayoutRect } from '../utils/grid'
 
+import { createTableAtom } from '../atoms/registry'
+
 export {
   createTextAtom,
   createTextShadowAtom,
@@ -34,7 +36,7 @@ export {
 const LOCAL_ATOMS_KEY = 'vslide-cn-react:localAtoms'
 const HISTORY_LIMIT = 50
 
-export type PlaceMode = 'chart' | 'text' | 'html' | null
+export type PlaceMode = 'chart' | 'text' | 'html' | 'table' | 'image' | null
 
 interface DeckState {
   deck: DeckFile
@@ -45,7 +47,7 @@ interface DeckState {
   toast: string | null
   past: DeckFile[]
   future: DeckFile[]
-  /** Google Slides–like place-first insert (charts + text/html). */
+  /** Google Slides–like place-first insert (charts, text/html, table, image). */
   placeMode: PlaceMode
   pendingLayout: GridLayoutRect | null
   chartDrawerOpen: boolean
@@ -57,6 +59,8 @@ interface DeckState {
   startChartPlace: () => void
   startTextPlace: () => void
   startHtmlPlace: () => void
+  startTablePlace: () => void
+  startImagePlace: () => void
   finishPlaceRect: (layout: GridLayoutRect) => void
   cancelPlaceMode: () => void
   setChartDrawerOpen: (open: boolean) => void
@@ -183,6 +187,26 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       editorFocus: null,
     }),
 
+  startTablePlace: () =>
+    set({
+      placeMode: 'table',
+      pendingLayout: null,
+      chartDrawerOpen: false,
+      textDrawerOpen: false,
+      activeAtomId: null,
+      editorFocus: null,
+    }),
+
+  startImagePlace: () =>
+    set({
+      placeMode: 'image',
+      pendingLayout: null,
+      chartDrawerOpen: false,
+      textDrawerOpen: false,
+      activeAtomId: null,
+      editorFocus: null,
+    }),
+
   finishPlaceRect: (layout) => {
     const mode = get().placeMode
     if (mode === 'text' || mode === 'html') {
@@ -194,6 +218,21 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       })
       return
     }
+    if (mode === 'table') {
+      // Single table type — insert into the dragged rect (place-first confirm)
+      get().addAtom(createTableAtom(layout))
+      return
+    }
+    if (mode === 'image') {
+      // Keep placeMode + pendingLayout; TopBar opens the file picker next
+      set({
+        pendingLayout: layout,
+        chartDrawerOpen: false,
+        textDrawerOpen: false,
+      })
+      return
+    }
+    // chart (default)
     set({
       pendingLayout: layout,
       chartDrawerOpen: true,

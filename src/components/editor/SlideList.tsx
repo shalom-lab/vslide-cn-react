@@ -3,7 +3,7 @@ import { Copy, Plus, Trash2 } from 'lucide-react'
 import GridLayout, { WidthProvider } from 'react-grid-layout'
 import { useDeckStore } from '../../store/useDeckStore'
 import { cssBackground } from '../../utils/background'
-import { GRID_COLS, calcRowHeight } from '../../utils/grid'
+import { GRID_COLS, GRID_MARGIN, calcRowHeight } from '../../utils/grid'
 import { AtomRenderer } from '../atoms/AtomRenderer'
 import { ContextMenu, type ContextMenuItem } from './ContextMenu'
 import { atomStackStyle } from '../../utils/layerOrder'
@@ -17,7 +17,8 @@ const CTX = { size: 14, strokeWidth: 1.75 }
 /** Match Vue Left.vue + VSlide: render at height 540, then scale(0.25). */
 const THUMB_FULL_HEIGHT = 540
 const THUMB_ROW_HEIGHT = calcRowHeight(THUMB_FULL_HEIGHT)
-const THUMB_MARGIN: [number, number] = [5, 5]
+/** Match canvas GRID_MARGIN so thumb layout matches the stage. */
+const THUMB_MARGIN = GRID_MARGIN
 
 function Thumb({
   slideContent,

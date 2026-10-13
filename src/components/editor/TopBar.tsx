@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   BarChart3,
@@ -15,7 +15,6 @@ import {
 } from 'lucide-react'
 import {
   createImageAtom,
-  createTableAtom,
   useDeckStore,
 } from '../../store/useDeckStore'
 import { ChartInsertDrawer } from './ChartInsertDrawer'
@@ -34,11 +33,14 @@ export function TopBar() {
   const pastLen = useDeckStore((s) => s.past.length)
   const futureLen = useDeckStore((s) => s.future.length)
   const placeMode = useDeckStore((s) => s.placeMode)
+  const pendingLayout = useDeckStore((s) => s.pendingLayout)
   const chartDrawerOpen = useDeckStore((s) => s.chartDrawerOpen)
   const textDrawerOpen = useDeckStore((s) => s.textDrawerOpen)
   const startChartPlace = useDeckStore((s) => s.startChartPlace)
   const startTextPlace = useDeckStore((s) => s.startTextPlace)
   const startHtmlPlace = useDeckStore((s) => s.startHtmlPlace)
+  const startTablePlace = useDeckStore((s) => s.startTablePlace)
+  const startImagePlace = useDeckStore((s) => s.startImagePlace)
   const cancelPlaceMode = useDeckStore((s) => s.cancelPlaceMode)
   const setChartDrawerOpen = useDeckStore((s) => s.setChartDrawerOpen)
   const setTextDrawerOpen = useDeckStore((s) => s.setTextDrawerOpen)
@@ -49,14 +51,28 @@ export function TopBar() {
   // placeMode stays set while the right drawer is open, so these cover both drag + chooser
   const textActive = placeMode === 'text'
   const htmlActive = placeMode === 'html'
+  const tableActive = placeMode === 'table'
+  const imageActive = placeMode === 'image'
+
+  // Place-first image: after drag-rect, open the file picker into pendingLayout
+  useEffect(() => {
+    if (placeMode !== 'image' || !pendingLayout) return
+    // Defer so the place-rect paints before the native dialog steals focus
+    const t = window.setTimeout(() => fileRef.current?.click(), 0)
+    return () => window.clearTimeout(t)
+  }, [placeMode, pendingLayout])
 
   const onImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
+    const layout = useDeckStore.getState().pendingLayout ?? undefined
+    e.target.value = ''
+    if (!file) {
+      // Dialog dismissed without a file — stay in place mode until Esc / re-pick
+      return
+    }
     const reader = new FileReader()
     reader.onload = () => {
-      addAtom(createImageAtom(String(reader.result)))
-      e.target.value = ''
+      addAtom(createImageAtom(String(reader.result), layout))
     }
     reader.readAsDataURL(file)
   }
@@ -83,6 +99,27 @@ export function TopBar() {
       return
     }
     startHtmlPlace()
+  }
+
+  const onTableClick = () => {
+    if (tableActive) {
+      cancelPlaceMode()
+      return
+    }
+    startTablePlace()
+  }
+
+  const onImageClick = () => {
+    if (imageActive) {
+      // Rect already placed — re-open file picker; Esc / empty-click cancels
+      if (pendingLayout) {
+        fileRef.current?.click()
+        return
+      }
+      cancelPlaceMode()
+      return
+    }
+    startImagePlace()
   }
 
   return (
@@ -160,9 +197,9 @@ export function TopBar() {
           </button>
           <button
             type="button"
-            className="icon-btn"
-            onClick={() => addAtom(createTableAtom())}
-            title="插入表格"
+            className={'icon-btn' + (tableActive ? ' active' : '')}
+            onClick={onTableClick}
+            title="在画布拖框后插入表格"
           >
             <span className="icon">
               <Table2 {...I} />
@@ -182,9 +219,9 @@ export function TopBar() {
           </button>
           <button
             type="button"
-            className="icon-btn"
-            onClick={() => fileRef.current?.click()}
-            title="插入图片"
+            className={'icon-btn' + (imageActive ? ' active' : '')}
+            onClick={onImageClick}
+            title="在画布拖框后选择图片"
           >
             <span className="icon">
               <ImageIcon {...I} />

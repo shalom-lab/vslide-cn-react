@@ -83,7 +83,12 @@ export function Canvas() {
   const [dragDraft, setDragDraft] = useState<DragDraft | null>(null)
   const stageRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<DragDraft | null>(null)
-  const placing = placeMode === 'chart' || placeMode === 'text' || placeMode === 'html'
+  const placing =
+    placeMode === 'chart' ||
+    placeMode === 'text' ||
+    placeMode === 'html' ||
+    placeMode === 'table' ||
+    placeMode === 'image'
 
   const wrapRef = useRef<HTMLDivElement>(null)
 
@@ -373,7 +378,13 @@ export function Canvas() {
             ? '在画布上拖拽框选文字位置 · Esc 取消'
             : placeMode === 'html'
               ? '在画布上拖拽框选 HTML 位置 · Esc 取消'
-              : '在画布上拖拽框选图表位置 · Esc 取消'}
+              : placeMode === 'table'
+                ? '在画布上拖拽框选表格位置 · Esc 取消'
+                : placeMode === 'image'
+                  ? pendingLayout
+                    ? '选择图片文件 · Esc 取消'
+                    : '在画布上拖拽框选图片位置 · Esc 取消'
+                  : '在画布上拖拽框选图表位置 · Esc 取消'}
         </div>
       )}
       <div
