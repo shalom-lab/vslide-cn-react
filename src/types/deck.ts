@@ -208,18 +208,21 @@ export const emptyBackgroundTexture = (): BackgroundTexture => ({
 
 export const defaultBackground = (): BackgroundConfig => ({
   mode: 'pure',
-  pure: 'rgba(249, 249, 249, 1)',
+  pure: '#f7f4ef',
   linear: {
-    angle: 23,
-    start: 'rgba(98, 116, 137, 1)',
-    end: 'rgba(58,153,178,1)',
+    angle: 165,
+    start: '#fbfcfe',
+    end: '#eef2f7',
   },
   radial: {
-    shape: 'ellipse',
-    start: 'rgba(58,153,178,1)',
-    end: 'rgba(13,56,112,1)',
+    shape: 'ellipse at 30% 20%',
+    start: '#2a2f55',
+    end: '#12131f',
   },
-  custom: 'linear-gradient(20deg, #feac5e, #c779d0, #4bc0c8)',
+  custom:
+    'radial-gradient(ellipse 80% 60% at 18% 22%, rgba(186, 210, 255, 0.55), transparent 55%),' +
+    'radial-gradient(ellipse 70% 55% at 82% 18%, rgba(255, 210, 230, 0.45), transparent 50%),' +
+    'linear-gradient(165deg, #f7f8fc, #eef1f7)',
   image: emptyBackgroundImage(),
   texture: emptyBackgroundTexture(),
 })

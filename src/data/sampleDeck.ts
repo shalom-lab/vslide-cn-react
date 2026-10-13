@@ -1,7 +1,6 @@
 import { nanoid } from 'nanoid'
 import {
   defaultAnimation,
-  defaultBackground,
   defaultBorder,
   defaultEchartTitle,
   defaultSlideAnimation,
@@ -10,6 +9,7 @@ import {
   type DeckFile,
   type Slide,
 } from '../types/deck'
+import { preferredDefaultBackground } from '../background/presets'
 import { cssBackground } from '../utils/background'
 
 const salesSheet: (string | number)[][] = [
@@ -92,7 +92,7 @@ function slide(i: string, y: number, content: Atom[]): Slide {
 
 /** Sample deck using Vue field names (text-shadow, nr/nc, title object, …) */
 export function createSampleDeck(): DeckFile {
-  const background = defaultBackground()
+  const background = preferredDefaultBackground()
   const slides: Slide[] = [
     slide('0', 0, [
       atom({

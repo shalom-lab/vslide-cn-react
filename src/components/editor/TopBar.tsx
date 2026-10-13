@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   BarChart3,
@@ -23,6 +23,7 @@ import {
   useDeckStore,
 } from '../../store/useDeckStore'
 import { ChartInsertDrawer } from './ChartInsertDrawer'
+import { BackgroundDrawer } from './BackgroundDrawer'
 
 const I = { size: 20, strokeWidth: 1.75 }
 
@@ -41,6 +42,7 @@ export function TopBar() {
   const cancelPlaceMode = useDeckStore((s) => s.cancelPlaceMode)
   const setChartDrawerOpen = useDeckStore((s) => s.setChartDrawerOpen)
   const fileRef = useRef<HTMLInputElement>(null)
+  const [bgDrawerOpen, setBgDrawerOpen] = useState(false)
 
   const chartActive = placeMode === 'chart' || chartDrawerOpen
 
@@ -183,10 +185,11 @@ export function TopBar() {
           <span className="topbar-sep" aria-hidden />
           <button
             type="button"
-            className="icon-btn"
+            className={'icon-btn' + (bgDrawerOpen ? ' active' : '')}
             onClick={() => {
               setActiveAtom(null)
               setEditorFocus(null)
+              setBgDrawerOpen(true)
             }}
             title="幻灯片背景"
           >
@@ -207,6 +210,10 @@ export function TopBar() {
       <ChartInsertDrawer
         open={chartDrawerOpen}
         onClose={() => setChartDrawerOpen(false)}
+      />
+      <BackgroundDrawer
+        open={bgDrawerOpen}
+        onClose={() => setBgDrawerOpen(false)}
       />
     </>
   )

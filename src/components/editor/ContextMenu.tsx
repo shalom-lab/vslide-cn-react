@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 export interface ContextMenuItem {
   key: string
@@ -16,7 +17,7 @@ interface Props {
   onClose: () => void
 }
 
-/** Lightweight context menu mirroring v-contextmenu item list. */
+/** Lightweight context menu — portaled to body so canvas stacking cannot cover it. */
 export function ContextMenu({ x, y, items, onClose }: Props) {
   const ref = useRef<HTMLDivElement>(null)
 
@@ -51,7 +52,7 @@ export function ContextMenu({ x, y, items, onClose }: Props) {
     el.style.top = `${top}px`
   }, [x, y, items])
 
-  return (
+  return createPortal(
     <div
       ref={ref}
       className="ctx-menu"
@@ -75,10 +76,11 @@ export function ContextMenu({ x, y, items, onClose }: Props) {
             }}
           >
             {item.icon ? <span className="ctx-icon">{item.icon}</span> : null}
-            {item.label}
+            <span className="ctx-label">{item.label}</span>
           </button>
         </div>
       ))}
-    </div>
+    </div>,
+    document.body,
   )
 }

@@ -4,7 +4,8 @@ import {
   selectActiveSlide,
   useDeckStore,
 } from '../../store/useDeckStore'
-import { defaultBackground, defaultEchartTitle } from '../../types/deck'
+import { defaultEchartTitle } from '../../types/deck'
+import { cssBackground } from '../../utils/background'
 import { canLayerAction } from '../../utils/layerOrder'
 
 export function PropertyPanel() {
@@ -44,82 +45,27 @@ export function PropertyPanel() {
         <h3>属性</h3>
         <p className="muted">选中画布中的组件以编辑属性（右键打开菜单）</p>
         <h4>幻灯片背景</h4>
+        <div
+          className="bg-props-preview"
+          style={{ background: cssBackground(bg) }}
+          title={bg.mode}
+        />
+        <p className="hint">
+          点顶部工具栏「背景」打开 PPT 风格模板库（预设 / 自定义 / 我的）。
+        </p>
         <label className="field">
-          模式
-          <select
-            value={bg.mode}
+          快捷 · 纯色
+          <input
+            type="color"
+            value={rgbToHex(bg.pure) || '#f7f4ef'}
             onChange={(e) =>
-              setBackground({
-                ...bg,
-                mode: e.target.value as typeof bg.mode,
-              })
+              setBackground({ ...bg, mode: 'pure', pure: e.target.value })
             }
-          >
-            <option value="pure">纯色</option>
-            <option value="linear">线性渐变</option>
-            <option value="radial">径向渐变</option>
-            <option value="custom">自定义</option>
-            <option value="image">图片</option>
-            <option value="texture">纹理</option>
-          </select>
+          />
         </label>
-        {bg.mode === 'pure' && (
-          <label className="field">
-            颜色
-            <input
-              type="color"
-              value={rgbToHex(bg.pure) || '#f9f9f9'}
-              onChange={(e) =>
-                setBackground({ ...bg, pure: e.target.value })
-              }
-            />
-          </label>
-        )}
-        {bg.mode === 'custom' && (
-          <label className="field">
-            CSS
-            <input
-              value={bg.custom}
-              onChange={(e) =>
-                setBackground({ ...bg, custom: e.target.value })
-              }
-            />
-          </label>
-        )}
-        {(bg.mode === 'image' || bg.mode === 'texture') && (
-          <label className="field">
-            图片 URL / DataURL
-            <textarea
-              rows={3}
-              value={
-                bg.mode === 'image' ? bg.image.src : bg.texture.src
-              }
-              onChange={(e) => {
-                if (bg.mode === 'image') {
-                  setBackground({
-                    ...bg,
-                    image: { ...bg.image, src: e.target.value },
-                  })
-                } else {
-                  setBackground({
-                    ...bg,
-                    texture: { ...bg.texture, src: e.target.value },
-                  })
-                }
-              }}
-            />
-          </label>
-        )}
-        <button
-          type="button"
-          className="btn-secondary"
-          onClick={() => setBackground(defaultBackground())}
-        >
-          重置背景
-        </button>
         <p className="hint">
           当前幻灯片 #{slide ? slide.y + 1 : '-'} ·{' '}
-          {slide?.slideContent.length ?? 0} 个组件
+          {slide?.slideContent.length ?? 0} 个组件 · 模式 {bg.mode}
         </p>
       </aside>
     )

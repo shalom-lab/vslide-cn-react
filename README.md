@@ -15,6 +15,7 @@ React + TypeScript rewrite of the interactive slide editor, faithful to the comp
 - Charts: line · bar · **stack-bar** · **hor-bar** · pie · **scatter** — **place-first** (拖框再选图) via insert drawer
 - Undo / redo (`Ctrl+Z` / `Ctrl+Y`) for deck mutations
 - Compact Chinese chrome; sample deck (~6 slides)
+- **背景模板库**（顶部「背景」）：PPT 风格预设 / 自定义 / 我的背景（localStorage）
 - Play: `←` `→` / Space / Esc→edit
 
 ## Run
