@@ -26,6 +26,7 @@ import { BackgroundDrawer } from './BackgroundDrawer'
 import { TemplateDrawer } from './TemplateDrawer'
 import { IconInsertDrawer } from './IconInsertDrawer'
 import { SettingsDrawer } from './SettingsDrawer'
+import { BrandLogo } from '../BrandLogo'
 
 const I = { size: 20, strokeWidth: 1.75 }
 
@@ -146,6 +147,9 @@ export function TopBar() {
     <>
       <div className="topbar">
         <div className="topbar-left">
+          <Link to="/" className="topbar-brand" title="微思文稿 · 首页">
+            <BrandLogo size={28} />
+          </Link>
           <button type="button" className="icon-btn" onClick={addSlide} title="新建幻灯片">
             <span className="icon">
               <Plus {...I} />

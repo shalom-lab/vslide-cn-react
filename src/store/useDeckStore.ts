@@ -84,6 +84,8 @@ interface DeckState {
   addSlide: () => void
   duplicateSlide: () => void
   removeSlide: () => void
+  /** Persist left-list drag order (Vue grid-layout y). */
+  reorderSlides: (order: { i: string; y: number }[]) => void
   addAtom: (atom: Atom) => void
   duplicateActiveAtom: () => void
   removeActiveAtom: () => void
@@ -595,6 +597,32 @@ export const useDeckStore = create<DeckState>((set, get) => ({
       editorFocus: null,
     }))
   },
+
+  reorderSlides: (order) => {
+    const { deck } = get()
+    if (!order.length) return
+    const yById = new Map(order.map((o) => [o.i, o.y]))
+    const before = [...deck.slides]
+      .sort((a, b) => a.y - b.y)
+      .map((s) => s.i)
+      .join(',')
+    const slides = deck.slides
+      .map((s) => ({
+        ...s,
+        y: yById.has(s.i) ? (yById.get(s.i) as number) : s.y,
+      }))
+      .sort((a, b) => a.y - b.y)
+    slides.forEach((s, idx) => {
+      s.y = idx
+    })
+    const after = slides.map((s) => s.i).join(',')
+    if (before === after) return
+    set((s) => ({
+      ...pushHistory(s),
+      deck: withGetBackground({ ...deck, slides }),
+    }))
+  },
+
 
   addAtom: (atom) => {
     const { deck, activeSlideId } = get()

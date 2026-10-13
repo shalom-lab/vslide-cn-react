@@ -7,6 +7,7 @@ import { GRID_COLS, calcRowHeight } from '../../utils/grid'
 import { AtomRenderer } from '../atoms/AtomRenderer'
 import { atomStackStyle } from '../../utils/layerOrder'
 import { stageTypographyStyle } from '../../utils/typography'
+import { BrandLogo } from '../BrandLogo'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import 'animate.css'
@@ -124,6 +125,9 @@ export function PlayPage() {
           )
         })}
       </AutoGrid>
+      <div className="play-brand" aria-hidden>
+        <BrandLogo size={28} />
+      </div>
       <span className="play-page-num">
         {index + 1}/{sorted.length}
       </span>

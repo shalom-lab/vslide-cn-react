@@ -71,11 +71,77 @@ select {
   font-weight: 700;
   font-size: 15px;
 }
-.home-logo .mark {
-  width: 24px;
-  height: 24px;
-  border-radius: 5px;
-  background: linear-gradient(135deg, #4bc0c8, #c779d0, #feac5e);
+.home-logo .mark,
+.home-logo .brand-logo img {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  display: block;
+  object-fit: contain;
+}
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+.brand-logo img {
+  display: block;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.brand-logo-text {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+.toolbar-left-cluster {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+.toolbar-brand {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 6px;
+  -webkit-app-region: no-drag;
+  text-decoration: none;
+  color: inherit;
+}
+.toolbar-brand img {
+  width: 18px;
+  height: 18px;
+}
+.topbar-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 4px;
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 4px;
+}
+.topbar-brand:hover {
+  background: var(--icon-hover-bg);
+}
+.topbar-brand img {
+  width: 28px;
+  height: 28px;
+}
+.play-brand {
+  position: absolute;
+  left: 12px;
+  top: 10px;
+  z-index: 3;
+  opacity: 0.85;
+  pointer-events: none;
+}
+.play-brand img {
+  width: 28px;
+  height: 28px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
 }
 .home-body {
   flex: 1;
@@ -368,30 +434,50 @@ body.pane-resizing * {
   overflow-y: auto;
   overflow-x: hidden;
   flex: 1;
-  padding: 0 10px 8px;
+  /* Top padding so selection ring on slide 1 is not clipped */
+  padding: 4px 10px 8px;
   margin: 0;
+}
+.slide-list-grid {
+  min-height: 100%;
+}
+.slide-list-grid .react-grid-item {
+  transition: none;
+}
+.slide-list-grid .react-grid-item.cssTransforms {
+  transition-property: transform;
+}
+.slide-list-grid .react-grid-item.react-draggable-dragging {
+  z-index: 5;
+  opacity: 0.92;
+  cursor: grabbing;
 }
 .slide-thumb {
   display: block;
   width: 100%;
-  margin-bottom: 5px;
+  height: 100%;
+  margin: 0;
   border: none;
+  /* Inset ring — hugs thumb; not clipped by scroll overflow */
   outline: 2px solid rgba(226, 211, 226, 0.705);
+  outline-offset: -2px;
   background: #fff;
   padding: 0;
-  cursor: pointer;
+  cursor: grab;
   position: relative;
-  border-radius: 0;
+  border-radius: 2px;
   overflow: hidden;
-  aspect-ratio: 16 / 9;
   box-shadow: 1px 1px 1px #888888;
+  box-sizing: border-box;
 }
 .slide-thumb:hover {
-  outline: 1px solid var(--active-slide-soft);
+  outline: 2px solid var(--active-slide-soft);
+  outline-offset: -2px;
 }
 .slide-thumb.actived,
 .slide-thumb.actived:hover {
   outline: 2px solid var(--active-slide);
+  outline-offset: -2px;
 }
 .slide-num {
   position: absolute;

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { BrandLogo } from '../BrandLogo'
 import { useDeckStore } from '../../store/useDeckStore'
 import { serializeDeck } from '../../utils/serialize'
 
@@ -37,19 +38,24 @@ export function Toolbar() {
 
   return (
     <header className="toolbar">
-      <ul className="menu">
-        <li>
-          <Link to="/">首页</Link>
-        </li>
-        <li>
-          <label className="file-label">
-            打开
-            <input type="file" accept=".json" onChange={openFile} hidden />
-          </label>
-        </li>
-        <li onClick={download}>下载</li>
-        <li onClick={resetSample}>示例</li>
-      </ul>
+      <div className="toolbar-left-cluster">
+        <Link to="/" className="toolbar-brand" title="微思文稿">
+          <BrandLogo size={18} />
+        </Link>
+        <ul className="menu">
+          <li>
+            <Link to="/">首页</Link>
+          </li>
+          <li>
+            <label className="file-label">
+              打开
+              <input type="file" accept=".json" onChange={openFile} hidden />
+            </label>
+          </li>
+          <li onClick={download}>下载</li>
+          <li onClick={resetSample}>示例</li>
+        </ul>
+      </div>
       <div className="toolbar-title">{fileName}.json</div>
       <div className="toolbar-spacer" />
     </header>

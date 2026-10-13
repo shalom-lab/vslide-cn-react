@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import GridLayout, { WidthProvider, type Layout } from 'react-grid-layout'
 import { Copy, Plus, Trash2 } from 'lucide-react'
-import GridLayout, { WidthProvider } from 'react-grid-layout'
 import { useDeckStore } from '../../store/useDeckStore'
 import { cssBackground } from '../../utils/background'
 import { GRID_COLS, GRID_MARGIN, calcRowHeight } from '../../utils/grid'
@@ -39,7 +39,10 @@ function Thumb({
   }))
   return (
     <div className="thumb-viewport">
-      <div className="thumb-scale" style={{ background, ...stageTypographyStyle(THUMB_FULL_HEIGHT) }}>
+      <div
+        className="thumb-scale"
+        style={{ background, ...stageTypographyStyle(THUMB_FULL_HEIGHT) }}
+      >
         <AutoGrid
           className="thumb-grid"
           layout={layout}
@@ -84,9 +87,54 @@ export function SlideList() {
   const addSlide = useDeckStore((s) => s.addSlide)
   const duplicateSlide = useDeckStore((s) => s.duplicateSlide)
   const removeSlide = useDeckStore((s) => s.removeSlide)
+  const reorderSlides = useDeckStore((s) => s.reorderSlides)
   const background = cssBackground(bg)
   const [menu, setMenu] = useState<MenuState | null>(null)
   const closeMenu = useCallback(() => setMenu(null), [])
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [gridWidth, setGridWidth] = useState(200)
+
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const measure = () => {
+      const style = getComputedStyle(el)
+      const padL = parseFloat(style.paddingLeft) || 0
+      const padR = parseFloat(style.paddingRight) || 0
+      setGridWidth(Math.max(80, el.clientWidth - padL - padR))
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const sorted = useMemo(
+    () => slides.slice().sort((a, b) => a.y - b.y),
+    [slides],
+  )
+
+  const layout: Layout[] = useMemo(
+    () =>
+      sorted.map((slide) => ({
+        i: slide.i,
+        x: 0,
+        y: slide.y,
+        w: 1,
+        h: 1,
+      })),
+    [sorted],
+  )
+
+  // Vue Left.vue: row-height ≈ width * 9/16 for 16:9 thumbs
+  const rowHeight = Math.max(48, (gridWidth * 9) / 16)
+
+  const onDragStop = useCallback(
+    (next: Layout[]) => {
+      reorderSlides(next.map((l) => ({ i: l.i, y: l.y })))
+    },
+    [reorderSlides],
+  )
 
   const menuItems: ContextMenuItem[] = [
     {
@@ -124,13 +172,24 @@ export function SlideList() {
           删除
         </button>
       </div>
-      <div className="slide-list-scroll">
-        {slides
-          .slice()
-          .sort((a, b) => a.y - b.y)
-          .map((slide, index) => (
-            <button
-              type="button"
+      <div className="slide-list-scroll" ref={scrollRef}>
+        <GridLayout
+          className="slide-list-grid"
+          width={gridWidth}
+          layout={layout}
+          cols={1}
+          rowHeight={rowHeight}
+          margin={[0, 5]}
+          containerPadding={[0, 0]}
+          isDraggable
+          isResizable={false}
+          compactType="vertical"
+          preventCollision={false}
+          useCSSTransforms
+          onDragStop={onDragStop}
+        >
+          {sorted.map((slide, index) => (
+            <div
               key={slide.i}
               className={
                 'slide-thumb' + (slide.i === activeSlideId ? ' actived' : '')
@@ -147,8 +206,9 @@ export function SlideList() {
                 slideContent={slide.slideContent}
                 background={background}
               />
-            </button>
+            </div>
           ))}
+        </GridLayout>
       </div>
       {menu && (
         <ContextMenu

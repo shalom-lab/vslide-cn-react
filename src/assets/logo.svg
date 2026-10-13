@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="微思文稿">
+  <defs>
+    <linearGradient id="vslide-bar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ed7939"/>
+      <stop offset="100%" stop-color="#e74d17"/>
+    </linearGradient>
+  </defs>
+  <!-- Bar-chart brand mark mirrored from vslide-vue/public/logo.png -->
+  <rect x="16" y="341" width="89" height="127" rx="12" fill="url(#vslide-bar)"/>
+  <rect x="113" y="201" width="90" height="267" rx="12" fill="url(#vslide-bar)"/>
+  <rect x="211" y="44" width="90" height="424" rx="12" fill="url(#vslide-bar)"/>
+  <rect x="310" y="201" width="89" height="267" rx="12" fill="url(#vslide-bar)"/>
+  <rect x="407" y="341" width="89" height="127" rx="12" fill="url(#vslide-bar)"/>
+</svg>

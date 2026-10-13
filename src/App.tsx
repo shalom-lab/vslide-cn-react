@@ -3,6 +3,7 @@ import { EditorPage } from './components/editor/EditorPage'
 import { PlayPage } from './components/play/PlayPage'
 import { Link } from 'react-router-dom'
 import { useDeckStore } from './store/useDeckStore'
+import { BrandLogo } from './components/BrandLogo'
 import './styles/app.css'
 
 function HomePage() {
@@ -12,8 +13,7 @@ function HomePage() {
     <div className="home-page">
       <header className="home-header">
         <div className="home-logo">
-          <span className="mark" />
-          微思文稿
+          <BrandLogo size={28} withText />
         </div>
         <span style={{ color: '#888', fontSize: 13 }}>
           React + TypeScript 重写 · 蓝本 vslide-vue
